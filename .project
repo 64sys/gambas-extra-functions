@@ -1,0 +1,18 @@
+# Gambas Project File 3.0
+# Compiled with Gambas 3.9.1
+Title=Gambas extra functions
+Startup=FMain
+Icon=tech.png
+Version=0.0.1
+Component=gb.image
+Component=gb.gui.qt
+Component=gb.form
+Component=gb.db
+Component=gb.xml
+Description="Compilation of utilities and functions developed by the gambas comunity."
+Authors="Martín Belmonte."
+TabSize=2
+Translate=1
+Language=es
+Vendor=belmotek
+Packager=1
