@@ -4,6 +4,9 @@ Count=0
 [DebugWindow]
 Count=0
 
+[Executable]
+Path="gambas-extra-functions.gambas"
+
 [OpenFile]
 Active=3
 File[1]=".src/FMain.form"

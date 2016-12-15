@@ -832,13 +832,15 @@ Public Function ListDeldup(stxInput As String[]) As String[] '' Elimina elemento
 
 End
 
-Public Function WhereRun() As Integer
+Public Function WhereRun() As Integer ''Indica si el programa se esta ejecutando desde el IDE o desde un ejecutable solo utilizando código de gambas.
 
   Dim strProcess As String
   Dim intRun As Integer
 
-  Shell "ps -p " & Application.id To strProcess
-  If InStr(strProcess, "gbx3") > 0 Then
+  strProcess = File.Load("/proc" &/ CStr(Application.Id) &/ "comm")
+
+  If Left(strProcess, 4) = "gbx3" Then
+
     intRun = 1
   Else
     intRun = 0

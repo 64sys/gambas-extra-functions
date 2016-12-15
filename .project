@@ -3,7 +3,7 @@
 Title=Gambas extra functions
 Startup=FMain
 Icon=tech.png
-Version=0.0.1
+Version=0.0.2
 Component=gb.image
 Component=gb.gui.qt
 Component=gb.form
