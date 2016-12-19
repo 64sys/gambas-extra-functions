@@ -404,3 +404,63 @@ Public Function XDGFolder() As String[]
   Return stxXDGFolders
 
 End
+
+Public Function PkgDep(stxPackages As String[]) As Integer '' Verifica si los paqutes que se le pasan como parametros en una matriz, estan instalados en el sistema, si alguno o todos estan pendientes de instalar este modulo propondra instalarlos y abrira la terminal de comandos para que ingreses la clave de administrador.
+
+  Dim intPkg As Integer
+  Dim stxPackagesInstall As New String[]
+  Dim strMessage As String
+  Dim strCommand As String
+  Dim intStatus As Integer
+
+  'stxPackages = Split("libimage-exiftool-perl:elinks", ":")
+  For intPkg = 0 To stxPackages.Max
+
+    If PkgStat(stxPackages[intPkg]) = False Then
+      stxPackagesInstall.Add(stxPackages[intPkg])
+
+    Endif
+  Next
+
+  If stxPackagesInstall.Count > 0 Then
+    Select stxPackagesInstall.Count
+      Case 1
+        strMessage = ("Falta instalar el paquete")
+
+      Case Else
+        strMessage = ("Faltan instalar los siguientes paquetes")
+    End Select
+
+    Select DistroShort()
+
+      Case "debian", "ubuntu", "mint"
+        strCommand = "sudo apt-get install " & stxPackagesInstall.Join(" ")
+
+      Case "manjaro", "arch"
+        strCommand = "sudo pacman -S " & stxPackagesInstall.Join(" ")
+      Case "fedora", "redhat"
+        strCommand = "sudo dnf install " & stxPackagesInstall.Join(" ")
+      Case "gentoo"
+        strCommand = "sudo emerge -a " & stxPackagesInstall.Join(" ")
+      Case "suse", "opensuse"
+        strCommand = "sudo zipper install " & stxPackagesInstall.Join(" ")
+    End Select
+
+    strCommand = Replace(strCommand, "-", Chr(45)) ' Esto es porque sendkeys tiene problermas con "-"
+
+    Select Message.Question(strMessage & ":" & gb.NewLine &
+          stxPackagesInstall.Join(gb.NewLine) & gb.NewLine &
+          ("Puede usar el siguente commando") & ":" & gb.NewLine &
+          strCommand & gb.NewLine &
+          ("¿Quiere abrir la terminal para poceder?"), ("Sí"), ("No"))
+
+      Case 1
+        Desktop.OpenTerminal
+        Wait 0.25
+        Desktop.SendKeys(strCommand)
+
+    End Select
+
+  Endif
+
+End

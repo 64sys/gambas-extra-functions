@@ -52,6 +52,9 @@ Devuelve un texto, nombre de arcivo concatenando todos los fragmentos que se le 
 #### FileVersion
 Devuelve un texto con la versión del archivo que se le pasa como ruta. Usa el comando file de la terminal.
 
+#### file_replace
+Sirve para reemplazar una cadena en un archivo de texto, como por ejemplo un .html que sw muestra en un webview.
+
 #### GetForeignKey
 Devuelve la clave del registro referenciado en otra tabla
  

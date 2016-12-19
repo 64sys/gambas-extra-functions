@@ -21,161 +21,161 @@
 ' Boston, MA  02110-1301  USA
 '
 
-Public Sub ImportFileMetadata(conDat As Connection, strTab As String, stxReff As String[], stxValApp As String[])
-
-  Dim tblPri As Table ' Tabla primaria
-  Dim fldPri As Field ' Tabla primaria
-  Dim strSQL As String
-  Dim strSQLf As String
-  Dim strSQLv As String
-  Dim strSQLr As String ' PAra insertar registros en tablas foráneas
-
-  Dim stxFld As New String[]
-  Dim stxFldFK As New String[]
-  Dim stxTblFK As New String[] ' matriz de nombres de Tablas foránelas
-  Dim stxFldRK As New String[] ' matriz de Campos con las claves foránelas
-  Dim stxFldNK As New String[] ' matriz de Campos con los nombres foránelos
-
-  Dim intC As Integer
-  Dim intK As Integer
-  Dim resChk As Result
-  Dim intFK As Integer
-  Dim intD As Integer
-  Dim resIns As Result
-  Dim resUpd As Result
-
-  Dim resInsRef As Result
-
-  Dim strTmp As String
-
-  stxFldFK.Clear
-  stxTblFK.Clear
-  stxFldRK.Clear
-  stxFldNK.Clear
-
-  For Each strTmp In stxReff ' Creo las listas FK
-
-    stxFldFK.Add(Split(strTmp, ":")[0])
-    stxTblFK.Add(Split(strTmp, ":")[1])
-    stxFldRK.Add(Split(strTmp, ":")[2])
-    stxFldNK.Add(Split(strTmp, ":")[3])
-
-  Next
-
-  If conDat.Tables.Exist(strTab) = True Then
-
-    tblPri = conDat.Tables[strTab]
-
-    For Each fldPri In tblPri.Fields ' Creo la lista de campos
-      stxFld.Add(fldPri.Name)
-    Next
-
-    For intC = 0 To stxValApp.Max
-
-      intK = stxFldFK.Find(stxFld[intC])
-
-      If intK <> -1 Then ' Si el campo actual es referenciado busco el key en la tabla Foránea
-
-        resChk = conDat.Exec("select " & stxFldRK[intK] & " from " & stxTblFK[intK] & " where " & stxFldNK[intK] & " = '" & stxValApp[intC] & "'")
-
-        If resChk.Available Then
-          intFK = resChk[stxFldRK[intK]]
-
-          If intFK <> Null Then
-            stxValApp[intC] = CStr(intFK)
-          Endif
-        Else ' Quiere decir que el registro no existe en la referencia
-
-          strSQLr = "insert into " & stxTblFK[intK] & "(" & stxFldRK[intK] & "," & stxFldNK[intK] & ") values(Null" & ",'" & stxValApp[intC] & "')"
-
-          resInsRef = conDat.Exec(strSQLr)
-          Wait 0.1
-
-          resChk = conDat.Exec("select " & stxFldRK[intK] & " from " & stxTblFK[intK] & " where " & stxFldNK[intK] & " = '" & stxValApp[intC] & "'")
-
-          If resChk.Available Then
-            intFK = resChk[stxFldRK[intK]]
-
-            If intFK <> Null Then
-              'Print stxValues[intC]
-              stxValApp[intC] = CStr(intFK)
-            Endif
-          Else ' Quiere decir que el registro no existe en la referencia
-            Message.Info(("Tenes que insertar la referencia a mano porque") & gb.NewLine & ("la forma automatica no funciono"))
-          Endif
-
-        Endif
-
-      Endif
-
-    Next
-
-  Endif
-
-  ' Una vez que esta todo acomodado verifico si el registro existe o no
-  resChk = conDat.Exec("select " & stxFld[16] & "," & stxFld[17] & " from " & strTab & " where " & stxFld[16] & " = '" & stxValApp[16] & "' and " & stxFld[17] & " = '" & stxValApp[17] & "'")
-  If resChk.Available Then
-    ' El registro ya existe asi que procedo con un update
-
-    resChk = conDat.Exec("select * from " & strTab & " where " & stxFld[16] & " = '" & stxValApp[16] & "' and " & stxFld[17] & " = '" & stxValApp[17] & "'")
-
-    For intD = 2 To stxFld.Max
-      If stxValApp[intD] <> resChk[stxFld[intD]]
-        strSQLv &= stxFld[intD] & "='" & stxValApp[intD] & "',"
-      Endif
-
-    Next
-
-    strSQL = "update " & strTab & " set " & strSQLv & " where " & stxFld[16] & " = '" & stxValApp[16] & "' and " & stxFld[17] & " = '" & stxValApp[17] & "'"
-    strSQL = Replace(strSQL, "', where", "' where")
-
-    If strSQLv = "" Then
-      'Print ("No hay cambios para aplicar")
-    Else
-      resUpd = conDat.Exec(strSQL)
-    Endif
-
-  Else
-    'El registro no existe, así que procedo con un insert
-
-    For intD = 0 To stxFld.Max
-
-      Select intD
-        Case 0
-          strSQLf = "insert into " & strTab & "(" & stxFld[intD] & ","
-          strSQLv &= "Null" & ","
-
-        Case stxFld.Max
-          strSQLf &= stxFld[intD] & ") values("
-
-          Select tblPri.Fields[stxFld[intD]].Type
-            Case 4, 7
-              strSQLv &= stxValApp[intD] & ")"
-            Case 9
-              strSQLv &= "'" & stxValApp[intD] & "')"
-          End Select
-
-        Case Else
-
-          strSQLf &= stxFld[intD] & ","
-
-          Select tblPri.Fields[stxFld[intD]].Type
-
-            Case 4, 7
-
-              strSQLv &= stxValApp[intD] & ","
-            Case 9
-              strSQLv &= "'" & stxValApp[intD] & "',"
-          End Select
-      End Select
-
-    Next
-    strSQL = strSQLf & strSQLv
-    resIns = conDat.Exec(strSQL)
-
-  Endif
-
-End
+' Public Sub ImportFileMetadata(conDat As Connection, strTab As String, stxReff As String[], stxValApp As String[])
+'
+'   Dim tblPri As Table ' Tabla primaria
+'   Dim fldPri As Field ' Tabla primaria
+'   Dim strSQL As String
+'   Dim strSQLf As String
+'   Dim strSQLv As String
+'   Dim strSQLr As String ' PAra insertar registros en tablas foráneas
+'
+'   Dim stxFld As New String[]
+'   Dim stxFldFK As New String[]
+'   Dim stxTblFK As New String[] ' matriz de nombres de Tablas foránelas
+'   Dim stxFldRK As New String[] ' matriz de Campos con las claves foránelas
+'   Dim stxFldNK As New String[] ' matriz de Campos con los nombres foránelos
+'
+'   Dim intC As Integer
+'   Dim intK As Integer
+'   Dim resChk As Result
+'   Dim intFK As Integer
+'   Dim intD As Integer
+'   Dim resIns As Result
+'   Dim resUpd As Result
+'
+'   Dim resInsRef As Result
+'
+'   Dim strTmp As String
+'
+'   stxFldFK.Clear
+'   stxTblFK.Clear
+'   stxFldRK.Clear
+'   stxFldNK.Clear
+'
+'   For Each strTmp In stxReff ' Creo las listas FK
+'
+'     stxFldFK.Add(Split(strTmp, ":")[0])
+'     stxTblFK.Add(Split(strTmp, ":")[1])
+'     stxFldRK.Add(Split(strTmp, ":")[2])
+'     stxFldNK.Add(Split(strTmp, ":")[3])
+'
+'   Next
+'
+'   If conDat.Tables.Exist(strTab) = True Then
+'
+'     tblPri = conDat.Tables[strTab]
+'
+'     For Each fldPri In tblPri.Fields ' Creo la lista de campos
+'       stxFld.Add(fldPri.Name)
+'     Next
+'
+'     For intC = 0 To stxValApp.Max
+'
+'       intK = stxFldFK.Find(stxFld[intC])
+'
+'       If intK <> -1 Then ' Si el campo actual es referenciado busco el key en la tabla Foránea
+'
+'         resChk = conDat.Exec("select " & stxFldRK[intK] & " from " & stxTblFK[intK] & " where " & stxFldNK[intK] & " = '" & stxValApp[intC] & "'")
+'
+'         If resChk.Available Then
+'           intFK = resChk[stxFldRK[intK]]
+'
+'           If intFK <> Null Then
+'             stxValApp[intC] = CStr(intFK)
+'           Endif
+'         Else ' Quiere decir que el registro no existe en la referencia
+'
+'           strSQLr = "insert into " & stxTblFK[intK] & "(" & stxFldRK[intK] & "," & stxFldNK[intK] & ") values(Null" & ",'" & stxValApp[intC] & "')"
+'
+'           resInsRef = conDat.Exec(strSQLr)
+'           Wait 0.1
+'
+'           resChk = conDat.Exec("select " & stxFldRK[intK] & " from " & stxTblFK[intK] & " where " & stxFldNK[intK] & " = '" & stxValApp[intC] & "'")
+'
+'           If resChk.Available Then
+'             intFK = resChk[stxFldRK[intK]]
+'
+'             If intFK <> Null Then
+'               'Print stxValues[intC]
+'               stxValApp[intC] = CStr(intFK)
+'             Endif
+'           Else ' Quiere decir que el registro no existe en la referencia
+'             Message.Info(("Tenes que insertar la referencia a mano porque") & gb.NewLine & ("la forma automatica no funciono"))
+'           Endif
+'
+'         Endif
+'
+'       Endif
+'
+'     Next
+'
+'   Endif
+'
+'   ' Una vez que esta todo acomodado verifico si el registro existe o no
+'   resChk = conDat.Exec("select " & stxFld[16] & "," & stxFld[17] & " from " & strTab & " where " & stxFld[16] & " = '" & stxValApp[16] & "' and " & stxFld[17] & " = '" & stxValApp[17] & "'")
+'   If resChk.Available Then
+'     ' El registro ya existe asi que procedo con un update
+'
+'     resChk = conDat.Exec("select * from " & strTab & " where " & stxFld[16] & " = '" & stxValApp[16] & "' and " & stxFld[17] & " = '" & stxValApp[17] & "'")
+'
+'     For intD = 2 To stxFld.Max
+'       If stxValApp[intD] <> resChk[stxFld[intD]]
+'         strSQLv &= stxFld[intD] & "='" & stxValApp[intD] & "',"
+'       Endif
+'
+'     Next
+'
+'     strSQL = "update " & strTab & " set " & strSQLv & " where " & stxFld[16] & " = '" & stxValApp[16] & "' and " & stxFld[17] & " = '" & stxValApp[17] & "'"
+'     strSQL = Replace(strSQL, "', where", "' where")
+'
+'     If strSQLv = "" Then
+'       'Print ("No hay cambios para aplicar")
+'     Else
+'       resUpd = conDat.Exec(strSQL)
+'     Endif
+'
+'   Else
+'     'El registro no existe, así que procedo con un insert
+'
+'     For intD = 0 To stxFld.Max
+'
+'       Select intD
+'         Case 0
+'           strSQLf = "insert into " & strTab & "(" & stxFld[intD] & ","
+'           strSQLv &= "Null" & ","
+'
+'         Case stxFld.Max
+'           strSQLf &= stxFld[intD] & ") values("
+'
+'           Select tblPri.Fields[stxFld[intD]].Type
+'             Case 4, 7
+'               strSQLv &= stxValApp[intD] & ")"
+'             Case 9
+'               strSQLv &= "'" & stxValApp[intD] & "')"
+'           End Select
+'
+'         Case Else
+'
+'           strSQLf &= stxFld[intD] & ","
+'
+'           Select tblPri.Fields[stxFld[intD]].Type
+'
+'             Case 4, 7
+'
+'               strSQLv &= stxValApp[intD] & ","
+'             Case 9
+'               strSQLv &= "'" & stxValApp[intD] & "',"
+'           End Select
+'       End Select
+'
+'     Next
+'     strSQL = strSQLf & strSQLv
+'     resIns = conDat.Exec(strSQL)
+'
+'   Endif
+'
+' End
 
 Public Sub getDBinfo(conDB As Connection) ''Extraccion de la informacion de la estructura de la base de datos
 
@@ -275,5 +275,75 @@ Public Sub getDBinfo(conDB As Connection) ''Extraccion de la informacion de la e
 
   End Select
   '---------------------------------------------------------------------------------
+
+End
+
+Public Function DBSqlite(stxDB As String[], Optional strMod As String) As Connection ''Inicia una base de datos o la crea y la inicia. Devuelve una conexion y como parametro de entrada requiere una matriz con los parametros de la base. Si la base de datos no existe, entonces crea una y la inicia.   ' Si la base de datos si existe, entonces puede hacer dos cosas, iniciarla o crear una copia de respaldo y crear una base nueva. stxDB contiene los paramentros de la base. 0 - DBHost. 1 - DBName. 2 - DBPath
+
+  Dim conCreate As New Connection
+  Dim strTimeStamp As String
+  Dim strDBZip As String
+  Dim strSQLCreate As String
+
+  If conCreate.Opened Then
+    conCreate.Close
+  Endif
+
+  strTimeStamp = MUtility.Timestamp(Now())
+
+  strDBZip = File.Dir(stxDB[2]) &/ File.BaseName(stxDB[2]) & "-" & strTimeStamp & ".zip"
+
+  Select strMod
+    Case "reset"
+
+      If Exist(stxDB[2]) = True Then
+        Shell "zip -j " & strDBZip & " " & stxDB[2]
+        Wait 0.5
+        Kill stxDB[2]
+      Endif
+  End Select
+
+  conCreate.Type = "sqlite3"
+  conCreate.Host = stxDB[0]
+  conCreate.Name = ""
+  conCreate.Open
+
+  If Not conCreate.Databases.Exist(stxDB[1]) Then
+    conCreate.Databases.Add(stxDB[1])
+    Wait 0.4
+
+    If conCreate.Opened Then
+      conCreate.Close
+    Endif
+
+    conCreate.Name = stxDB[1]
+    conCreate.Open
+
+    If Exist("new.sql") Then
+      strSQLCreate = File.Load("new.sql")
+      conCreate.Exec(strSQLCreate)
+      Wait 0.4
+      If conCreate.Opened Then
+        conCreate.Close
+      Endif
+
+    Else
+      Message.Warning(("No existe el archivo") & " " & "new.sql" & gb.NewLine & ("La base de datos no sera creada"))
+    Endif
+  Endif
+
+  If conCreate.Opened Then
+    conCreate.Close
+  Endif
+
+  Return conCreate
+
+End
+
+Public Function RecordNew(con As Connection, strTab As String, Optional stxVal As String[]) As Integer '' Inserta un registro nuevo en la base de datos.
+
+  If con.Available Then
+
+  Endif
 
 End

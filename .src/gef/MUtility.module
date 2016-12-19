@@ -543,8 +543,6 @@ End
 Public Function FileInfo(strFilePath As String) As String[] ''Devuelve una matriz con datos del archivo que se le pasa como ruta.
 
   Dim stxFileMeta As New String[]
-  'Dim stxExif As New String[]
-  'Dim intF As Integer
   Dim strFileDir As String
   Dim strFileName As String
   Dim strFileExt As String
@@ -940,3 +938,43 @@ Public Sub ScanFolder(strDir As String, Optional strExt As String) As String[] '
   Return stxFiles
 
 End
+
+Public Function file_replace(file_name As String, search_for As String, replace_with As String) As Boolean
+
+  Dim f As File, file_out As String
+  Dim a As String, fo As File, b As String
+
+  ' busca la string en el archivo y la reemplaza
+  ' pone todo en otro archivo
+  ' archivos en modo input
+  file_out = Mid$(file_name, 1, Len(file_name) - 3) & "tmp"
+
+  Try Kill file_out
+
+  'Try 'On Error Goto nopude:
+
+  f = Open file_name For Input
+
+  fo = Open file_out For Create
+
+  Do
+    Line Input #f, a
+    '    Stop
+    b = Replace(a, search_for, replace_with)
+
+    Write #fo, b & Chr$(13) & Chr$(10)
+  Loop Until Eof(f)
+  Close f
+  Close fo
+
+  Try Kill file_name
+  Try Move file_out To File_name
+
+  Return True
+
+Catch
+  Try Close f
+  Try Close fo
+  Return False
+
+End Function
