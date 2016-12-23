@@ -177,7 +177,7 @@
 '
 ' End
 
-Public Sub getDBinfo(conDB As Connection) ''Extraccion de la informacion de la estructura de la base de datos
+Public Sub getDBinfo(connDB As Connection) ''Extraccion de la informacion de la estructura de la base de datos
 
   Dim strSQLk As String
   Dim resDBk As Result
@@ -197,16 +197,32 @@ Public Sub getDBinfo(conDB As Connection) ''Extraccion de la informacion de la e
   Dim stxFDShow As New String[]
   Dim stxOrigin As New String[]
   Dim stxReference As New String[]
+  Dim stxKeyWordsSQLite As New String[]
+  Dim stxTypesSQLite As New String[]
 
-  Select conDB.Type
+  Select connDB.Type ' Tipo de motor de base de datos
 
     Case "sqlite3"
+      stxKeyWordsSQLite.Add("not null")
+      stxKeyWordsSQLite.Add("primary key")
+      stxKeyWordsSQLite.Add("autoincrement")
+      stxKeyWordsSQLite.Add("unique")
+      stxKeyWordsSQLite.Add("default")
+
+      stxTypesSQLite.Add("integer")
+      stxTypesSQLite.Add("float")
+      stxTypesSQLite.Add("real")
+      stxTypesSQLite.Add("datetime")
+      stxTypesSQLite.Add("varchar")
+      stxTypesSQLite.Add("text")
+      stxTypesSQLite.Add("bool")
 
       strSQLk = "SELECT * FROM sqlite_master WHERE type='table' AND name NOT LIKE 'sqlite_%' ORDER BY name" ' La letra K es por Key
-      resDBk = MData.SQLResult(conDB, strSQLk)
+      'resDBk = MData.SQLResult(connDB, strSQLk)
+      resDBk = connDB.Exec(strSQLk)
 
       ' Creacion de la lista de tabla.campofk
-      If conDB.Opened Then
+      If connDB.Opened Then
         If resDBk.Available Then
           'Print "Foreign keys"
           For intR = 0 To resDBk.Max
@@ -239,7 +255,7 @@ Public Sub getDBinfo(conDB As Connection) ''Extraccion de la informacion de la e
                   strFDReference = Split(strSentence, "~")[2]
                   ' Busco los campos de destino posibles
 
-                  tblReference = conDB.Tables[strTBReference]
+                  tblReference = connDB.Tables[strTBReference]
                   stxRefFields.Clear
 
                   If tblReference.Fields.Count > 1 Then
@@ -340,10 +356,241 @@ Public Function DBSqlite(stxDB As String[], Optional strMod As String) As Connec
 
 End
 
-Public Function RecordNew(con As Connection, strTab As String, Optional stxVal As String[]) As Integer '' Inserta un registro nuevo en la base de datos.
+Public Function RecordNew(connDB As Connection, strTab As String, Optional ctnVal As Collection) As Integer '' Inserta un registro nuevo en la base de datos, ctnVal es una coleccion opcional del pares de campo:valor.
 
-  If con.Available Then
+  Dim resIns As Result
+  Dim tbl As Table
+  Dim fld As Field
+  Dim strFieldName As String
+  Dim int As Integer
+
+  Dim stxFields As New String[]
+  Dim stxValues As New String[]
+  Dim stxTypes As New String[]
+  Dim strType As String
+
+  If connDB.Opened Then
+    tbl = connDB.Tables[strTab]
+
+    resIns = connDB.Create(strTab)
+    int = 0
+
+    For Each fld In tbl.Fields
+
+      Select fld.Name
+        Case tbl.PrimaryKey[0]
+          strType = "PK"
+        Case Else
+          Select fld.Type
+            Case db.Boolean
+              strType = "Bolean"
+            Case db.Integer
+              strType = "Integer"
+            Case db.float
+              strType = "Float"
+            Case db.date
+              strType = "Date"
+            Case db.string
+              strType = "String"
+            Case db.serial
+              strType = "Serial"
+            Case db.field
+              strType = "Field"
+            Case Else
+              strType = "Desconocido"
+          End Select
+
+      End Select
+
+      stxFields.Add(fld.Name)
+
+      ' If ctnVal.Count > 0 Then
+      '   If int <= stxVal.Count Then
+      '     stxValues.Add(stxValues[int])
+      '   Endif
+      ' Endif
+
+      Inc int
+      Print fld.Name & " " & strType & " [" & fld.Type & "]"
+
+    Next
+    'resIns[strFieldName] = stxFileData[stxFileTag.Find("Title")]
 
   Endif
+
+End
+
+Public Function getTableFields(connDB As Connection, strTab As String) As String[] ''Extraccion de la informacion de la estructura de una tabla.
+
+  Dim strSQLk As String
+  Dim resDBk As Result
+  Dim intR As Integer
+  Dim strSentenceSQL As String
+  Dim strSentence As String
+  Dim stxSentence As New String[]
+  Dim stxOrigin As New String[]
+  Dim stxReference As New String[]
+  Dim strTBOrigin As String
+  Dim strFDOrigin As String
+  Dim strTBReference As String
+  Dim strFDReference As String
+  Dim tblReference As Table
+  Dim strFDShow As String
+  Dim stxRefFields As New String[]
+  Dim fldReference As Field
+
+  Dim stxFDShowPK As New String[]
+
+  Dim tbl As Table
+  Dim fld As Field
+  Dim cntInfo As New Collection
+  Dim strInfo As String
+  Dim strkey As String
+  Dim stxFieldInfo As New String[]
+  Dim intSnt As Integer
+
+  Dim stxWordsSQLite As New String[]
+  Dim stxYesSQLite As New String[]
+  Dim stxNotSQLite As New String[]
+  Dim inxKeySQLite As New Integer[]
+  Dim intWrd As Integer
+  Dim intkey As Integer
+
+  Dim stxTableInfo As New String[]
+
+  Select connDB.Type
+
+    Case "sqlite3"
+
+      stxWordsSQLite.Add("unique")
+      stxYesSQLite.Add("YU")
+      stxNotSQLite.Add("NU")
+      inxKeySQLite.Add(3)
+
+      stxWordsSQLite.Add("not null")
+      stxYesSQLite.Add("NN")
+      stxNotSQLite.Add("YN")
+      inxKeySQLite.Add(4)
+
+      stxWordsSQLite.Add("primary key")
+      stxYesSQLite.Add("YK")
+      stxNotSQLite.Add("NK")
+      inxKeySQLite.Add(5)
+
+      stxWordsSQLite.Add("autoincrement")
+      stxYesSQLite.Add("YA")
+      stxNotSQLite.Add("NA")
+
+      inxKeySQLite.Add(6)
+
+      strSQLk = "SELECT * FROM sqlite_master WHERE type='table' AND name='" & strTab & "'"
+      resDBk = connDB.Exec(strSQLk)
+      strSentenceSQL = Str(resDBk["sql"])
+      stxSentence = Split(strSentenceSQL, "\n")
+
+      If connDB.Opened Then
+        If resDBk.Available Then
+
+          resDBk.MoveFirst
+
+          tbl = connDB.Tables[strTab]
+
+          For Each fld In tbl.Fields
+            stxFieldInfo.Clear
+            stxFieldInfo = ["0", "1", "2", "3", "4", "5", "6", "7", "8", "9"]
+
+            stxFieldInfo[0] = strTab
+            stxFieldInfo[1] = fld.Name
+            stxFieldInfo[2] = String.LCase(MUtility.TypeVar(fld.Type))
+            'stxFieldInfo[3] = ""
+            'stxFieldInfo[4] = ""
+            'stxFieldInfo[5] = ""
+            'stxFieldInfo[6] = ""
+            stxFieldInfo[7] = ""
+            stxFieldInfo[8] = ""
+            stxFieldInfo[9] = ""
+
+            '----------------------------------------------------------------------------------
+            For intSnt = 0 To stxSentence.Max
+              If InStr(stxSentence[intSnt], "FOREIGN KEY") = 0 And InStr(stxSentence[intSnt], fld.Name) > 0 Then
+                Print stxSentence[intSnt] & " Datos del campo"
+
+                strSentence = Replace(stxSentence[intSnt], "\t`", "")
+                strSentence = Replace(strSentence, fld.Name & "`", "")
+                strSentence = Replace(strSentence, "\t", "")
+
+                Print strSentence & " Datos del campo proc"
+
+                For intWrd = 0 To stxWordsSQLite.Max
+
+                  intkey = inxKeySQLite[intWrd]
+
+                  If InStr(String.LCase(stxSentence[intSnt]), stxWordsSQLite[intWrd]) > 0 Then
+                    stxFieldInfo[intkey] = stxYesSQLite[intWrd]
+                  Else
+                    stxFieldInfo[intkey] = stxNotSQLite[intWrd]
+                  Endif
+                Next
+
+                Break
+              Endif
+            Next
+
+            For intSnt = 0 To stxSentence.Max
+              If InStr(stxSentence[intSnt], "FOREIGN KEY") > 0 And InStr(stxSentence[intSnt], fld.Name) > 0 Then
+                Print stxSentence[intSnt] & " Datos del foráneo"
+
+                strSentence = Replace(stxSentence[intSnt], "\tFOREIGN KEY(`", "")
+                strSentence = Replace(strSentence, "`) REFERENCES ", "~")
+                strSentence = Replace(strSentence, " ( ", "~")
+                strSentence = Replace(strSentence, " ),", " )")
+                strSentence = Replace(strSentence, " )", "")
+                strSentence = Replace(strSentence, "`", "")
+                strSentence = Replace(strSentence, " ", "")
+
+                strFDOrigin = Split(strSentence, "~")[0]
+                strTBReference = Split(strSentence, "~")[1]
+                strFDReference = Split(strSentence, "~")[2]
+                ' Busco los campos de destino posibles
+
+                tblReference = connDB.Tables[strTBReference]
+                stxRefFields.Clear
+
+                If tblReference.Fields.Count > 1 Then
+
+                  For Each fldReference In tblReference.Fields
+
+                    stxRefFields.Add(fldReference.Name)
+
+                  Next
+
+                  If stxRefFields.Count > 1 Then
+                    strFDShow = stxRefFields[1]
+                  Else
+                    strFDShow = strFDReference
+                  Endif
+
+                Endif
+
+                stxFieldInfo[7] = strTBReference
+                stxFieldInfo[8] = strFDReference
+                stxFieldInfo[9] = strFDShow
+
+                Break
+              Endif
+            Next
+            '----------------------------------------------------------------------------------
+            ' Agregando a la matriz de salida
+            stxTableInfo.Add(stxFieldInfo.Join(":"))
+          Next
+        Endif
+      Endif
+      'Case "postgres"
+      'Case "mysql"
+      'Case "odbc"
+
+  End Select
+  '---------------------------------------------------------------------------------
+  Return stxTableInfo
 
 End

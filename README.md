@@ -158,3 +158,17 @@ This module groups the functions focused to the databases and the intrraccion wi
 #### getDBinfo
 Extraccion de la informacion de la estructura de la base de datos
 
+#### getTableFieds
+Extraccion de la informacion de la estructura de la tabla pasada como parametro. Devuelve una matriz de texto con los parametros de todos los campos de la tabla en el siguiente formato de 13 parametros separados por ":"
+00 TableName
+01 FieldName [From gb.db]
+02 FieldType [From gb.db]
+03 FieldDefaultValue [From gb.db]
+04 Null / Not Null
+05 Primary Key
+06 Autoincrement / Unique
+07 ForeignTableName
+08 ForeignFieldIndexName
+09 ForeignFieldShowName
+Para el caso de campos que no tienen claves foráneas las posiciones 7,8,9 seran vacias "".
+
