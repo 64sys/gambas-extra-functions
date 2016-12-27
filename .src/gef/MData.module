@@ -356,67 +356,217 @@ Public Function DBSqlite(stxDB As String[], Optional strMod As String) As Connec
 
 End
 
-Public Function RecordNew(connDB As Connection, strTab As String, Optional ctnVal As Collection) As Integer '' Inserta un registro nuevo en la base de datos, ctnVal es una coleccion opcional del pares de campo:valor.
+' Public Function RecordNew(connDB As Connection, strTab As String, Optional ctnVal As Collection) As Integer '' Inserta un registro nuevo en la base de datos, ctnVal es una coleccion opcional del pares de campo:valor.
+'
+'   Dim resIns As Result
+'   Dim tbl As Table
+'   Dim fld As Field
+'   Dim strFieldName As String
+'   Dim int As Integer
+'
+'   Dim stxFields As New String[]
+'   Dim stxValues As New String[]
+'   Dim stxTypes As New String[]
+'   Dim strType As String
+'
+'   If connDB.Opened Then
+'     tbl = connDB.Tables[strTab]
+'
+'     resIns = connDB.Create(strTab)
+'     int = 0
+'
+'     For Each fld In tbl.Fields
+'
+'       Select fld.Name
+'         Case tbl.PrimaryKey[0]
+'           strType = "PK"
+'         Case Else
+'           Select fld.Type
+'             Case db.Boolean
+'               strType = "Bolean"
+'             Case db.Integer
+'               strType = "Integer"
+'             Case db.float
+'               strType = "Float"
+'             Case db.date
+'               strType = "Date"
+'             Case db.string
+'               strType = "String"
+'             Case db.serial
+'               strType = "Serial"
+'             Case db.field
+'               strType = "Field"
+'             Case Else
+'               strType = "Desconocido"
+'           End Select
+'
+'       End Select
+'
+'       stxFields.Add(fld.Name)
+'
+'       If ctnVal.Count > 0 Then
+'         If int <= stxVal.Count Then
+'           stxValues.Add(stxValues[int])
+'         Endif
+'       Endif
+'
+'       Inc int
+'       Print fld.Name & " " & strType & " [" & fld.Type & "]"
+'
+'     Next
+'     resIns[strFieldName] = stxFileData[stxFileTag.Find("Title")]
+'
+'   Endif
+'
+' End
+
+Public Function RecordNew(connDB As Connection, strTable As String, stxInsert As String[], stxValues As String[]) As Integer '' Inserta un registro nuevo en la base de datos, ctnVal es una coleccion opcional del pares de campo:valor.
 
   Dim resIns As Result
-  Dim tbl As Table
-  Dim fld As Field
-  Dim strFieldName As String
+  Dim stxTables As New String[]
   Dim int As Integer
+  Dim intTable As Integer
+  Dim intField As Integer
+  Dim strSQLCheck As String
+  Dim resCheckRef As Result
+  Dim intVal As Integer
+  Dim stxTag As New String[]
+  Dim stxVal As New String[]
 
-  Dim stxFields As New String[]
-  Dim stxValues As New String[]
-  Dim stxTypes As New String[]
-  Dim strType As String
+  Dim strTag As String
+  Dim strVal As String
+  Dim intFKey As Integer
+  Dim stxVKey As New String[]
+  Dim intCounter As Integer
 
-  If connDB.Opened Then
-    tbl = connDB.Tables[strTab]
-
-    resIns = connDB.Create(strTab)
-    int = 0
-
-    For Each fld In tbl.Fields
-
-      Select fld.Name
-        Case tbl.PrimaryKey[0]
-          strType = "PK"
-        Case Else
-          Select fld.Type
-            Case db.Boolean
-              strType = "Bolean"
-            Case db.Integer
-              strType = "Integer"
-            Case db.float
-              strType = "Float"
-            Case db.date
-              strType = "Date"
-            Case db.string
-              strType = "String"
-            Case db.serial
-              strType = "Serial"
-            Case db.field
-              strType = "Field"
-            Case Else
-              strType = "Desconocido"
-          End Select
-
-      End Select
-
-      stxFields.Add(fld.Name)
-
-      ' If ctnVal.Count > 0 Then
-      '   If int <= stxVal.Count Then
-      '     stxValues.Add(stxValues[int])
-      '   Endif
-      ' Endif
-
-      Inc int
-      Print fld.Name & " " & strType & " [" & fld.Type & "]"
-
+  If stxValues.Count > 0 Then
+    For intVal = 0 To stxValues.Max
+      stxTag.Add(Split(stxValues[intVal], ":")[0])
+      stxVal.Add(Split(stxValues[intVal], ":")[1])
     Next
-    'resIns[strFieldName] = stxFileData[stxFileTag.Find("Title")]
-
   Endif
+
+  For int = 0 To stxInsert.Max
+    If stxTables.Find(Split(stxInsert[int], ":")[0]) = -1 Then
+      stxTables.Add(Split(stxInsert[int], ":")[0])
+    Endif
+  Next
+
+  '  For intTable = 0 To stxTables.Max
+  resIns = connDB.Create(stxTables[intTable])
+  For intField = 0 To stxInsert.Max
+    If Split(stxInsert[intField], ":")[0] = strTable Then
+
+      If stxTables[intTable] = strTable Then 'Split(stxInsert[intField], ":")[0] Then
+        If Split(stxInsert[intField], ":")[6] <> "YA" Then
+
+          strTag = Split(stxInsert[intField], ":")[1]
+          intVal = stxTag.Find(strTag)
+          If intVal > -1 Then
+            strVal = stxVal[intVal]
+          Else
+            strVal = ""
+          Endif
+
+          Select Split(stxInsert[intField], ":")[7]
+            Case ""
+              resIns[strTag] = strVal
+            Case Else
+
+              For intCounter = 0 To 1
+
+                strSQLCheck = "select "
+                strSQLCheck &= Split(stxInsert[intField], ":")[8] & ", "
+                strSQLCheck &= Split(stxInsert[intField], ":")[9]
+                strSQLCheck &= " from " & Split(stxInsert[intField], ":")[7]
+                strSQLCheck &= " where " & Split(stxInsert[intField], ":")[9] & "='"
+                strSQLCheck &= strVal & "'"
+
+                resCheckRef = connDB.Exec(strSQLCheck)
+
+                If resCheckRef.Available Then
+                  intFKey = resCheckRef[Split(stxInsert[intField], ":")[8]]
+                  resIns[strTag] = intFKey
+                Else
+
+                  Select intCounter
+                    Case 0
+                      stxVKey.Add(Split(stxInsert[intField], ":")[9] & ":" & strVal)
+
+                      RecordRef(connDB, Split(stxInsert[intField], ":")[7], stxInsert, stxVKey)
+                    Case Else
+                      Message.Error("El registro no se pudo insertar")
+                  End Select
+
+                Endif
+              Next
+          End Select
+        Endif
+      Endif
+    Endif
+  Next
+  resIns.Update
+  '  Next
+
+End
+
+Public Function RecordRef(connDB As Connection, strTable As String, stxInsert As String[], stxValues As String[]) As Integer '' Inserta un registro nuevo en la base de datos, ctnVal es una coleccion opcional del pares de campo:valor.
+
+  Dim resIns As Result
+  Dim stxTables As New String[]
+  Dim int As Integer
+  Dim intTable As Integer
+  Dim intField As Integer
+  Dim strSQLCheck As String
+  Dim resCheckRef As Result
+  Dim intVal As Integer
+  Dim stxTag As New String[]
+  Dim stxVal As New String[]
+
+  Dim strTag As String
+  Dim strVal As String
+  Dim intFKey As Integer
+  Dim stxVKey As New String[]
+  Dim intCounter As Integer
+
+  If stxValues.Count > 0 Then
+    For intVal = 0 To stxValues.Max
+      stxTag.Add(Split(stxValues[intVal], ":")[0])
+      stxVal.Add(Split(stxValues[intVal], ":")[1])
+    Next
+  Endif
+
+  For int = 0 To stxInsert.Max
+    If stxTables.Find(Split(stxInsert[int], ":")[0]) = -1 Then
+      stxTables.Add(Split(stxInsert[int], ":")[0])
+    Endif
+  Next
+
+  'For intTable = 0 To stxTables.Max
+  resIns = connDB.Create(strTable)
+  For intField = 0 To stxInsert.Max
+    If Split(stxInsert[intField], ":")[0] = strTable Then
+
+      If Split(stxInsert[intField], ":")[6] <> "YA" Then
+
+        strTag = Split(stxInsert[intField], ":")[1]
+        intVal = stxTag.Find(strTag)
+        If intVal > -1 Then
+          strVal = stxVal[intVal]
+        Else
+          strVal = ""
+        Endif
+
+        Select Split(stxInsert[intField], ":")[7]
+          Case ""
+            resIns[strTag] = strVal
+
+        End Select
+      Endif
+    Endif
+  Next
+  resIns.Update
+  ' Next
 
 End
 
