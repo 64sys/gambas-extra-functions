@@ -20,163 +20,6 @@
 ' Foundation, Inc., 51 Franklin St, Fifth Floor,
 ' Boston, MA  02110-1301  USA
 '
-
-' Public Sub ImportFileMetadata(conDat As Connection, strTab As String, stxReff As String[], stxValApp As String[])
-'
-'   Dim tblPri As Table ' Tabla primaria
-'   Dim fldPri As Field ' Tabla primaria
-'   Dim strSQL As String
-'   Dim strSQLf As String
-'   Dim strSQLv As String
-'   Dim strSQLr As String ' PAra insertar registros en tablas foráneas
-'
-'   Dim stxFld As New String[]
-'   Dim stxFldFK As New String[]
-'   Dim stxTblFK As New String[] ' matriz de nombres de Tablas foránelas
-'   Dim stxFldRK As New String[] ' matriz de Campos con las claves foránelas
-'   Dim stxFldNK As New String[] ' matriz de Campos con los nombres foránelos
-'
-'   Dim intC As Integer
-'   Dim intK As Integer
-'   Dim resChk As Result
-'   Dim intFK As Integer
-'   Dim intD As Integer
-'   Dim resIns As Result
-'   Dim resUpd As Result
-'
-'   Dim resInsRef As Result
-'
-'   Dim strTmp As String
-'
-'   stxFldFK.Clear
-'   stxTblFK.Clear
-'   stxFldRK.Clear
-'   stxFldNK.Clear
-'
-'   For Each strTmp In stxReff ' Creo las listas FK
-'
-'     stxFldFK.Add(Split(strTmp, ":")[0])
-'     stxTblFK.Add(Split(strTmp, ":")[1])
-'     stxFldRK.Add(Split(strTmp, ":")[2])
-'     stxFldNK.Add(Split(strTmp, ":")[3])
-'
-'   Next
-'
-'   If conDat.Tables.Exist(strTab) = True Then
-'
-'     tblPri = conDat.Tables[strTab]
-'
-'     For Each fldPri In tblPri.Fields ' Creo la lista de campos
-'       stxFld.Add(fldPri.Name)
-'     Next
-'
-'     For intC = 0 To stxValApp.Max
-'
-'       intK = stxFldFK.Find(stxFld[intC])
-'
-'       If intK <> -1 Then ' Si el campo actual es referenciado busco el key en la tabla Foránea
-'
-'         resChk = conDat.Exec("select " & stxFldRK[intK] & " from " & stxTblFK[intK] & " where " & stxFldNK[intK] & " = '" & stxValApp[intC] & "'")
-'
-'         If resChk.Available Then
-'           intFK = resChk[stxFldRK[intK]]
-'
-'           If intFK <> Null Then
-'             stxValApp[intC] = CStr(intFK)
-'           Endif
-'         Else ' Quiere decir que el registro no existe en la referencia
-'
-'           strSQLr = "insert into " & stxTblFK[intK] & "(" & stxFldRK[intK] & "," & stxFldNK[intK] & ") values(Null" & ",'" & stxValApp[intC] & "')"
-'
-'           resInsRef = conDat.Exec(strSQLr)
-'           Wait 0.1
-'
-'           resChk = conDat.Exec("select " & stxFldRK[intK] & " from " & stxTblFK[intK] & " where " & stxFldNK[intK] & " = '" & stxValApp[intC] & "'")
-'
-'           If resChk.Available Then
-'             intFK = resChk[stxFldRK[intK]]
-'
-'             If intFK <> Null Then
-'               'Print stxValues[intC]
-'               stxValApp[intC] = CStr(intFK)
-'             Endif
-'           Else ' Quiere decir que el registro no existe en la referencia
-'             Message.Info(("Tenes que insertar la referencia a mano porque") & gb.NewLine & ("la forma automatica no funciono"))
-'           Endif
-'
-'         Endif
-'
-'       Endif
-'
-'     Next
-'
-'   Endif
-'
-'   ' Una vez que esta todo acomodado verifico si el registro existe o no
-'   resChk = conDat.Exec("select " & stxFld[16] & "," & stxFld[17] & " from " & strTab & " where " & stxFld[16] & " = '" & stxValApp[16] & "' and " & stxFld[17] & " = '" & stxValApp[17] & "'")
-'   If resChk.Available Then
-'     ' El registro ya existe asi que procedo con un update
-'
-'     resChk = conDat.Exec("select * from " & strTab & " where " & stxFld[16] & " = '" & stxValApp[16] & "' and " & stxFld[17] & " = '" & stxValApp[17] & "'")
-'
-'     For intD = 2 To stxFld.Max
-'       If stxValApp[intD] <> resChk[stxFld[intD]]
-'         strSQLv &= stxFld[intD] & "='" & stxValApp[intD] & "',"
-'       Endif
-'
-'     Next
-'
-'     strSQL = "update " & strTab & " set " & strSQLv & " where " & stxFld[16] & " = '" & stxValApp[16] & "' and " & stxFld[17] & " = '" & stxValApp[17] & "'"
-'     strSQL = Replace(strSQL, "', where", "' where")
-'
-'     If strSQLv = "" Then
-'       'Print ("No hay cambios para aplicar")
-'     Else
-'       resUpd = conDat.Exec(strSQL)
-'     Endif
-'
-'   Else
-'     'El registro no existe, así que procedo con un insert
-'
-'     For intD = 0 To stxFld.Max
-'
-'       Select intD
-'         Case 0
-'           strSQLf = "insert into " & strTab & "(" & stxFld[intD] & ","
-'           strSQLv &= "Null" & ","
-'
-'         Case stxFld.Max
-'           strSQLf &= stxFld[intD] & ") values("
-'
-'           Select tblPri.Fields[stxFld[intD]].Type
-'             Case 4, 7
-'               strSQLv &= stxValApp[intD] & ")"
-'             Case 9
-'               strSQLv &= "'" & stxValApp[intD] & "')"
-'           End Select
-'
-'         Case Else
-'
-'           strSQLf &= stxFld[intD] & ","
-'
-'           Select tblPri.Fields[stxFld[intD]].Type
-'
-'             Case 4, 7
-'
-'               strSQLv &= stxValApp[intD] & ","
-'             Case 9
-'               strSQLv &= "'" & stxValApp[intD] & "',"
-'           End Select
-'       End Select
-'
-'     Next
-'     strSQL = strSQLf & strSQLv
-'     resIns = conDat.Exec(strSQL)
-'
-'   Endif
-'
-' End
-
 Public Sub getDBinfo(connDB As Connection) ''Extraccion de la informacion de la estructura de la base de datos
 
   Dim strSQLk As String
@@ -356,70 +199,6 @@ Public Function DBSqlite(stxDB As String[], Optional strMod As String) As Connec
 
 End
 
-' Public Function RecordNew(connDB As Connection, strTab As String, Optional ctnVal As Collection) As Integer '' Inserta un registro nuevo en la base de datos, ctnVal es una coleccion opcional del pares de campo:valor.
-'
-'   Dim resIns As Result
-'   Dim tbl As Table
-'   Dim fld As Field
-'   Dim strFieldName As String
-'   Dim int As Integer
-'
-'   Dim stxFields As New String[]
-'   Dim stxValues As New String[]
-'   Dim stxTypes As New String[]
-'   Dim strType As String
-'
-'   If connDB.Opened Then
-'     tbl = connDB.Tables[strTab]
-'
-'     resIns = connDB.Create(strTab)
-'     int = 0
-'
-'     For Each fld In tbl.Fields
-'
-'       Select fld.Name
-'         Case tbl.PrimaryKey[0]
-'           strType = "PK"
-'         Case Else
-'           Select fld.Type
-'             Case db.Boolean
-'               strType = "Bolean"
-'             Case db.Integer
-'               strType = "Integer"
-'             Case db.float
-'               strType = "Float"
-'             Case db.date
-'               strType = "Date"
-'             Case db.string
-'               strType = "String"
-'             Case db.serial
-'               strType = "Serial"
-'             Case db.field
-'               strType = "Field"
-'             Case Else
-'               strType = "Desconocido"
-'           End Select
-'
-'       End Select
-'
-'       stxFields.Add(fld.Name)
-'
-'       If ctnVal.Count > 0 Then
-'         If int <= stxVal.Count Then
-'           stxValues.Add(stxValues[int])
-'         Endif
-'       Endif
-'
-'       Inc int
-'       Print fld.Name & " " & strType & " [" & fld.Type & "]"
-'
-'     Next
-'     resIns[strFieldName] = stxFileData[stxFileTag.Find("Title")]
-'
-'   Endif
-'
-' End
-
 Public Function RecordNew(connDB As Connection, strTable As String, stxInsert As String[], stxValues As String[]) As Integer '' Inserta un registro nuevo en la base de datos, ctnVal es una coleccion opcional del pares de campo:valor.
 
   Dim resIns As Result
@@ -452,61 +231,140 @@ Public Function RecordNew(connDB As Connection, strTable As String, stxInsert As
     Endif
   Next
 
-  '  For intTable = 0 To stxTables.Max
-  resIns = connDB.Create(stxTables[intTable])
+  resIns = connDB.Create(strTable)
   For intField = 0 To stxInsert.Max
     If Split(stxInsert[intField], ":")[0] = strTable Then
 
-      If stxTables[intTable] = strTable Then 'Split(stxInsert[intField], ":")[0] Then
-        If Split(stxInsert[intField], ":")[6] <> "YA" Then
+      If Split(stxInsert[intField], ":")[6] <> "YA" Then
 
-          strTag = Split(stxInsert[intField], ":")[1]
-          intVal = stxTag.Find(strTag)
-          If intVal > -1 Then
-            strVal = stxVal[intVal]
-          Else
-            strVal = ""
-          Endif
-
-          Select Split(stxInsert[intField], ":")[7]
-            Case ""
-              resIns[strTag] = strVal
-            Case Else
-
-              For intCounter = 0 To 1
-
-                strSQLCheck = "select "
-                strSQLCheck &= Split(stxInsert[intField], ":")[8] & ", "
-                strSQLCheck &= Split(stxInsert[intField], ":")[9]
-                strSQLCheck &= " from " & Split(stxInsert[intField], ":")[7]
-                strSQLCheck &= " where " & Split(stxInsert[intField], ":")[9] & "='"
-                strSQLCheck &= strVal & "'"
-
-                resCheckRef = connDB.Exec(strSQLCheck)
-
-                If resCheckRef.Available Then
-                  intFKey = resCheckRef[Split(stxInsert[intField], ":")[8]]
-                  resIns[strTag] = intFKey
-                Else
-
-                  Select intCounter
-                    Case 0
-                      stxVKey.Add(Split(stxInsert[intField], ":")[9] & ":" & strVal)
-
-                      RecordRef(connDB, Split(stxInsert[intField], ":")[7], stxInsert, stxVKey)
-                    Case Else
-                      Message.Error("El registro no se pudo insertar")
-                  End Select
-
-                Endif
-              Next
-          End Select
+        strTag = Split(stxInsert[intField], ":")[1]
+        intVal = stxTag.Find(strTag)
+        If intVal > -1 Then
+          strVal = stxVal[intVal]
+        Else
+          strVal = ""
         Endif
+
+        Select Split(stxInsert[intField], ":")[7]
+          Case ""
+            resIns[strTag] = strVal
+          Case Else
+
+            For intCounter = 0 To 1
+
+              strSQLCheck = "select "
+              strSQLCheck &= Split(stxInsert[intField], ":")[8] & ", "
+              strSQLCheck &= Split(stxInsert[intField], ":")[9]
+              strSQLCheck &= " from " & Split(stxInsert[intField], ":")[7]
+              strSQLCheck &= " where " & Split(stxInsert[intField], ":")[9] & "='"
+              strSQLCheck &= strVal & "'"
+
+              resCheckRef = connDB.Exec(strSQLCheck)
+
+              If resCheckRef.Available Then
+                intFKey = resCheckRef[Split(stxInsert[intField], ":")[8]]
+                resIns[strTag] = intFKey
+              Else
+
+                Select intCounter
+                  Case 0
+                    stxVKey.Add(Split(stxInsert[intField], ":")[9] & ":" & strVal)
+
+                    RecordRef(connDB, Split(stxInsert[intField], ":")[7], stxInsert, stxVKey)
+                  Case Else
+                    Message.Error("El registro no se pudo insertar")
+                End Select
+
+              Endif
+            Next
+        End Select
       Endif
     Endif
   Next
   resIns.Update
-  '  Next
+
+  'Comprobación de que el registro se creo correctamente
+
+End
+
+Public Function RecordWrite(connDB As Connection, strTable As String, stxEdit As String[], stxValues As String[]) As Integer '' Inserta un registro nuevo en la base de datos, ctnVal es una coleccion opcional del pares de campo:valor.
+
+  Dim resEdit As Result
+  Dim stxTables As New String[]
+  Dim int As Integer
+  Dim intTable As Integer
+  Dim intField As Integer
+  Dim strSQLCheck As String
+  Dim resCheckRef As Result
+  Dim intVal As Integer
+  Dim stxTag As New String[]
+  Dim stxVal As New String[]
+
+  Dim strTag As String
+  Dim strVal As String
+  Dim intFKey As Integer
+  Dim stxVKey As New String[]
+  Dim intCounter As Integer
+  Dim strFieldKey As String
+  Dim intKey As Integer
+  Dim intKeyRef As Integer
+
+  For intField = 0 To stxEdit.Max
+    If Split(stxEdit[intField], ":")[0] = strTable Then
+      If Split(stxEdit[intField], ":")[5] = "YK" Then
+        strFieldKey = Split(stxEdit[intField], ":")[1]
+        Break
+      Endif
+    Endif
+  Next
+
+  If stxValues.Count > 0 Then
+    For intVal = 0 To stxValues.Max
+      stxTag.Add(Split(stxValues[intVal], ":")[0])
+      stxVal.Add(Split(stxValues[intVal], ":")[1])
+      If Split(stxValues[intVal], ":")[0] = strFieldKey Then
+        intKey = CInt(Split(stxValues[intVal], ":")[1])
+        'Break
+      Endif
+    Next
+  Endif
+
+  resEdit = connDB.Edit(strTable, strFieldKey & "=&1", intkey)
+
+  For intField = 0 To stxEdit.Max
+    If Split(stxEdit[intField], ":")[0] = strTable Then
+      If Split(stxEdit[intField], ":")[1] <> strFieldKey Then
+        strTag = Split(stxEdit[intField], ":")[1]
+        intVal = stxTag.Find(strTag)
+        If intVal > -1 Then
+          strVal = stxVal[intVal]
+        Else
+          strVal = ""
+        Endif
+
+        Select Split(stxEdit[intField], ":")[7]
+          Case ""
+            If resEdit[strTag] <> strVal Then
+              resEdit[strTag] = strVal
+            Endif
+          Case Else ' Verificar si el registro existe en la tabla foránea
+            intKeyRef = RecordExist(connDB, Split(stxEdit[intField], ":")[7], Split(stxEdit[intField], ":")[9], Split(stxEdit[intField], ":")[8], strVal)
+            Select intKeyRef
+              Case -1 'No existe el registor de referencia
+                stxVKey.Add(Split(stxEdit[intField], ":")[9] & ":" & strVal)
+                RecordNew(connDB, Split(stxEdit[intField], ":")[7], stxEdit, stxVKey)
+              Case Else ' Existe
+                If resEdit[strTag] <> intKeyRef Then
+                  resEdit[strTag] = intKeyRef
+                Endif
+            End Select
+        End Select
+      Endif
+    Endif
+  Next
+  resEdit.Update
+
+  'Comprobación de que el registro se creo correctamente
 
 End
 
@@ -542,7 +400,6 @@ Public Function RecordRef(connDB As Connection, strTable As String, stxInsert As
     Endif
   Next
 
-  'For intTable = 0 To stxTables.Max
   resIns = connDB.Create(strTable)
   For intField = 0 To stxInsert.Max
     If Split(stxInsert[intField], ":")[0] = strTable Then
@@ -566,7 +423,6 @@ Public Function RecordRef(connDB As Connection, strTable As String, stxInsert As
     Endif
   Next
   resIns.Update
-  ' Next
 
 End
 
@@ -742,5 +598,73 @@ Public Function getTableFields(connDB As Connection, strTab As String) As String
   End Select
   '---------------------------------------------------------------------------------
   Return stxTableInfo
+
+End
+
+Public Function RecordExist(connDB As Connection, strTable As String, strFieldVal As String, strFieldKey As String, strValue As String) As Integer '' Devuelve -1 si no existe o un numero (la clave) si existe el texto que se pasa como parametro junto con la tabla y el campo.
+
+  Dim strSQLCheck As String
+  Dim resCheckRef As Result
+  Dim intKey As Integer
+
+  strSQLCheck = "select "
+  strSQLCheck &= strFieldVal & ", " & strFieldKey
+  strSQLCheck &= " from " & strTable
+  strSQLCheck &= " where " & strFieldVal & "='"
+  strSQLCheck &= strValue & "'"
+
+  resCheckRef = connDB.Exec(strSQLCheck)
+
+  If resCheckRef.Available Then
+    If resCheckRef.Count > 0 Then
+      intKey = resCheckRef[strFieldKey]
+    Else
+      intKey = -1
+    Endif
+  Endif
+  Return intKey
+
+End
+
+Public Function RecordDelete(connDB As Connection, strTable As String, stxDBFields As String[], intKey As Integer) As Integer '' Devuelve -1 si no existe o un numero (la clave) si existe el texto que se pasa como parametro junto con la tabla y el campo.
+
+  Dim strSQLDelete As String
+  Dim resDelete As Result
+  Dim resCheck As Result
+  Dim intField As Integer
+  Dim strFieldKey As String
+
+  For intField = 0 To stxDBFields.Max
+    If Split(stxDBFields[intField], ":")[0] = strTable Then
+      If Split(stxDBFields[intField], ":")[5] = "YK" Then
+        strFieldKey = Split(stxDBFields[intField], ":")[1]
+        Break
+      Endif
+    Endif
+  Next
+
+  'resDelete = connDB.Delete(strTable, strFieldKey & "=&1", intKey)
+  connDB.Delete(strTable, strFieldKey & "=&1", intKey)
+  'resDelete.Update
+
+  ' Verificación
+  strSQLDelete = "select *"
+  strSQLDelete &= " from " & strTable
+  strSQLDelete &= " where " & strFieldKey & "='"
+  strSQLDelete &= CStr(intKey) & "'"
+
+  resCheck = connDB.Exec(strSQLDelete)
+
+  If resCheck.Available Then
+    If resCheck.Count > 0 Then
+      intKey = resCheck[strFieldKey]
+    Else
+      intKey = -1
+    Endif
+  Else
+    intKey = -1
+  Endif
+
+  Return intKey
 
 End
