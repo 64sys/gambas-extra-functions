@@ -20,123 +20,6 @@
 ' Foundation, Inc., 51 Franklin St, Fifth Floor,
 ' Boston, MA  02110-1301  USA
 '
-Public Sub getDBinfo(connDB As Connection) ''Extraccion de la informacion de la estructura de la base de datos
-
-  Dim strSQLk As String
-  Dim resDBk As Result
-  Dim intR As Integer
-  Dim strSentenceSQL As String
-  Dim strSentence As String
-  Dim stxSentence As New String[]
-  Dim strTBOrigin As String
-  Dim strFDOrigin As String
-  Dim strTBReference As String
-  Dim strFDReference As String
-  Dim tblReference As Table
-  Dim strFDShow As String
-  Dim stxRefFields As New String[]
-  Dim fldReference As Field
-  Dim stxFDShowPK As New String[]
-  Dim stxFDShow As New String[]
-  Dim stxOrigin As New String[]
-  Dim stxReference As New String[]
-  Dim stxKeyWordsSQLite As New String[]
-  Dim stxTypesSQLite As New String[]
-
-  Select connDB.Type ' Tipo de motor de base de datos
-
-    Case "sqlite3"
-      stxKeyWordsSQLite.Add("not null")
-      stxKeyWordsSQLite.Add("primary key")
-      stxKeyWordsSQLite.Add("autoincrement")
-      stxKeyWordsSQLite.Add("unique")
-      stxKeyWordsSQLite.Add("default")
-
-      stxTypesSQLite.Add("integer")
-      stxTypesSQLite.Add("float")
-      stxTypesSQLite.Add("real")
-      stxTypesSQLite.Add("datetime")
-      stxTypesSQLite.Add("varchar")
-      stxTypesSQLite.Add("text")
-      stxTypesSQLite.Add("bool")
-
-      strSQLk = "SELECT * FROM sqlite_master WHERE type='table' AND name NOT LIKE 'sqlite_%' ORDER BY name" ' La letra K es por Key
-      'resDBk = MData.SQLResult(connDB, strSQLk)
-      resDBk = connDB.Exec(strSQLk)
-
-      ' Creacion de la lista de tabla.campofk
-      If connDB.Opened Then
-        If resDBk.Available Then
-          'Print "Foreign keys"
-          For intR = 0 To resDBk.Max
-            resDBk.MoveTo(intR)
-            strTBOrigin = Str(resDBk["name"])
-
-            strSentenceSQL = Str(resDBk["sql"])
-
-            If InStr(strSentenceSQL, "FOREIGN KEY") <> 0 Then
-
-              stxFDShow.Clear
-
-              stxSentence = Split(strSentenceSQL, "\n")
-              stxSentence = Mutility.ArrayInclude(stxSentence, "FOREIGN KEY")
-
-              For Each strSentence In stxSentence
-                If InStr(strSentence, "FOREIGN KEY") <> 0 Then
-
-                  'Print strSentence
-                  strSentence = Replace(strSentence, "\tFOREIGN KEY(`", "")
-                  strSentence = Replace(strSentence, "`) REFERENCES ", "~")
-                  strSentence = Replace(strSentence, " ( ", "~")
-                  strSentence = Replace(strSentence, " ),", " )")
-                  strSentence = Replace(strSentence, " )", "")
-                  strSentence = Replace(strSentence, "`", "")
-                  strSentence = Replace(strSentence, " ", "")
-
-                  strFDOrigin = Split(strSentence, "~")[0]
-                  strTBReference = Split(strSentence, "~")[1]
-                  strFDReference = Split(strSentence, "~")[2]
-                  ' Busco los campos de destino posibles
-
-                  tblReference = connDB.Tables[strTBReference]
-                  stxRefFields.Clear
-
-                  If tblReference.Fields.Count > 1 Then
-
-                    For Each fldReference In tblReference.Fields
-
-                      stxRefFields.Add(fldReference.Name)
-
-                    Next
-
-                    If stxRefFields.Count > 1 Then
-                      strFDShow = stxRefFields[1]
-                    Else
-                      strFDShow = strFDReference
-                    Endif
-
-                  Endif
-
-                  stxOrigin.Add(strTBOrigin & "." & strFDOrigin)
-                  stxReference.Add(strTBReference & "." & strFDReference & "." & strFDShow)
-                  stxFDShow.Add(strFDShow)
-                  stxFDShowPK.Add(strFDReference)
-
-                Endif
-              Next
-            Endif
-          Next
-        Endif
-      Endif
-      'Case "postgres"
-      'Case "mysql"
-      'Case "odbc"
-
-  End Select
-  '---------------------------------------------------------------------------------
-
-End
-
 Public Function DBSqlite(stxDB As String[], Optional strMod As String) As Connection ''Inicia una base de datos o la crea y la inicia. Devuelve una conexion y como parametro de entrada requiere una matriz con los parametros de la base. Si la base de datos no existe, entonces crea una y la inicia.   ' Si la base de datos si existe, entonces puede hacer dos cosas, iniciarla o crear una copia de respaldo y crear una base nueva. stxDB contiene los paramentros de la base. 0 - DBHost. 1 - DBName. 2 - DBPath
 
   Dim conCreate As New Connection
@@ -150,46 +33,42 @@ Public Function DBSqlite(stxDB As String[], Optional strMod As String) As Connec
 
   strTimeStamp = MUtility.Timestamp(Now())
 
-  strDBZip = File.Dir(stxDB[2]) &/ File.BaseName(stxDB[2]) & "-" & strTimeStamp & ".zip"
+  strDBZip = File.Dir(stxDB[3]) &/ File.BaseName(stxDB[3]) & "-" & strTimeStamp & ".zip"
+
+  conCreate.Type = stxDB[0]
+  conCreate.Host = stxDB[1]
+  conCreate.Name = ""
+  conCreate.Open
 
   Select strMod
     Case "reset"
 
-      If Exist(stxDB[2]) = True Then
-        Shell "zip -j " & strDBZip & " " & stxDB[2]
+      If Exist(stxDB[3]) = True Then
+        Shell "zip -j " & strDBZip & " " & stxDB[3]
         Wait 0.5
-        Kill stxDB[2]
+        Kill stxDB[3]
       Endif
   End Select
 
-  conCreate.Type = "sqlite3"
-  conCreate.Host = stxDB[0]
-  conCreate.Name = ""
-  conCreate.Open
+  Wait 0.2
 
-  If Not conCreate.Databases.Exist(stxDB[1]) Then
-    conCreate.Databases.Add(stxDB[1])
-    Wait 0.4
-
-    If conCreate.Opened Then
-      conCreate.Close
-    Endif
-
-    conCreate.Name = stxDB[1]
-    conCreate.Open
-
-    If Exist("new.sql") Then
-      strSQLCreate = File.Load("new.sql")
-      conCreate.Exec(strSQLCreate)
-      Wait 0.4
-      If conCreate.Opened Then
-        conCreate.Close
+  Select strMod
+    Case "empty"
+      If Not conCreate.Databases.Exist(stxDB[2]) Then
+        conCreate.Databases.Add(stxDB[2])
       Endif
 
-    Else
-      Message.Warning(("No existe el archivo") & " " & "new.sql" & gb.NewLine & ("La base de datos no sera creada"))
-    Endif
-  Endif
+    Case Else
+      If Not conCreate.Databases.Exist(stxDB[2]) Then
+        conCreate.Databases.Add(stxDB[2])
+      Endif
+      If Exist("new.sql") Then
+        strSQLCreate = File.Load("new.sql")
+        conCreate.Exec(strSQLCreate)
+      Else
+        Message.Warning(("No existe el archivo") & " " & "new.sql" & gb.NewLine & ("La base de datos no sera creada"))
+      Endif
+  End Select
 
   If conCreate.Opened Then
     conCreate.Close
@@ -199,12 +78,11 @@ Public Function DBSqlite(stxDB As String[], Optional strMod As String) As Connec
 
 End
 
-Public Function RecordNew(connDB As Connection, strTable As String, stxInsert As String[], stxValues As String[]) As Integer '' Inserta un registro nuevo en la base de datos, ctnVal es una coleccion opcional del pares de campo:valor.
+Public Function RecordNew(connDB As Connection, strTable As String, stxDBFields As String[][], stxValues As String[]) As Integer '' Inserta un registro nuevo en la base de datos. Si este es insertado correctamente la funcion devuelve la clave de dicho registro, de lo contratio devuelve -1
 
   Dim resIns As Result
   Dim stxTables As New String[]
   Dim int As Integer
-  Dim intTable As Integer
   Dim intField As Integer
   Dim strSQLCheck As String
   Dim resCheckRef As Result
@@ -218,102 +96,252 @@ Public Function RecordNew(connDB As Connection, strTable As String, stxInsert As
   Dim stxVKey As New String[]
   Dim intCounter As Integer
 
-  If stxValues.Count > 0 Then
-    For intVal = 0 To stxValues.Max
-      stxTag.Add(Split(stxValues[intVal], ":")[0])
-      stxVal.Add(Split(stxValues[intVal], ":")[1])
-    Next
-  Endif
+  Dim intKey As Integer
 
-  For int = 0 To stxInsert.Max
-    If stxTables.Find(Split(stxInsert[int], ":")[0]) = -1 Then
-      stxTables.Add(Split(stxInsert[int], ":")[0])
+  Dim strSqlExist As String
+  Dim resExist As Result
+  Dim intExist As Integer
+  Dim stxSqlExistFields As New String[]
+  Dim stxSqlExistWhere As New String[]
+
+  Dim strFieldKey As String
+  Dim intRefKey As String
+
+  For intExist = 0 To stxValues.Max
+    If Split(stxValues[intExist], "\t")[1] <> "" Then
+
+      stxSqlExistFields.Add(Split(stxValues[intExist], "\t")[0])
+
+      intRefKey = RecordForeign(connDB, strTable, Split(stxValues[intExist], "\t")[0], Split(stxValues[intExist], "\t")[1], stxDBFields)
+
+      Select intRefKey
+        Case -1 ' No es un campo referenciado
+          stxSqlExistWhere.Add(Split(stxValues[intExist], "\t")[0] & "='" & Split(stxValues[intExist], "\t")[1] & "'")
+        Case -2 'El campo es referenciado pero la tabla de referencia no contiene el texto, por lo tanto luego se agregara, y como no hay peligro de repetir el registro se continua
+          Print "El registro no existe, en la tabla de referencia"
+        Case -3  'El campo es referenciado pero la tabla de referencia contiene mas de una coincidencia, por lo tanto debe revisarse la estructura de la tabla.
+          stxSqlExistWhere.Add(Split(stxValues[intExist], "\t")[0] & "='" & intRefKey & "'")
+        Case Else ' este es el caso ideal, donde el texto existe en la referencia, es único y por lo tanto se devuelve la clave en la tabla de referencia
+          stxSqlExistWhere.Add(Split(stxValues[intExist], "\t")[0] & "='" & intRefKey & "'")
+
+      End Select
+
     Endif
   Next
 
-  resIns = connDB.Create(strTable)
-  For intField = 0 To stxInsert.Max
-    If Split(stxInsert[intField], ":")[0] = strTable Then
+  strSqlExist = "select " & stxSqlExistFields.Join(",") & " from " & strTable
+  strSqlExist &= " where " & stxSqlExistWhere.Join(" and ")
 
-      If Split(stxInsert[intField], ":")[6] <> "YA" Then
+  resExist = connDB.Exec(strSqlExist)
 
-        strTag = Split(stxInsert[intField], ":")[1]
-        intVal = stxTag.Find(strTag)
-        If intVal > -1 Then
-          strVal = stxVal[intVal]
-        Else
-          strVal = ""
-        Endif
+  If resExist.Available Then
+    If resExist.Count > 0 Then
+      Print "El registro ya existe"
+      'Message.Info("El registro ya existe")
+    Endif
 
-        Select Split(stxInsert[intField], ":")[7]
-          Case ""
-            resIns[strTag] = strVal
-          Case Else
+  Else
 
-            For intCounter = 0 To 1
+    Print "El registro no existe, se procede a insertarlo"
 
-              strSQLCheck = "select "
-              strSQLCheck &= Split(stxInsert[intField], ":")[8] & ", "
-              strSQLCheck &= Split(stxInsert[intField], ":")[9]
-              strSQLCheck &= " from " & Split(stxInsert[intField], ":")[7]
-              strSQLCheck &= " where " & Split(stxInsert[intField], ":")[9] & "='"
-              strSQLCheck &= strVal & "'"
+    If stxValues.Count > 0 Then
+      For intVal = 0 To stxValues.Max
+        stxTag.Add(Split(stxValues[intVal], "\t")[0])
+        stxVal.Add(Split(stxValues[intVal], "\t")[1])
+      Next
+    Endif
 
-              resCheckRef = connDB.Exec(strSQLCheck)
+    For int = 0 To stxDBFields.Max
+      If stxTables.Find(stxDBFields[int][0]) = -1 Then
+        stxTables.Add(stxDBFields[int][0])
+      Endif
+    Next
 
-              If resCheckRef.Available Then
-                intFKey = resCheckRef[Split(stxInsert[intField], ":")[8]]
-                resIns[strTag] = intFKey
-              Else
+    resIns = connDB.Create(strTable)
+    For intField = 0 To stxDBFields.Max
+      If stxDBFields[intField][0] = strTable Then
 
-                Select intCounter
-                  Case 0
-                    stxVKey.Add(Split(stxInsert[intField], ":")[9] & ":" & strVal)
+        If stxDBFields[intField][6] <> "YA" Then
 
-                    RecordRef(connDB, Split(stxInsert[intField], ":")[7], stxInsert, stxVKey)
-                  Case Else
-                    Message.Error("El registro no se pudo insertar")
-                End Select
+          strTag = stxDBFields[intField][1]
+          intVal = stxTag.Find(strTag)
+          If intVal > -1 Then
+            strVal = stxVal[intVal]
+          Else
+            strVal = ""
+          Endif
 
+          Select stxDBFields[intField][7]
+            Case ""
+              resIns[strTag] = strVal
+            Case Else
+              If strVal <> "" Then
+                For intCounter = 0 To 1
+
+                  strSQLCheck = "select "
+                  strSQLCheck &= stxDBFields[intField][8] & ", "
+                  strSQLCheck &= stxDBFields[intField][9]
+                  strSQLCheck &= " from " & stxDBFields[intField][7]
+                  strSQLCheck &= " where " & stxDBFields[intField][9] & "='"
+                  strSQLCheck &= strVal & "'"
+
+                  resCheckRef = connDB.Exec(strSQLCheck)
+
+                  If resCheckRef.Available Then
+                    intFKey = resCheckRef[stxDBFields[intField][8]]
+                    resIns[strTag] = intFKey
+                  Else
+                    Select intCounter
+                      Case 0
+                        stxVKey.Add(stxDBFields[intField][9] & "\t" & strVal)
+                        RecordNewRef(connDB, stxDBFields[intField][7], stxDBFields, stxVKey)
+                      Case Else
+                        Message.Error("El registro no se pudo insertar")
+                    End Select
+
+                  Endif
+                Next
               Endif
-            Next
+          End Select
+        Endif
+      Endif
+    Next
+    resIns.Update
+
+    'Comprobación de que el registro se creo correctamente
+    stxSqlExistWhere.Clear
+    stxSqlExistFields.Clear
+
+    For intExist = 0 To stxValues.Max
+      If Split(stxValues[intExist], "\t")[1] <> "" Then
+
+        stxSqlExistFields.Add(Split(stxValues[intExist], "\t")[0])
+
+        intRefKey = RecordForeign(connDB, strTable, Split(stxValues[intExist], "\t")[0], Split(stxValues[intExist], "\t")[1], stxDBFields)
+
+        Select intRefKey
+          Case -1 ' No es un campo referenciado
+            stxSqlExistWhere.Add(Split(stxValues[intExist], "\t")[0] & "='" & Split(stxValues[intExist], "\t")[1] & "'")
+          Case Else ' este es el caso ideal, donde el texto existe en la referencia, es único y por lo tanto se devuelve la clave en la tabla de referencia
+            stxSqlExistWhere.Add(Split(stxValues[intExist], "\t")[0] & "='" & intRefKey & "'")
         End Select
       Endif
-    Endif
-  Next
-  resIns.Update
+    Next
 
-  'Comprobación de que el registro se creo correctamente
+    strSqlExist = ""
+    strSqlExist = "select " & stxSqlExistFields.Join(",") & " from " & strTable
+    strSqlExist &= " where " & stxSqlExistWhere.Join(" and ")
+
+    resExist = connDB.Exec(strSqlExist)
+
+    If resExist.Available Then
+      If resExist.Count > 0 Then
+        Print "El registro fue insertado correctamente"
+
+        intKey = resExist[strFieldKey]
+
+      Else
+        Print "El registro no fue insertado o un valor no fue asignado correctamente a alguno de los campos"
+        intKey = -1
+      Endif
+    Endif
+
+  Endif
+
+  Return intKey
 
 End
 
-Public Function RecordWrite(connDB As Connection, strTable As String, stxEdit As String[], stxValues As String[]) As Integer '' Inserta un registro nuevo en la base de datos, ctnVal es una coleccion opcional del pares de campo:valor.
+Public Function RecordKey(strTable As String, stxDBFields As String[][]) As String '' Devuelve el nombre del campo clave de la tabla.\nconnDB As Connection es laq conxión a la base de  datos.\nstrTable As String es el nombre de la tabla sobre la que intenta saber que tipo de campo es.\nstrFieldCheck As String Es el campo a verificar.\nstrValueCheck As String Es el valor del registro para el campo a verificar.\nstxDBFields As String[] Es la lista de todos los campos de la base de datos.
+
+  Dim intIndex As Integer
+  Dim strFieldKey As String
+
+  For intIndex = 0 To stxDBFields.Max
+    If stxDBFields[intIndex][0] = strTable Then
+      If stxDBFields[intIndex][6] = "YA" Then
+        strFieldKey = stxDBFields[intIndex][1]
+        Break
+      Endif
+    Endif
+  Next
+  Return strFieldKey
+
+End
+
+Public Function RecordForeign(connDB As Connection, strTable As String, strFieldCheck As String, strValueCheck As String, stxDBFields As String[][]) As String '' Devuelve la clave en la tabla foránea para un valor de texto si el campo es referenciado o -1 si el campo no es referenciado o no existe el valor en el campo a mostrar.
+
+  Dim intIndex As Integer
+  Dim intForeign As Integer
+
+  Dim strForeignTable As String
+  Dim strForeignIndex As String
+  Dim strForeignShow As String
+  Dim strSqlForeign As String
+  Dim resForeign As Result
+
+  For intIndex = 0 To stxDBFields.Max
+    If stxDBFields[intIndex][0] = strTable Then
+      If stxDBFields[intIndex][1] = strFieldCheck Then
+        strForeignTable = stxDBFields[intIndex][7]
+        strForeignIndex = stxDBFields[intIndex][8]
+        strForeignShow = stxDBFields[intIndex][9]
+        Break
+      Endif
+    Endif
+  Next
+
+  Select strForeignTable
+    Case ""
+      intForeign = -1
+    Case Else
+
+      strSqlForeign = "select " & strForeignIndex & " from " & strForeignTable
+      strSqlForeign &= " where " & strForeignShow & "='" & strValueCheck & "' order by " & strForeignIndex & " asc"
+
+      resForeign = connDB.Exec(strSqlForeign)
+
+      If resForeign.Available Then
+        Select resForeign.Count
+          Case 0
+            intForeign = -2
+          Case 1
+            resForeign.MoveFirst
+            intForeign = CInt(resForeign[strForeignIndex])
+          Case Else
+            intForeign = -3
+            Message.Warning(("Existen") & " " & CStr(resForeign.Count) &
+              " " & ("coincidencias, deberia ser una sola") &
+              gb.NewLine & ("Se utilizara el primero de la lista"))
+        End Select
+
+      Endif
+
+  End Select
+
+  Return intForeign
+
+End
+
+Public Function RecordWrite(connDB As Connection, strTable As String, stxEdit As String[][], stxValues As String[]) As Integer '' Inserta un registro nuevo en la base de datos, ctnVal es una coleccion opcional del pares de campo:valor.
 
   Dim resEdit As Result
-  Dim stxTables As New String[]
-  Dim int As Integer
-  Dim intTable As Integer
   Dim intField As Integer
-  Dim strSQLCheck As String
-  Dim resCheckRef As Result
   Dim intVal As Integer
   Dim stxTag As New String[]
   Dim stxVal As New String[]
 
   Dim strTag As String
   Dim strVal As String
-  Dim intFKey As Integer
   Dim stxVKey As New String[]
-  Dim intCounter As Integer
   Dim strFieldKey As String
   Dim intKey As Integer
   Dim intKeyRef As Integer
 
-  For intField = 0 To stxEdit.Max
-    If Split(stxEdit[intField], ":")[0] = strTable Then
-      If Split(stxEdit[intField], ":")[5] = "YK" Then
-        strFieldKey = Split(stxEdit[intField], ":")[1]
-        Break
+  For intField = 0 To MStarter.stxTableFields.Max
+    If MStarter.stxTableFields[intField][0] = strTable Then
+      If MStarter.stxTableFields[intField][5] = "YK" Then
+        strFieldKey = MStarter.stxTableFields[intField][1]
       Endif
     Endif
   Next
@@ -332,9 +360,9 @@ Public Function RecordWrite(connDB As Connection, strTable As String, stxEdit As
   resEdit = connDB.Edit(strTable, strFieldKey & "=&1", intkey)
 
   For intField = 0 To stxEdit.Max
-    If Split(stxEdit[intField], ":")[0] = strTable Then
-      If Split(stxEdit[intField], ":")[1] <> strFieldKey Then
-        strTag = Split(stxEdit[intField], ":")[1]
+    If stxEdit[intField][0] = strTable Then
+      If stxEdit[intField][1] <> strFieldKey Then
+        strTag = stxEdit[intField][1]
         intVal = stxTag.Find(strTag)
         If intVal > -1 Then
           strVal = stxVal[intVal]
@@ -342,22 +370,25 @@ Public Function RecordWrite(connDB As Connection, strTable As String, stxEdit As
           strVal = ""
         Endif
 
-        Select Split(stxEdit[intField], ":")[7]
+        Select stxEdit[intField][7]
           Case ""
             If resEdit[strTag] <> strVal Then
               resEdit[strTag] = strVal
             Endif
+
           Case Else ' Verificar si el registro existe en la tabla foránea
-            intKeyRef = RecordExist(connDB, Split(stxEdit[intField], ":")[7], Split(stxEdit[intField], ":")[9], Split(stxEdit[intField], ":")[8], strVal)
-            Select intKeyRef
-              Case -1 'No existe el registor de referencia
-                stxVKey.Add(Split(stxEdit[intField], ":")[9] & ":" & strVal)
-                RecordNew(connDB, Split(stxEdit[intField], ":")[7], stxEdit, stxVKey)
-              Case Else ' Existe
-                If resEdit[strTag] <> intKeyRef Then
-                  resEdit[strTag] = intKeyRef
-                Endif
-            End Select
+            If strVal <> "" Then
+              intKeyRef = RecordExist(connDB, stxEdit[intField][7], stxEdit[intField][9], stxEdit[intField][8], strVal)
+              Select intKeyRef
+                Case -1 'No existe el registor de referencia
+                  stxVKey.Add(stxEdit[intField][9] & ":" & strVal)
+                  RecordNew(connDB, stxEdit[intField][7], stxEdit, stxVKey)
+                Case Else ' Existe
+                  If resEdit[strTag] <> intKeyRef Then
+                    resEdit[strTag] = intKeyRef
+                  Endif
+              End Select
+            Endif
         End Select
       Endif
     Endif
@@ -368,45 +399,39 @@ Public Function RecordWrite(connDB As Connection, strTable As String, stxEdit As
 
 End
 
-Public Function RecordRef(connDB As Connection, strTable As String, stxInsert As String[], stxValues As String[]) As Integer '' Inserta un registro nuevo en la base de datos, ctnVal es una coleccion opcional del pares de campo:valor.
+Public Function RecordNewRef(connDB As Connection, strTable As String, stxDBFields As String[][], stxValues As String[]) As Integer '' Inserta un registro nuevo en la base de datos, ctnVal es una coleccion opcional del pares de campo:valor.
 
   Dim resIns As Result
   Dim stxTables As New String[]
   Dim int As Integer
-  Dim intTable As Integer
   Dim intField As Integer
-  Dim strSQLCheck As String
-  Dim resCheckRef As Result
   Dim intVal As Integer
   Dim stxTag As New String[]
   Dim stxVal As New String[]
 
   Dim strTag As String
   Dim strVal As String
-  Dim intFKey As Integer
-  Dim stxVKey As New String[]
-  Dim intCounter As Integer
 
   If stxValues.Count > 0 Then
     For intVal = 0 To stxValues.Max
-      stxTag.Add(Split(stxValues[intVal], ":")[0])
-      stxVal.Add(Split(stxValues[intVal], ":")[1])
+      stxTag.Add(Split(stxValues[intVal], "\t")[0])
+      stxVal.Add(Split(stxValues[intVal], "\t")[1])
     Next
   Endif
 
-  For int = 0 To stxInsert.Max
-    If stxTables.Find(Split(stxInsert[int], ":")[0]) = -1 Then
-      stxTables.Add(Split(stxInsert[int], ":")[0])
+  For int = 0 To stxDBFields.Max
+    If stxTables.Find(stxDBFields[int][0]) = -1 Then
+      stxTables.Add(stxDBFields[int][0])
     Endif
   Next
 
   resIns = connDB.Create(strTable)
-  For intField = 0 To stxInsert.Max
-    If Split(stxInsert[intField], ":")[0] = strTable Then
+  For intField = 0 To stxDBFields.Max
+    If stxDBFields[intField][0] = strTable Then
 
-      If Split(stxInsert[intField], ":")[6] <> "YA" Then
+      If stxDBFields[intField][6] <> "YA" Then
 
-        strTag = Split(stxInsert[intField], ":")[1]
+        strTag = stxDBFields[intField][1]
         intVal = stxTag.Find(strTag)
         If intVal > -1 Then
           strVal = stxVal[intVal]
@@ -414,7 +439,7 @@ Public Function RecordRef(connDB As Connection, strTable As String, stxInsert As
           strVal = ""
         Endif
 
-        Select Split(stxInsert[intField], ":")[7]
+        Select stxDBFields[intField][7]
           Case ""
             resIns[strTag] = strVal
 
@@ -426,17 +451,147 @@ Public Function RecordRef(connDB As Connection, strTable As String, stxInsert As
 
 End
 
-Public Function getTableFields(connDB As Connection, strTab As String) As String[] ''Extraccion de la informacion de la estructura de una tabla.
+Public Function getFields(connDB As Connection, strTbl As String, strMod As String, Optional stxTitles As String[][]) As String[][] ''Extraccion de la lista de campos de la tabla que se pasa como parametro.
+
+  Dim strSQL As String
+  Dim resSQL As Result
+  Dim fld As ResultField
+
+  Dim strFld As String
+  Dim strTyp As String
+
+  Dim strOrd As String
+  Dim strFty As String
+  Dim strFva As String
+  Dim strFwd As String
+  Dim strFs1 As String
+  Dim strFs2 As String
+  Dim strFs3 As String
+  Dim strTle As String
+
+  Dim stxTmp As New String[][]
+  Dim stxExt As New String[]
+  Dim stxFld As New String[][]
+  Dim intTl As Integer
+
+  strSQL = "select * from " & strTbl
+  resSQL = connDB.Exec(strSQL)
+  If resSQL Then
+
+    For Each fld In resSQL.Fields
+
+      strFld = fld.Name
+      strTyp = String.LCase(MUtility.TypeVar(fld.Type))
+
+      If stxTitles Then
+        For intTl = 0 To stxTitles.Max
+          If stxTitles[intTl][0] = strTbl Then
+            If stxTitles[intTl][1] = strFld Then
+              strTle = stxTitles[intTl][2]
+            Endif
+          Endif
+        Next
+      Endif
+
+      Select String.LCase(strMod)
+        Case "table", "tables", "tabla", "tablas"
+          stxExt = getFieldInfo(connDB, strTbl, strFld)
+
+          stxTmp.Add([strTbl, strFld, strTyp, stxExt[0], stxExt[1], stxExt[2], stxExt[3], stxExt[4], stxExt[5], stxExt[6], strTle])
+
+        Case "view", "views", "vista", "vistas"
+
+          strOrd = Settings[strTbl & "-Order" &/ strFld, ""] ' Orden
+          strFty = Settings[strTbl & "-FilterType" &/ strFld, ""] ' Filtro Tipo
+          strFva = Settings[strTbl & "-FilterValue" &/ strFld, ""] ' Filtro Valor
+          strFwd = Settings[strTbl & "-Width" &/ strFld, "75"] ' Ancho de Columna
+          strFs1 = "" ' Reserva 1 > Funcion especial, email, informe, etc.
+          strFs2 = "" ' Reserva 2 >
+          strFs3 = "" ' Reserva 3 >
+          'strTle = "" ' Titles
+
+          stxTmp.Add([strTbl, strFld, strTyp, strOrd, strFty, strFva, strFwd, strFs1, strFs2, strFs3, strTle])
+
+      End Select
+
+      stxFld.Insert(stxTmp)
+
+      stxTmp.Clear
+      stxExt.Clear
+
+    Next
+  Endif
+
+  Return stxFld
+
+End
+
+Public Function AskForField(strTable As String, stxFields As String[][]) As String[] ''Devuelve informacion sobre el campo que se pregunta, devuelve una matriz con 10 valores de texto. Se le pasan el nombre de la tabla el campo y una matriz de 2 Dimensiones con tod ala informacion en bruto que genera la función getFiles().</br>Depende de si es una tabla o una vista:</br>Tabla:</br>00 TableName \ n01 FieldName[ From gb.db]</br>02 FieldType[ From gb.db]</br>03 Unique[YU |NU]</br>04 Null / Not Null[YN |NN]</br>05 Primary Key[YK |NK]</br>06 Autoincrement[YA |NA]</br>07 ForeignTableName</br>08 ForeignFieldIndexName</br>09 ForeignFieldShowName</br>Vista:</br>00 ViewName</br>01 FieldName[ From gb.db]</br>02 FieldType[ From gb.db]</br>03 Order["asc" | "desc" | ""]</br>04 Filter Type["=" / "<>" | ">"/"<" | ">="/"<=" | "like"/"not like" | "in" ]</br>05 Filter Value</br>06 Width</br>07 Spare > Future For Functions</br>08 Spare</br>09 Spare
+
+  Dim stxInfo As New String[]
+  Dim intY As Integer
+  Dim intX As Integer
+
+  For intX = 0 To stxFields.Max
+    If stxFields[intX][0] = strTable Then
+      For intY = 0 To 9
+        stxInfo.Add(stxFields[intX][intY])
+      Next
+    Endif
+  Next
+
+  Return stxInfo
+
+End
+
+Public Function getTables(connDB As Connection, Optional strMod As String) As String[] ''Extraccion de la lista de tablas de la conexión. s ele pasan dos parametros, la conexión a la base de datos y el tipo view|table
+
+  Dim strEngine As String
+  Dim strSQL As String
+  Dim resSQL As Result
+  Dim stxSQL As New String[]
+  Dim strTable As Variant
+
+  strEngine = connDB.Type
+
+  Select String.LCase(strMod)
+    Case "", "table", "tables", "tabla", "tablas"
+      strMod = "table"
+    Case "view", "views", "vista", "vistas"
+      strMod = "view"
+  End Select
+
+  If strEngine <> "" Then
+    Select strEngine
+      Case "sqlite3"
+        strSQL = "SELECT name FROM sqlite_master WHERE type='" & strMod & "'"
+        resSQL = connDB.Exec(strSQL)
+        While resSQL.Available
+          strTable = resSQL["name"]
+          Select strTable
+            Case "sqlite_sequence"
+              '
+            Case Else
+              stxSQL.Add(strTable)
+          End Select
+          resSQL.MoveNext
+        Wend
+    End Select
+
+  Endif
+  stxSQL.Sort
+
+  Return stxSQL
+
+End
+
+Public Function getFieldInfo(connDB As Connection, strTab As String, strFld As String) As String[]
 
   Dim strSQLk As String
   Dim resDBk As Result
-  Dim intR As Integer
   Dim strSentenceSQL As String
   Dim strSentence As String
   Dim stxSentence As New String[]
-  Dim stxOrigin As New String[]
-  Dim stxReference As New String[]
-  Dim strTBOrigin As String
   Dim strFDOrigin As String
   Dim strTBReference As String
   Dim strFDReference As String
@@ -444,14 +599,6 @@ Public Function getTableFields(connDB As Connection, strTab As String) As String
   Dim strFDShow As String
   Dim stxRefFields As New String[]
   Dim fldReference As Field
-
-  Dim stxFDShowPK As New String[]
-
-  Dim tbl As Table
-  Dim fld As Field
-  Dim cntInfo As New Collection
-  Dim strInfo As String
-  Dim strkey As String
   Dim stxFieldInfo As New String[]
   Dim intSnt As Integer
 
@@ -462,7 +609,216 @@ Public Function getTableFields(connDB As Connection, strTab As String) As String
   Dim intWrd As Integer
   Dim intkey As Integer
 
-  Dim stxTableInfo As New String[]
+  Select connDB.Type
+
+    Case "sqlite3"
+
+      stxWordsSQLite.Add("unique")
+      stxYesSQLite.Add("YU")
+      stxNotSQLite.Add("NU")
+      inxKeySQLite.Add(0)
+
+      stxWordsSQLite.Add("not null")
+      stxYesSQLite.Add("NN")
+      stxNotSQLite.Add("YN")
+      inxKeySQLite.Add(1)
+
+      stxWordsSQLite.Add("primary key")
+      stxYesSQLite.Add("YK")
+      stxNotSQLite.Add("NK")
+      inxKeySQLite.Add(2)
+
+      stxWordsSQLite.Add("autoincrement")
+      stxYesSQLite.Add("YA")
+      stxNotSQLite.Add("NA")
+
+      inxKeySQLite.Add(3)
+
+      strSQLk = "SELECT * FROM sqlite_master WHERE type='table' AND name='" & strTab & "'"
+      resDBk = connDB.Exec(strSQLk)
+
+      strSentenceSQL = Str(resDBk["sql"])
+      stxSentence = Split(strSentenceSQL, "\n")
+
+      If connDB.Opened Then
+        If resDBk.Available Then
+
+          resDBk.MoveFirst
+
+          stxFieldInfo.Clear
+          stxFieldInfo = ["", "", "", "", "", "", ""]
+
+          For intSnt = 0 To stxSentence.Max
+            If InStr(stxSentence[intSnt], "FOREIGN KEY") = 0 And InStr(stxSentence[intSnt], strFld) > 0 Then
+
+              strSentence = Replace(stxSentence[intSnt], "\t`", "")
+              strSentence = Replace(strSentence, strFld & "`", "")
+              strSentence = Replace(strSentence, "\t", "")
+
+              For intWrd = 0 To stxWordsSQLite.Max
+
+                intkey = inxKeySQLite[intWrd]
+
+                If InStr(String.LCase(stxSentence[intSnt]), stxWordsSQLite[intWrd]) > 0 Then
+                  stxFieldInfo[intkey] = stxYesSQLite[intWrd]
+                Else
+                  stxFieldInfo[intkey] = stxNotSQLite[intWrd]
+                Endif
+              Next
+
+              Break
+            Endif
+          Next
+
+          For intSnt = 0 To stxSentence.Max
+            If InStr(stxSentence[intSnt], "FOREIGN KEY") > 0 And InStr(stxSentence[intSnt], strFld) > 0 Then
+
+              strSentence = Replace(stxSentence[intSnt], "\tFOREIGN KEY(`", "")
+              strSentence = Replace(strSentence, "`) REFERENCES ", "~")
+              strSentence = Replace(strSentence, " ( ", "~")
+              strSentence = Replace(strSentence, " ),", " )")
+              strSentence = Replace(strSentence, " )", "")
+              strSentence = Replace(strSentence, "`", "")
+              strSentence = Replace(strSentence, " ", "")
+
+              strFDOrigin = Split(strSentence, "~")[0]
+              strTBReference = Split(strSentence, "~")[1]
+              strFDReference = Split(strSentence, "~")[2]
+              ' Busco los campos de destino posibles
+
+              tblReference = connDB.Tables[strTBReference]
+              stxRefFields.Clear
+
+              If tblReference.Fields.Count > 1 Then
+
+                For Each fldReference In tblReference.Fields
+
+                  stxRefFields.Add(fldReference.Name)
+
+                Next
+
+                If stxRefFields.Count > 1 Then
+                  strFDShow = stxRefFields[1]
+                Else
+                  strFDShow = strFDReference
+                Endif
+
+              Endif
+
+              stxFieldInfo[4] = strTBReference
+              stxFieldInfo[5] = strFDReference
+              stxFieldInfo[6] = strFDShow
+
+              Break
+            Endif
+          Next
+
+        Endif
+      Endif
+
+  End Select
+  '---------------------------------------------------------------------------------
+  Return stxFieldInfo
+
+End
+
+Public Function getIndex(connDB As Connection, strTab As String) As String[]
+
+  Dim strSQLk As String
+  Dim resDBk As Result
+  '  Dim strSentenceSQL As String
+  Dim strSentence As String
+  Dim stxSentence As New String[]
+  '  Dim strFDOrigin As String
+  '  Dim strTBReference As String
+  '  Dim strFDReference As String
+  '  Dim tblReference As Table
+  '  Dim strFDShow As String
+  '  Dim stxRefFields As New String[]
+  '  Dim fldReference As Field
+  Dim stxIndex As New String[]
+  Dim intSnt As Integer
+
+  '  Dim stxWordsSQLite As New String[]
+  '  Dim stxYesSQLite As New String[]
+  '  Dim stxNotSQLite As New String[]
+  '  Dim inxKeySQLite As New Integer[]
+  '  Dim intWrd As Integer
+  '  Dim intkey As Integer
+  Dim intPos1 As Integer
+  Dim intPos2 As Integer
+  Dim intFi As Integer
+  Dim stxTmp As New String[]
+
+  Select connDB.Type
+
+    Case "sqlite3"
+
+      strSQLk = "SELECT * FROM sqlite_master WHERE type='index' AND tbl_name='" & strTab & "'  AND sql<>''"
+      resDBk = connDB.Exec(strSQLk)
+
+      If resDBk.Available Then
+
+        resDBk.MoveFirst
+
+        stxIndex.Clear
+        stxIndex = ["", ""]
+
+        For intSnt = 0 To stxSentence.Max
+          If InStr(stxSentence[intSnt], "CREATE UNIQUE INDEX") > 0 And InStr(stxSentence[intSnt], strTab) > 0 Then
+
+            intPos1 = InStr(stxSentence[intSnt], "(", 1)
+            intPos2 = InStr(stxSentence[intSnt], ")", intPos1)
+
+            strSentence = String.Mid(stxSentence[intSnt], intPos1, intPos2 - intPos1)
+            strSentence = Replace(stxSentence, "ASC", "")
+            strSentence = Replace(strSentence, "DESC", "")
+            strSentence = Replace(strSentence, " ", "")
+
+            stxTmp = Split(strSentence, ",")
+
+            For intFi = 0 To stxTmp.Max
+
+              'stxTmp[int]
+
+            Next
+
+          Endif
+        Next
+      Endif
+  End Select
+
+  Return stxIndex
+
+End
+
+Public Function getTableFields(connDB As Connection, strTab As String) As String[][] ''Extraccion de la informacion de la estructura de una tabla.
+
+  Dim strSQLk As String
+  Dim resDBk As Result
+  Dim strSentenceSQL As String
+  Dim strSentence As String
+  Dim stxSentence As New String[]
+  Dim strFDOrigin As String
+  Dim strTBReference As String
+  Dim strFDReference As String
+  Dim tblReference As Table
+  Dim strFDShow As String
+  Dim stxRefFields As New String[]
+  Dim fldReference As Field
+  Dim tbl As Table
+  Dim fld As Field
+  Dim stxFieldInfo As New String[]
+  Dim intSnt As Integer
+
+  Dim stxWordsSQLite As New String[]
+  Dim stxYesSQLite As New String[]
+  Dim stxNotSQLite As New String[]
+  Dim inxKeySQLite As New Integer[]
+  Dim intWrd As Integer
+  Dim intkey As Integer
+
+  Dim stxTableInfo As New String[][]
 
   Select connDB.Type
 
@@ -502,6 +858,7 @@ Public Function getTableFields(connDB As Connection, strTab As String) As String
           tbl = connDB.Tables[strTab]
 
           For Each fld In tbl.Fields
+
             stxFieldInfo.Clear
             stxFieldInfo = ["0", "1", "2", "3", "4", "5", "6", "7", "8", "9"]
 
@@ -565,9 +922,7 @@ Public Function getTableFields(connDB As Connection, strTab As String) As String
                 If tblReference.Fields.Count > 1 Then
 
                   For Each fldReference In tblReference.Fields
-
                     stxRefFields.Add(fldReference.Name)
-
                   Next
 
                   If stxRefFields.Count > 1 Then
@@ -575,7 +930,6 @@ Public Function getTableFields(connDB As Connection, strTab As String) As String
                   Else
                     strFDShow = strFDReference
                   Endif
-
                 Endif
 
                 stxFieldInfo[7] = strTBReference
@@ -587,7 +941,67 @@ Public Function getTableFields(connDB As Connection, strTab As String) As String
             Next
             '----------------------------------------------------------------------------------
             ' Agregando a la matriz de salida
-            stxTableInfo.Add(stxFieldInfo.Join(":"))
+            'stxTableInfo.Add(stxFieldInfo.Join(":"))
+            stxTableInfo.Add(stxFieldInfo)
+
+          Next
+        Endif
+      Endif
+      'Case "postgres"
+      'Case "mysql"
+      'Case "odbc"
+
+  End Select
+  '---------------------------------------------------------------------------------
+  Return stxTableInfo
+
+End
+
+Public Function getViewFields(connDB As Connection, strView As String) As String[][] ''Extraccion de la informacion de la estructura de una vista.
+
+  Dim strSQLk As String
+  Dim resDBk As Result
+  Dim intord As Integer
+  Dim fld As ResultField
+  Dim stxFieldInfo As New String[]
+  Dim stxTableInfo As New String[][]
+  Dim intOrder As Variant
+  Dim strOrder As Variant
+  Dim strOrderTmp As Variant
+
+  Select connDB.Type
+
+    Case "sqlite3"
+
+      strSQLk = "SELECT * FROM " & strView
+      resDBk = connDB.Exec(strSQLk)
+
+      If connDB.Opened Then
+        If resDBk.Available Then
+
+          resDBk.MoveFirst
+          intOrd = 0
+          For Each fld In resDBk.Fields
+            stxFieldInfo.Clear
+            stxFieldInfo = ["0", "1", "2", "3", "4", "5", "6"]
+
+            stxFieldInfo[0] = strView
+            stxFieldInfo[1] = fld.Name
+            stxFieldInfo[2] = String.LCase(MUtility.TypeVar(fld.Type))
+            stxFieldInfo[3] = CStr(intOrd) ' Numero de columna
+
+            strOrderTmp = Settings[strView & "-order/" & CStr(intOrd), ""]
+
+            intOrder = ""
+            strOrder = ""
+
+            stxFieldInfo[4] = CStr(intOrder) ' Tipo de filtro
+
+            'stxTableInfo.Add(stxFieldInfo.Join(":"))
+            stxTableInfo.Add(stxFieldInfo)
+
+            Inc intOrd
+
           Next
         Endif
       Endif
@@ -621,31 +1035,30 @@ Public Function RecordExist(connDB As Connection, strTable As String, strFieldVa
     Else
       intKey = -1
     Endif
+  Else
+    intKey = -1
   Endif
   Return intKey
 
 End
 
-Public Function RecordDelete(connDB As Connection, strTable As String, stxDBFields As String[], intKey As Integer) As Integer '' Devuelve -1 si no existe o un numero (la clave) si existe el texto que se pasa como parametro junto con la tabla y el campo.
+Public Function RecordDelete(connDB As Connection, strTable As String, stxDBFields As String[][], intKey As Integer) As Integer '' Devuelve -1 si no existe o un numero (la clave) si existe el texto que se pasa como parametro junto con la tabla y el campo.
 
   Dim strSQLDelete As String
-  Dim resDelete As Result
   Dim resCheck As Result
   Dim intField As Integer
   Dim strFieldKey As String
 
   For intField = 0 To stxDBFields.Max
-    If Split(stxDBFields[intField], ":")[0] = strTable Then
-      If Split(stxDBFields[intField], ":")[5] = "YK" Then
-        strFieldKey = Split(stxDBFields[intField], ":")[1]
+    If stxDBFields[intField][0] = strTable Then
+      If stxDBFields[intField][5] = "YK" Then
+        strFieldKey = stxDBFields[intField][1]
         Break
       Endif
     Endif
   Next
 
-  'resDelete = connDB.Delete(strTable, strFieldKey & "=&1", intKey)
   connDB.Delete(strTable, strFieldKey & "=&1", intKey)
-  'resDelete.Update
 
   ' Verificación
   strSQLDelete = "select *"
@@ -666,5 +1079,318 @@ Public Function RecordDelete(connDB As Connection, strTable As String, stxDBFiel
   Endif
 
   Return intKey
+
+End
+
+Public Function SqlMake(strTbl As String, stxFld As String[][]) As String
+
+  Dim int As Integer
+  Dim strSqlOut As String
+  Dim stxOrder As New String[]
+  Dim strOrder As String
+  Dim stxFilter As New String[]
+  Dim strFilter As String
+
+  strSqlOut = "select * from " & strTbl
+
+  For int = 0 To stxFld.Max
+
+    If stxFld[int][0] = strTbl Then
+      'Acopiar los ordenes que existan
+      Select stxFld[int][3]
+        Case "asc", "desc"
+          stxOrder.Push(stxFld[int][1] & " " & stxFld[int][3])
+      End Select
+
+      'Acopiar los filtros que existan
+      Select stxFld[int][4]
+        Case "=", "<>", ">", "<", ">=", "<="
+          stxFilter.Push(stxFld[int][1] & stxFld[int][4] & "'" & stxFld[int][5] & "'")
+        Case "like", "not like" ', "in"
+          stxFilter.Push(stxFld[int][1] & " " & stxFld[int][4] & " '%" & stxFld[int][5] & "%'")
+      End Select
+
+    Endif
+  Next
+
+  Select stxFilter.Count
+    Case 0
+      strFilter = ""
+    Case 1
+      strFilter = " where " & stxOrder[0]
+    Case Else
+      strFilter = " where " & stxOrder.Join(" and ")
+  End Select
+  strSqlOut &= strFilter
+
+  Select stxOrder.Count
+    Case 0
+      strOrder = ""
+    Case 1
+      strOrder = " order by " & stxOrder[0]
+    Case Else
+      strOrder = " order by " & stxOrder.Join(", ")
+
+  End Select
+  strSqlOut &= strOrder
+
+  Return strSqlOut
+
+End
+
+Public Function TableMake1(cnx As Connection, stxParam As String[]) As Integer ''<p>Crea una tabla en la conexion que se le pasa como parametro. Donde el orden de los paramentros dentro de la matriz debe ser el siguiente:</p><ul><li>0 Nombre de la tabla</li><li>1 Nombre del campo clave</li><li>2 Nombre del resto de los campos</li><li>N Nombre del ultimo campo</li></ul>
+
+  Dim tbl As Table
+  Dim int As Integer
+  Dim strFKey As String 'Nombre del campo que sera Primary Key
+  Dim strFIdx As String 'Nombre del campo indice para esta funsion sera uno solo, el siguiente al campo PK.
+  Dim strFNme As String 'Nombre cambiante del resto de los campos.
+
+  If cnx.Tables.Exist(stxParam[0]) = False Then
+    cnx.Tables.Add(stxParam[0])
+    tbl = cnx.Tables[stxParam[0]]
+    With tbl
+      For int = 1 To stxParam.Max
+        Select int
+          Case 1
+            strFKey = stxParam[0] & stxParam[int]
+            tbl.Fields.Add(strFKey, db.Serial)
+          Case 2
+            strFIdx = stxParam[0] & stxParam[int]
+            tbl.Fields.Add(strFIdx, db.String)
+          Case Else
+            strFNme = stxParam[0] & stxParam[int]
+            tbl.Fields.Add(strFNme, db.String)
+        End Select
+      Next
+      tbl.PrimaryKey = [strFKey]
+      tbl.Update()
+      tbl.Indexes.Add(stxParam[0] & "_idx", [strFIdx], True)
+    End With
+
+  Endif
+
+  If cnx.Tables.Exist(stxParam[0]) = True Then
+    Return 1
+  Else
+    Return 0
+  Endif
+
+End
+
+Public Function TableMake2(cnx As Connection, stxParam As String[]) As Integer ''<p>Crea una tabla de combinacion de otras dos tablas en la conexion que se le pasa como parametro. Donde el orden de los paramentros dentro de la matriz debe ser el siguiente:</p><ul><li>0 Nombre de la tabla 1</li><li>1 Nombre del campo clave 1</li><li>2 Nombre del campo a mostrar 1</li><li>3 Nombre de la tabla 21</li><li>4 Nombre del campo clave 2</li><li>5 Nombre del campo a mostrar 2</li></ul>
+
+  Dim tbl As Table
+  '  Dim int As Integer
+  Dim strTable As String
+  Dim strFKey As String 'Nombre del campo que sera Primary Key
+
+  Dim strFld1 As String 'Nombre del campo 1
+  Dim strTblf1 As String 'Nombre de la tabla foránea 1
+  Dim strFIdx1 As String 'Nombre del campo indice en la tabla foránea 1
+  Dim strFShw1 As String 'Nombre del campo a mostrar en la tabla foránea 1
+
+  Dim strFld2 As String 'Nombre del campo 2
+  Dim strTblf2 As String 'Nombre de la tabla foránea 2
+  Dim strFIdx2 As String 'Nombre del campo indice en la tabla foránea 2
+  Dim strFShw2 As String 'Nombre del campo a mostrar en la tabla foránea 2
+
+  strTable = stxParam[0] & stxParam[3]
+  strFKey = strTable & "i"
+
+  strFld1 = strTable & "1"
+  strTblf1 = stxParam[0]
+  strFIdx1 = stxParam[1]
+  strFShw1 = stxParam[2]
+
+  strFld2 = strTable & "2"
+  strTblf2 = stxParam[3]
+  strFIdx2 = stxParam[4]
+  strFShw2 = stxParam[5]
+
+  If cnx.Tables.Exist(strTable) = False Then
+    cnx.Tables.Add(strTable)
+    tbl = cnx.Tables[strTable]
+
+    With tbl
+      tbl.Fields.Add(strFKey, db.Serial)
+      tbl.Fields.Add(strFld1, db.Integer)
+      tbl.Fields.Add(strFld2, db.Integer)
+
+      tbl.PrimaryKey = [strFKey]
+
+      tbl.Update()
+
+      tbl.Indexes.Add(strTable & "_idx", [strFld1], True)
+
+    End With
+  Endif
+
+  If cnx.Tables.Exist(strTable) = True Then
+    Return 1
+  Else
+    Return 0
+  Endif
+
+End
+
+Public Function ViewMake1(cnx As Connection, stxParam As String[]) As Integer ''<p>Crea una Vista en la conexion que se le pasa como parametro.</p><p>La funcion trabaja con campos que se llaman TABLA+i y TABLA+n donde n es un numero correlativo</p><p>Todos los vinculas seran left join y el orden sera por la segunda columna</p><p>Por ejemplo para una tabla de productos donde hay un campo color y otro clase y ambos son tablas relacionadas</p><p></p><p>Donde el orden de los paramentros dentro de la matriz debe ser el siguiente:</p><ul><li>0 Nombre de la tabla base</li><li>1 Este y en adelante, nombre las tablas secundarias</li></ul><p>Para el ejemplo</p><ul><li>0 productos</li><li>1 color</li><li>2 clase</li></ul><p>Donde <b>color</b> tendra los campos colori, color1 y <b>clase<b> tendrá los campos clasei, clase1. La tabla principal tendra los campos productosi, productos1, productos2</p>
+
+  Dim ptbl As Table
+  Dim strType As String
+  Dim stxTb As New String[]
+  Dim strTb As String
+  Dim strFx As String
+  Dim strFs As String
+
+  Dim stxFinfo As New String[]
+  Dim stxHeader As New String[]
+  Dim stxFields As New String[]
+  Dim stxJoints As New String[]
+  Dim stxOrders As New String[]
+
+  Dim strCreate As String
+  Dim fld As Field
+  Dim strEnd As String
+  Dim intfld As Integer
+  Dim intX As Integer
+
+  strType = cnx.Type
+  ptbl = cnx.Tables[stxParam[0]]
+  ' "postgresql"
+  ' "mysql"
+  ' "sqlite2"
+  ' "sqlite3"
+  ' "sqlite"
+  ' "odbc"
+  stxHeader.Clear
+  stxFields.Clear
+  stxJoints.Clear
+  stxOrders.Clear
+  stxHeader.Add("CREATE VIEW `" & "v" & stxParam[0] & "` AS SELECT\n")
+  With ptbl
+    intfld = 0
+    For Each fld In .Fields
+
+      ' If intFld = .Fields.Count - 1 Then
+      '   strEnd = ""
+      ' Else
+      '   strEnd = ","
+      ' Endif
+      Select .PrimaryKey.Find(fld.Name)
+        Case 0 'es la primera clave el resto, si las hubiera, se destartan
+          stxFields.Add(fld.Name & strEnd)
+          stxTb.Add(String.Mid(fld.Name, 1, 2))
+          stxTb.Add(String.Mid(fld.Name, 3, 2))
+
+        Case Else
+
+          Select fld.Type
+            Case db.Integer
+              'stxFinfo = getFieldInfo(cnx, stxParam[0], fld.Name)
+              'Esto esta manual porque no logre poner foreign keys por código
+
+              strTb = stxTb[intX]
+              strFx = strTb & "i"
+              strFs = strTb & "1"
+              Inc intX
+              stxFinfo = ["", "", "", "", strTb, strFx, strFs]
+
+              If stxFinfo[4] <> "" Then
+                stxFields.Add(stxFinfo[6] & " AS " & fld.Name)
+                stxFields.Add(stxFinfo[5])
+                stxJoints.Add("LEFT JOIN " & stxFinfo[4] & " ON " & fld.Name & "=" & stxFinfo[5])
+                stxOrders.Add(fld.Name)
+              Else
+                stxFields.Add(fld.Name)
+              Endif
+            Case Else
+              stxFields.Add(fld.Name)
+          End Select
+      End Select
+      Inc intfld
+
+    Next
+  End With
+  strCreate = stxHeader.Join("\n")
+  strCreate &= stxFields.Join(",\n")
+  strCreate &= "\n"
+  strCreate &= "FROM " & stxParam[0] & "\n"
+  strCreate &= stxJoints.Join("\n")
+  strCreate &= "\n"
+  strCreate &= "ORDER BY " & stxOrders.Join(", ")
+  'strCreate &= "\n"
+  'strCreate &= ")"
+
+  cnx.Exec(strCreate)
+
+End
+
+Public Function RecordNewTest(cnx As Connection, strTbl As String, stxIns As String[][]) As Integer '' Inserta un registro nuevo en la base de datos.
+
+  Dim resIns As Result
+  Dim int As Integer
+  Dim strSQL As String
+  Dim res As Result
+
+  strSQL = "select " & stxIns[int][0] &
+    " from " & strTbl &
+    " where " & stxIns[int][0] &
+    "='" & stxIns[int][1] & "'"
+  res = cnx.Exec(strSQL)
+
+  If res.Count = 0 Then ' Esto es para evitar insertar un registro que ya existe
+    If stxIns.Count > 0 Then
+      resIns = cnx.Create(strTbl)
+      For int = 0 To stxIns.Max
+        resIns[stxIns[int][0]] = stxIns[int][1]
+      Next
+      resIns.Update
+    Endif
+  Endif
+
+End
+
+Public Function RecordNewRefTest(cnx As Connection, stxTbl As String[], stxIns As String[][]) As Integer '' Inserta un registro nuevo en la base de datos.
+
+  Dim resIns As Result
+  Dim int As Integer
+  Dim strSQL As String
+  Dim res As Result
+  Dim fld As ResultField
+  Dim strRef As String
+
+  Dim strChk As String
+  Dim resChk As Result
+
+  strSQL = "select * " &
+    " from " & stxTbl[1] &
+    " where " & stxTbl[2] &
+    "='" & stxIns[int][1] & "'"
+  res = cnx.Exec(strSQL)
+
+  For Each fld In res.Fields
+    Select fld.Type
+      Case db.Integer, db.Serial
+        strRef = fld.Name
+    End Select
+  Next
+
+  strChk = "select * " &
+    " from " & stxTbl[0] &
+    " where " & stxIns[int][0] &
+    "='" & res[strRef] & "'"
+  resChk = cnx.Exec(strChk)
+
+  If resChk.Count = 0 Then ' Esto es para evitar insertar un registro que ya existe
+    If stxIns.Count > 0 Then
+      resIns = cnx.Create(stxTbl[0])
+      For int = 0 To stxIns.Max
+        resIns[stxIns[int][0]] = res[strRef]
+        Print stxIns[int][0] & ": " & res[strRef]
+      Next
+    Endif
+    resIns.Update
+  Endif
 
 End

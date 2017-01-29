@@ -1,0 +1,485 @@
+' Gambas module file
+
+'
+' Gambas extra functions
+' Compilation of utilities and functions developed by the gambas comunity.
+'
+' Copyright (C) Martín Belmonte
+'
+' This program is free software; you can redistribute it and/or modify
+' it under the terms of the GNU General Public License as published by
+' the Free Software Foundation; either version 2 of the License, or
+' (at your option) any later version.
+'
+' This program is distributed in the hope that it will be useful,
+' but WITHOUT ANY WARRANTY; without even the implied warranty of
+' MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+' GNU General Public License for more details.
+'
+' You should have received a copy of the GNU General Public License
+' along with this program; if not, write to the Free Software
+' Foundation, Inc., 51 Franklin St, Fifth Floor,
+' Boston, MA  02110-1301  USA
+'
+' usamos el evento lostfocus para comprobar sólo cuando se pierde el foco del textbox
+
+Public Function VEmail(strAddress As String) As String '' Validación de una direccion de correo electrónico
+  'Propuesta por Jguardon y modificado por Tincho
+  'https://www.gambas-es.org/viewtopic.php?f=1&t=359
+
+  Dim regex As New RegExp
+  Dim strPattern As String = "^[A-Z0-9._%+-]+@[A-Z0-9.-]+\\.[A-Z]{2,4}$"
+  Dim strChecked As String
+
+  If regex.Match(strAddress, strPattern, regex.Caseless) = True Then
+    strChecked = strAddress
+  Else
+    strChecked = ""
+  Endif
+
+  Return strChecked
+
+End
+
+Public Function OnlyTextParenthesis(strInput As String) As String '' Validación de solo texto, espacio, punto y coma entre parentesis.
+
+  Dim regex As New RegExp
+  Dim strPattern As String = "([A-Za-z. ]*)"
+  Dim strChecked As String
+
+  If regex.Match(strInput, strPattern, regex.Caseless) = True Then
+    strChecked = strInput
+  Else
+    strChecked = ""
+  Endif
+
+  Return strChecked
+
+End
+
+Public Function DictFeeder(strWord As String[], strLang As String) As String '' Lista palabras en tres arcivos LANG_words.txt donde LANG es ES,EN etc.
+
+End
+
+Public Function OnlyLeters(strInput As String) As String '' Validación de palabras.
+
+  Dim int As Integer
+  Dim strSymbol As String
+
+  Dim stxLeters As New String[]
+  Dim intKey As Integer
+  Dim stxOut As New String[]
+  Dim strOut As String
+
+  Dim btxLeters As New Byte[]
+
+  btxLeters = Byte[].FromString(strInput)
+
+  stxOut.Clear
+  stxLeters.Clear
+
+  stxLeters = Split("a:b:c:d:e:f:g:h:i:j:k:l:m:n:o:p:q:r:s:t:u:v:w:x:y:z:A:B:C:D:E:F:G:H:I:J:K:L:M:N:O:P:Q:R:S:T:U:V:W:X:Y:Z:á:à:â:ã:é:è:ê:í:ï:ó:ô:õ:ö:ú:ç:ñ:Á:À:Â:Ã:É:È:Í:Ï:Ó:Ô:Õ:Ö:Ú:Ç:Ñ", ":")
+
+  For int = 1 To String.Len(strInput)
+    strSymbol = String.Mid(strInput, int, 1)
+    intKey = stxLeters.Find(strSymbol)
+    If intKey > -1 Then
+      stxOut.Add(strSymbol)
+    End If
+  Next
+
+  strOut = stxOut.Join("")
+
+  Return strOut
+
+End
+
+Public Function OnlyCyrilic(strInput As String) As String '' Validación de palabras.
+
+  Dim int As Integer
+  Dim strSymbol As String
+
+  Dim stxLeters As New String[]
+  Dim intKey As Integer
+  Dim stxOut As New String[]
+  Dim strOut As String
+
+  Dim btxLeters As New Byte[]
+
+  btxLeters = Byte[].FromString(strInput)
+
+  stxOut.Clear
+  stxLeters.Clear
+
+  stxLeters = Split("а:б:в:г:д:е:ё:ж:з:и:й:к:л:м:н:о:п:р:с:т:у:ф:х:ц:ч:ш:щ:ъ:ы:ь:э:ю:я:А:Б:В:Г:Д:Е:Ё:Ж:З:И:Й:К:Л:М:Н:О:П:Р:С:Т:У:Ф:Х:Ц:Ч:Ш:Щ:Ъ:Ы:Ь:Э:Ю:Я", ":")
+
+  For int = 1 To String.Len(strInput)
+    strSymbol = String.Mid(strInput, int, 1)
+    If strSymbol = "ó" Then
+      Print strSymbol
+    Endif
+    intKey = stxLeters.Find(strSymbol)
+    If intKey > -1 Then
+      stxOut.Add(strSymbol)
+    End If
+  Next
+
+  strOut = stxOut.Join("")
+
+  Return strOut
+
+End
+
+Public Function OnlyText(strInput As String) As String '' Validación de solo texto, Numeros NO, Doble espacio NO, Espacio Al principio y/o al final NO.
+
+  Dim int As Integer
+  Dim strSymbol As String
+  Dim strChecked As String
+  Dim strError As String
+  Dim stxSpaces As New String[]
+  Dim stxRepated As New String[]
+  Dim stxExcluded As New String[]
+  Dim stxEx As New String[]
+  Dim inxExN As New String[]
+
+  Dim stxLeters As New String[]
+  Dim stxLower As New String[]
+  Dim stxUpper As New String[]
+  Dim intM As Integer ' Contados de letras mayúsculas
+  Dim intKey As Integer
+  Dim intKx As Integer
+
+  strError = ""
+  stxSpaces.Clear
+  stxRepated.Clear
+  stxExcluded.Clear
+  stxEx.Clear
+  inxExN.Clear
+
+  stxLeters.Clear
+  stxLower.Clear
+  stxUpper.Clear
+
+  stxUpper = Split("A:B:C:D:E:F:G:H:I:J:K:L:M:N:O:P:Q:R:S:T:U:V:W:X:Y:Z:Á:À:Â:Ã:É:È:Í:Ï:Ó:Ô:Õ:Ö:Ú:Ç:Ñ", ":")
+  stxLower = Split("a:b:c:d:e:f:g:h:i:j:k:l:m:n:o:p:q:r:s:t:u:v:w:x:y:z:à:â:ã:é:è:ê:í:ï:ó:ô:õ:ö:ú:ç:ñ", ":")
+
+  stxLeters.Insert(stxLower)
+  stxLeters.Insert(stxUpper)
+
+  intM = 0
+
+  For int = 1 To String.Len(strInput)
+
+    strSymbol = String.Mid(strInput, int, 1)
+
+    intKey = stxLeters.Find(strSymbol)
+
+    Select intKey
+      Case -1
+        Select strSymbol
+          Case " ", ",", ".", "¿", "?", "!", "¡"
+            If String.Right(strChecked) <> strSymbol Then
+              strChecked &= strSymbol
+            Else
+              stxRepated.Add("'" & strSymbol & "'")
+            Endif
+          Case Else
+            Select Asc(strSymbol)
+              Case 9
+                stxExcluded.Add("'TB'")
+              Case 10
+                stxExcluded.Add("'LF'")
+              Case 13
+                stxExcluded.Add("'CR'")
+              Case Else
+                stxExcluded.Add("'" & strSymbol & "'")
+            End Select
+
+        End Select
+      Case Else
+
+        'Verificacion de mas de una mayúscula
+        If stxUpper.Find(strSymbol) > -1 Then
+          Inc intM
+        Endif
+
+        strChecked &= strSymbol
+    End Select
+  Next
+
+  If String.Right(strChecked) = " " Then
+    strChecked = String.Mid(strChecked, 1, String.Len(strChecked) - 1)
+    stxSpaces.Add("end")
+  Endif
+
+  If String.Left(strChecked) = " " Then
+    strChecked = String.Mid(strChecked, 2)
+    stxSpaces.Add("ini")
+  Endif
+
+  If stxSpaces.Find("ini") > -1 Then
+    If stxSpaces.Find("end") > -1 Then
+      strError &= "[" & ("Espacios al inicio y al final") & "]"
+    Else
+      strError &= "[" & ("Espacio al inicio") & "]"
+    Endif
+  Else
+    If stxSpaces.Find("end") > -1 Then
+      strError &= "[" & ("Espacio al final") & "]"
+    Endif
+  Endif
+
+  If stxRepated.Count > 0 Then
+    strError &= "[" & ("Repetidos") & ": " & stxRepated.Join(",") & "]"
+  Endif
+
+  If stxExcluded.Count > 0 Then
+    For int = 0 To stxExcluded.Max
+      intKx = stxEx.Find(stxExcluded[int])
+
+      If intKx = -1 Then
+        stxEx.Add(stxExcluded[int])
+        inxExN.Add(1)
+      Else
+        inxExN[intKx] = inxExN[intKx] + 1
+      Endif
+    Next
+  Endif
+
+  stxExcluded.Clear
+
+  If stxEx.Count > 0 Then
+    For int = 0 To stxEx.Max
+      Select inxExN[int]
+        Case 1
+          stxExcluded.Add(stxEx[int])
+        Case Else
+          stxExcluded.Add(stxEx[int] & "#" & CStr(inxExN[int]))
+      End Select
+    Next
+    strError &= "[" & ("Excluidos") & ": " & stxExcluded.Join(",") & "]"
+  Endif
+
+  If intM > 1 Then
+    strError &= "[" & ("Mas de una letra mayúscula") & "]"
+  Endif
+
+  If strError = "" Then
+    Return strChecked
+  Else
+    Return strInput & "\t" & strError
+  Endif
+
+End
+
+Public Function OnlyTextCyrilic(strInput As String) As String '' Validación de solo texto, Numeros NO, Doble espacio NO, Espacio Al principio y/o al final NO.
+
+  Dim int As Integer
+  Dim strSymbol As String
+  Dim strChecked As String
+  Dim strError As String
+  Dim stxSpaces As New String[]
+  Dim stxRepated As New String[]
+  Dim stxExcluded As New String[]
+  Dim stxEx As New String[]
+  Dim inxExN As New String[]
+
+  Dim stxLeters As New String[]
+  Dim stxLower As New String[]
+  Dim stxUpper As New String[]
+  Dim intM As Integer ' Contados de letras mayúsculas
+  Dim intKey As Integer
+  Dim intKx As Integer
+
+  strError = ""
+  stxSpaces.Clear
+  stxRepated.Clear
+  stxExcluded.Clear
+  stxEx.Clear
+  inxExN.Clear
+
+  stxLeters.Clear
+  stxLower.Clear
+  stxUpper.Clear
+
+  stxUpper = Split("А:Б:В:Г:Д:Е:Ё:Ж:З:И:Й:К:Л:М:Н:О:П:Р:С:Т:У:Ф:Х:Ц:Ч:Ш:Щ:Ъ:Ы:Ь:Э:Ю:Я", ":")
+  stxLower = Split("а:б:в:г:д:е:ё:ж:з:и:й:к:л:м:н:о:п:р:с:т:у:ф:х:ц:ч:ш:щ:ъ:ы:ь:э:ю:я", ":")
+
+  stxLeters.Insert(stxLower)
+  stxLeters.Insert(stxUpper)
+
+  intM = 0
+
+  For int = 1 To String.Len(strInput)
+
+    strSymbol = String.Mid(strInput, int, 1)
+
+    intKey = stxLeters.Find(strSymbol)
+
+    Select intKey
+      Case -1
+        Select strSymbol
+          Case " ", ",", ".", "¿", "?", "!", "¡"
+            If String.Right(strChecked) <> strSymbol Then
+              strChecked &= strSymbol
+            Else
+              stxRepated.Add("'" & strSymbol & "'")
+            Endif
+          Case Else
+            Select Asc(strSymbol)
+              Case 9
+                stxExcluded.Add("'TB'")
+              Case 10
+                stxExcluded.Add("'LF'")
+              Case 13
+                stxExcluded.Add("'CR'")
+              Case Else
+                stxExcluded.Add("'" & strSymbol & "'")
+            End Select
+
+        End Select
+      Case Else
+
+        'Verificacion de mas de una mayúscula
+        If stxUpper.Find(strSymbol) > -1 Then
+          Inc intM
+        Endif
+
+        strChecked &= strSymbol
+    End Select
+  Next
+
+  If String.Right(strChecked) = " " Then
+    strChecked = String.Mid(strChecked, 1, String.Len(strChecked) - 1)
+    stxSpaces.Add("end")
+  Endif
+
+  If String.Left(strChecked) = " " Then
+    strChecked = String.Mid(strChecked, 2)
+    stxSpaces.Add("ini")
+  Endif
+
+  If stxSpaces.Find("ini") > -1 Then
+    If stxSpaces.Find("end") > -1 Then
+      strError &= "[" & ("Espacios al inicio y al final") & "]"
+    Else
+      strError &= "[" & ("Espacio al inicio") & "]"
+    Endif
+  Else
+    If stxSpaces.Find("end") > -1 Then
+      strError &= "[" & ("Espacio al final") & "]"
+    Endif
+  Endif
+
+  If stxRepated.Count > 0 Then
+    strError &= "[" & ("Repetidos") & ": " & stxRepated.Join(",") & "]"
+  Endif
+
+  If stxExcluded.Count > 0 Then
+    For int = 0 To stxExcluded.Max
+      intKx = stxEx.Find(stxExcluded[int])
+
+      If intKx = -1 Then
+        stxEx.Add(stxExcluded[int])
+        inxExN.Add(1)
+      Else
+        inxExN[intKx] = inxExN[intKx] + 1
+      Endif
+    Next
+  Endif
+
+  stxExcluded.Clear
+
+  If stxEx.Count > 0 Then
+    For int = 0 To stxEx.Max
+      Select inxExN[int]
+        Case 1
+          stxExcluded.Add(stxEx[int])
+        Case Else
+          stxExcluded.Add(stxEx[int] & "#" & CStr(inxExN[int]))
+      End Select
+    Next
+    strError &= "[" & ("Excluidos") & ": " & stxExcluded.Join(",") & "]"
+  Endif
+
+  If intM > 1 Then
+    strError &= "[" & ("Mas de una letra mayúscula") & "]"
+  Endif
+
+  If strError = "" Then
+    Return strChecked
+  Else
+    Return strInput & "\t" & strError
+  Endif
+
+End
+
+Public Function VDNISpain(strDNI As String) As Boolean '' Validación de un dni español
+  'Propuesta por Jguardon y modificado por Tincho
+  'https://www.gambas-es.org/viewtopic.php?f=1&t=359
+
+  Dim regex As New RegExp
+  Dim strPattern As String = "^\\d{6,8}[A-Z]$"
+  'Dim strLeter As String
+  Dim inxRest As New Integer[]
+  Dim stxRest As New String[]
+
+  inxRest.Clear
+  inxRest = [0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19, 20, 21, 22]
+
+  stxRest.Clear
+  stxRest = ["T", "R", "W", "A", "G", "M", "Y", "F", "P", "D", "X", "B", "N", "J", "Z", "S", "Q", "V", "H", "L", "C", "K", "E"]
+
+  ' Primera pasada, verificar si no hay caracteres no compatibles
+  If regex.Match(strDNI, strPattern, regex.Caseless) = True Then
+    ' Segunda pasada, si se trata de un DNI o un NIE
+
+    Print strDNI
+  Endif
+
+End
+
+Public Function VRUTChile(strRutIn As String, strDigRut As String) As Boolean
+  'Propuesta por DEATH y modificado por Tincho
+  'https://www.gambas-es.org/viewtopic.php?f=5&t=85
+
+  Dim intPlus As Integer
+  Dim intLen As Integer
+  Dim intConstant As Integer
+  'Dim strRutOut As String
+  Dim strRutTmp As String
+  Dim intDigit As Integer
+  Dim strDigit As String
+  Dim bolValid As Boolean
+
+  strDigit = ""
+
+  intConstant = 1
+  intLen = Len(Trim(strRutIn))
+  strRutTmp = Val(Trim(strRutIn))
+  Do Until intLen = 0
+    intConstant = intConstant + 1
+    intPlus = intPlus + Mid(strRutTmp, intLen, 1) * intConstant
+    If intConstant = 7 Then
+      intConstant = 1
+    End If
+    intLen = intLen - 1
+  Loop
+  intDigit = intPlus Mod 11
+  strDigit = Str(11 - intDigit)
+  If Val(strDigit) = 11 Then
+    strDigit = "0"
+  End If
+  If Val(strDigit) = 10 Then
+    strDigit = "K"
+  End If
+
+  If Trim(strDigit) <> Trim(strDigRut) Then
+    bolValid = False
+  Else
+    bolValid = True
+  End If
+
+  Return bolValid
+
+End

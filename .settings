@@ -1,6 +1,5 @@
 [Breakpoints]
-Count=1
-Breakpoint[1]="MData.667"
+Count=0
 
 [DebugWindow]
 Count=0
@@ -9,10 +8,7 @@ Count=0
 Path="gambas-extra-functions.gambas"
 
 [OpenFile]
-Active=2
-File[1]=".src/gef/MUtility.module:2.456"
-Count=2
-File[2]=".src/gef/MData.module:58.639"
+Count=0
 
 [Watches]
 Count=0

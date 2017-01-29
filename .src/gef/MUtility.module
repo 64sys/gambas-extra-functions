@@ -41,7 +41,7 @@ Public Function DirChooser(Optional stInputPath As String) As String  ''Seleccio
 
 End
 
-Public Function FileChooser(Optional strInputPath As String, Optional strFilter As String) As String ''Selecciona la ruta completa de un archivo, con el nombre y las extensiones. Como opcional se puede pasar un directorio que es a donde se dirigira el filechooser cuando se abra.
+Public Function FileChooser(Optional strInputPath As String, Optional strFilter As String) As String ''Selecciona la ruta completa de un archivo, con el nombre y las extensiones. Como opcional se puede pasar un directorio que es a donde se dirigira el filechooser cuando se abra. También como opcional se pued epasar un filtro de tipos de archivos separados por :, por ejemolo "txt:csv"
 
   Dim strFilepath, strExtension, strFilterA, strFilterB As String
   Dim stxExtensions As New String[]
@@ -216,6 +216,38 @@ Public Function FileVersion(strInputPath As String) As String ''Devuelve un text
 
 End
 
+Public Function FileLoad(strPath As String) As String[] '' Devuelve una matriz de texto con los valores listados en un archivo de texto desl cual se pasa su ruta como parametro.
+
+  Dim strList As String
+  Dim stxListTmp As New String[]
+  Dim stxList As New String[]
+  Dim intList As Integer
+
+  stxList.Clear
+
+  If Exist(strPath) Then
+
+    strList = File.Load(strPath)
+
+    If InStr(strList, "\n") > -1 Then
+      stxListTmp = Split(strList, "\n")
+    Else
+      If String.Len(strList) > 0 Then
+        stxListTmp.Add(strList)
+      Endif
+    Endif
+
+    For intList = 0 To stxListTmp.Max
+      If stxListTmp[intList] <> "" Then
+        stxList.Add(stxListTmp[intList])
+      Endif
+    Next
+  Endif
+
+  Return stxList
+
+End
+
 Public Function GetForeignKey(strValue As String, conRef As Connection, strTable As String, strFieldKey As String, strFieldName As String) As Integer '' Devuelve la clave del registro referenciado en otra tabla
 
   Dim intKey As Integer
@@ -223,10 +255,6 @@ Public Function GetForeignKey(strValue As String, conRef As Connection, strTable
   Dim resFeoreign As Result
   Dim stxForeignKey As New String[]
   Dim stxForeignName As New String[]
-
-  '  Dim intKey2 As Integer
-  '  Dim strSQLForeign2 As String
-  '  Dim resFeoreign2 As Result
   Dim intCounter As Integer
   Dim resInsert As Result
 
@@ -479,6 +507,23 @@ Public Function Capital(strInput As String) As String ''Devuelve un texto con la
 
 End
 
+Public Function OnlyChar(strInput As String) As String ''Devuelve un texto con sus caracteres.
+
+  Dim strOutput As String
+
+  If strInput <> "" Then
+
+    strOutput = String.UCase(String.Mid(strInput, 1, 1))
+    strOutput &= String.LCase(String.Mid(strInput, 2, String.len(strInput) - 1))
+
+  Else
+    strOutput = ""
+  Endif
+
+  Return strOutput
+
+End
+
 Public Function MouseButton(intKey As Integer) As String '' Funcion que retorna el nombre en ingés del boton del ratón que se ha presionado.
 
   Dim strMouseButton As String
@@ -606,42 +651,45 @@ Public Function FileInfo(strFilePath As String) As String[] ''Devuelve una matri
 
 End
 
-Public Function ConvertPath(txt As String) As String '' Devuelve una ruta con los caracteres hexadecimales decodificados en las URI's que se le pase.
-  ' Función de jguardon en gambas-es
+Public Function ConvertPath(strInput As String) As String '' Descodifica los caracteres hexadecimales en las URI's recorriendo la cadena dada Params: strInput la URintPos a descodificar Return: la URintPos descodificada
+  '----------------------------------------------------------------------
+  'http://www.gambas-es.org/viewtopic.php?f=1&t=2054&postdays=0&postorder=asc&start=10
+  '----------------------------------------------------------------------
+  '
 
-  Dim txt_len As Integer
-  Dim i As Integer
-  Dim ch As String
-  Dim digits As String
-  Dim resultado As String
+  Dim intLen As Integer
+  Dim intPos As Integer
+  Dim strChar As String
+  Dim strDigits As String
+  Dim strOutput As String
 
-  resultado = ""
-  txt_len = Len(txt)
-  i = 1
-  Do While i <= txt_len
+  strOutput = ""
+  intLen = Len(strInput)
+  intPos = 1
+  Do While intPos <= intLen
     ' Examinar el siguiente caracter
-    ch = Mid$(txt, i, 1)
-    If ch = "+" Then
+    strChar = Mid$(strInput, intPos, 1)
+    If strChar = "+" Then
       ' Convertir a espacio
-      resultado = resultado & "+"
-    Else If ch <> "%" Then
+      strOutput = strOutput & " "
+    Else If strChar <> "%" Then
       ' Normal, no cambiar
-      resultado = resultado & ch
-    Else If i > txt_len - 2 Then
-      resultado = resultado & ch
+      strOutput = strOutput & strChar
+    Else If intPos > intLen - 2 Then
+      strOutput = strOutput & strChar
     Else
       ' Obtener los siguientes caracteres hex.
-      digits = Mid$(txt, i + 1, 2)
-      ' Debug digits
+      strDigits = Mid$(strInput, intPos + 1, 2)
+      ' Debug strDigits
       ' aquí convertimos el valor hexadecimal a entero y
       ' se lo pasamos a Chr que devuelve el carácter correcto.
-      resultado = resultado & Chr$(CInt(Val("&" & digits)))
-      i = i + 2
+      strOutput = strOutput & Chr$(CInt(Val("&" & strDigits)))
+      intPos = intPos + 2
     Endif
-    i = i + 1
+    intPos = intPos + 1
   Loop
 
-  Return resultado
+  Return strOutput
 
 End
 
@@ -848,7 +896,7 @@ Public Function WhereRun() As Integer ''Indica si el programa se esta ejecutando
 
 End
 
-Public Sub ScanFolder(strDir As String, Optional strExt As String) As String[] '' Escanea una carpeta que se pasa como parametro en busca de archivos se puede filtrar con una lista de extensiones separadas por dos puntos ":".
+Public Function ScanFolder(strDir As String, Optional strExt As String) As String[] '' Escanea una carpeta que se pasa como parametro en busca de archivos se puede filtrar con una lista de extensiones separadas por dos puntos ":".
 
   Dim stxFiles As New String[]
   Dim stxExt As New String[]
@@ -939,6 +987,58 @@ Public Sub ScanFolder(strDir As String, Optional strExt As String) As String[] '
 
 End
 
+Public Sub SendEmail(stxAddreses As String[], stxNames As String[], Optional strMode As String, Optional strSubject As String, Optional strBody As String, Optional strAttachment As String)
+
+  Dim intR As Integer
+  Dim strAddresses As String
+  Dim strNames As String
+
+  For intR = 0 To stxAddreses.Max
+
+    If intR = 0 Then
+      strAddresses = stxAddreses[intR]
+    Else
+      strAddresses = strAddresses & "; " & stxAddreses[intR]
+    Endif
+  Next
+
+  For intR = 0 To stxNames.Max
+
+    Select intR
+      Case 0
+        strNames = stxNames[intR]
+
+      Case stxNames.Max
+        strNames &= " ~ " & stxNames[intR]
+
+      Case Else
+        strNames &= " ~ " & stxNames[intR]
+    End Select
+
+  Next
+
+  If strMode = "" Then
+    strMode = "to"
+  Else
+    strMode = String.LCase(strMode)
+  Endif
+
+  If strSubject = "" Then
+    strSubject = ""
+  Endif
+
+  If strAttachment = "" Then
+    strAttachment = ""
+  Endif
+
+  If strBody = "" Then
+    strBody = ("Hola") & " " & strNames & "."
+  Endif
+
+  Desktop.SendMail(stxAddreses,,, strSubject, strBody)
+
+End
+
 Public Function file_replace(file_name As String, search_for As String, replace_with As String) As Boolean
 
   Dim f As File, file_out As String
@@ -950,8 +1050,6 @@ Public Function file_replace(file_name As String, search_for As String, replace_
   file_out = Mid$(file_name, 1, Len(file_name) - 3) & "tmp"
 
   Try Kill file_out
-
-  'Try 'On Error Goto nopude:
 
   f = Open file_name For Input
 

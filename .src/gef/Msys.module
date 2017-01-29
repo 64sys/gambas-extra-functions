@@ -204,6 +204,89 @@ Public Function Vgambas() As String 'devuelve la versión de gambas intalada en 
 
 End
 
+Public Function ProjInfo(Optional strPath As String) As String[] ''Devuelve una matriz con la información del projecto alojada en el archivo ".project" si no se le pasa el camino del archivo .project del que se desea extraer la información la funcion devolvera los datos del proyecto local. Luego, el orden de cada item es el siguiente:<ol start="0"><li>Title</li><li>Description</li><li>Authors</li><li>Vendor</li><li>Version</li><li>Component</li><li>Language</li><li>Startup</li><li>Icon</li></ol>
+
+  Dim stxKeys As New String[]
+  Dim stxInfo As New String[]
+  Dim strProject As String
+  Dim stxTmp As New String[]
+  Dim stxTag As New String[]
+  Dim stxVal As New String[]
+  Dim int As Integer
+  Dim intKey As Integer
+  Dim intTag As Integer
+  Dim strVal As String
+  Dim intCount As Integer
+
+  stxKeys.Add("Title")
+  stxKeys.Add("Description")
+  stxKeys.Add("Authors")
+  stxKeys.Add("Vendor")
+  stxKeys.Add("Version")
+  stxKeys.Add("Component")
+  stxKeys.Add("Language")
+  stxKeys.Add("Startup")
+  stxKeys.Add("Icon")
+
+  stxInfo.Add("")
+  stxInfo.Add("")
+  stxInfo.Add("")
+  stxInfo.Add("")
+  stxInfo.Add("")
+  stxInfo.Add("")
+  stxInfo.Add("")
+  stxInfo.Add("")
+  stxInfo.Add("")
+
+  If strPath = "" Then
+    strPath = ".project"
+  Endif
+
+  If Exist(strPath) Then
+    strProject = File.Load(strPath)
+    stxTmp = Split(strProject, "\n")
+    For int = 0 To stxTmp.Max
+      If InStr(stxTmp[int], "=") > 0 Then
+        Select Split(stxTmp[int], "=")[0]
+          Case "Title", "Startup", "Icon", "Version", "Component", "Description", "Authors", "Language", "Vendor"
+            stxTag.Add(Split(stxTmp[int], "=")[0])
+            strVal = Replace(Split(stxTmp[int], "=")[1], Chr(34), "")
+            strVal = Replace(strVal, "\n", ":")
+            stxVal.Add(strVal)
+        End Select
+      Endif
+    Next
+  Endif
+
+  If stxTag.Count > 0 Then
+    For intKey = 0 To stxKeys.Max
+      intCount = 0
+
+      For intTag = 0 To stxTag.max
+
+        If stxTag[intTag] = stxKeys[intKey] Then
+
+          Select intCount
+            Case 0
+              stxInfo[intKey] &= stxVal[intTag]
+            Case Else
+              stxInfo[intKey] &= ":" & stxVal[intTag]
+          End Select
+
+          Inc intCount
+
+        Endif
+
+      Next
+
+    Next
+
+  Endif
+
+  Return stxInfo
+
+End
+
 Public Function Ls(Ruta As String) As String 'devuelve un listado del directorio pasado en ruta
 
   Dim sListado As String
@@ -281,8 +364,6 @@ End
 Public Function PkgStat(strPkg As String) As Boolean ''Devuelve el estado respecto a la instalacion de un paquete. Requiere como parametro de entrada el nombre exacto del paquete.
 
   Dim strDistroShort As String
-  'Dim stxDistro As New String[]
-  'Dim intN As Integer
   Dim strCommand As String
   Dim strPkgStatus As String
   Dim bolPkgStatus As Boolean
@@ -355,7 +436,7 @@ Public Function PkgStat(strPkg As String) As Boolean ''Devuelve el estado respec
 
 End
 
-Public Function XDGFolder() As String[]
+Public Function XDGFolder() As String[] '' Devuelve una matriz de texto con las rutas de las carpetas de musica, imagenes, documentos etc. del directorio /home/user
 
   Dim strHome As String
   Dim stxXDGTmp As New String[]
@@ -406,22 +487,69 @@ Public Function XDGFolder() As String[]
 
 End
 
-Public Function PkgDep(stxPackages As String[]) As Integer '' Verifica si los paqutes que se le pasan como parametros en una matriz, estan instalados en el sistema, si alguno o todos estan pendientes de instalar este modulo propondra instalarlos y abrira la terminal de comandos para que ingreses la clave de administrador.
+Public Function PkgDep(stxPackages As String[]) As String[] '' Verifica si los paqutes que se le pasan como parametros en una matriz, estan instalados en el sistema, si alguno o todos estan pendientes de instalar este modulo propondra instalarlos y abrira la terminal de comandos para que ingreses la clave de administrador.
 
   Dim intPkg As Integer
   Dim stxPackagesInstall As New String[]
   Dim strMessage As String
   Dim strCommand As String
-  Dim intStatus As Integer
 
-  'stxPackages = Split("libimage-exiftool-perl:elinks", ":")
   For intPkg = 0 To stxPackages.Max
 
     If PkgStat(stxPackages[intPkg]) = False Then
+
       stxPackagesInstall.Add(stxPackages[intPkg])
 
     Endif
   Next
+
+  If stxPackagesInstall.Count > 0 Then
+    Select stxPackagesInstall.Count
+      Case 1
+        strMessage = ("Falta instalar el paquete")
+
+      Case Else
+        strMessage = ("Faltan instalar los siguientes paquetes")
+    End Select
+
+    Select DistroShort()
+
+      Case "debian", "ubuntu", "mint"
+        strCommand = "sudo apt-get install " & stxPackagesInstall.Join(" ")
+
+      Case "manjaro", "arch"
+        strCommand = "sudo pacman -S " & stxPackagesInstall.Join(" ")
+      Case "fedora", "redhat"
+        strCommand = "sudo dnf install " & stxPackagesInstall.Join(" ")
+      Case "gentoo"
+        strCommand = "sudo emerge -a " & stxPackagesInstall.Join(" ")
+      Case "suse", "opensuse"
+        strCommand = "sudo zipper install " & stxPackagesInstall.Join(" ")
+    End Select
+    strCommand = Replace(strCommand, "-", Chr(45)) ' Esto es porque sendkeys tiene problermas con "-"
+    Select Message.Question(strMessage & ":" & gb.NewLine &
+          stxPackagesInstall.Join(gb.NewLine) & gb.NewLine &
+          ("Puede usar la siguente orden") & ":" & gb.NewLine &
+          strCommand & gb.NewLine &
+          ("¿Quiere abrir la terminal para poceder?"), ("Sí"), ("No"))
+      Case 1
+        Desktop.OpenTerminal
+        Wait 0.25
+        Desktop.SendKeys(strCommand)
+    End Select
+  Endif
+  Return stxPackagesInstall
+
+End
+
+Public Function PkgInstall(stxPackagesInstall As String[]) As String[] '' Instala los paqutes que se le pasan como parametros en una matriz de texto.
+
+  '  Dim intPkg As Integer
+  Dim stxPackagesInstalled As New String[]
+  Dim strMessage As String
+  Dim strCommand As String
+  Dim prsInstall As Process
+  Dim intInst As Integer
 
   If stxPackagesInstall.Count > 0 Then
     Select stxPackagesInstall.Count
@@ -456,12 +584,27 @@ Public Function PkgDep(stxPackages As String[]) As Integer '' Verifica si los pa
           ("¿Quiere abrir la terminal para poceder?"), ("Sí"), ("No"))
 
       Case 1
-        Desktop.OpenTerminal
-        Wait 0.25
-        Desktop.SendKeys(strCommand)
+        ' Desktop.OpenTerminal
+        ' Wait 0.25
+        ' Desktop.SendKeys(strCommand)
+
+        prsInstall = Shell strCommand
+
+        While prsInstall.State = prsInstall.Running
+          Wait 0.1
+        Wend
 
     End Select
 
   Endif
+
+  For intInst = 0 To stxPackagesInstall.Max
+    If PkgStat(stxPackagesInstall[intInst]) = True Then
+      stxPackagesInstalled.Add(stxPackagesInstall[intInst])
+    Endif
+
+  Next
+
+  Return stxPackagesInstalled
 
 End

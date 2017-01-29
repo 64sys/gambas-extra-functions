@@ -132,6 +132,18 @@ devuelve el tipo de Procesador
 #### PkgStat
 Devuelve el estado respecto a la instalacion de un paquete. Requiere como parametro de entrada el nombre exacto del paquete.
 
+#### ProjectInfo()
+Devuelve una matriz con la información del projecto alojada en el archivo ".project", donde el orden de cada item es el siguiente:
+0 Title
+1 Description
+2 Authors
+3 Vendor
+4 Version
+5 Component
+6 Language
+7 Startup
+8 Icon
+
 #### Ram
 Devuelve cantidad de Ram en MB tambien con free -m
 
@@ -155,20 +167,102 @@ Devuelve el Grupo de trabajo del pc
 ### Module Database
 This module groups the functions focused to the databases and the intrraccion with them.
 
-#### getDBinfo
-Extraccion de la informacion de la estructura de la base de datos
 
-#### getTableFieds
+### DBSqlite
+Inicia una base de datos o la crea y la inicia. Si la base de datos no existe, entonces crea una y la inicia.
+stxDB As String[] donde 0=DBHost. 1=DBName. 2=DBPath
+strMod As String 'Optional'
+Devuelve una conexion y como parametro de entrada requiere una matriz con los parametros de la base.
+Connection
+
+### getTableFields
 Extraccion de la informacion de la estructura de la tabla pasada como parametro. Devuelve una matriz de texto con los parametros de todos los campos de la tabla en el siguiente formato de 13 parametros separados por ":"
 00 TableName
 01 FieldName [From gb.db]
 02 FieldType [From gb.db]
-03 FieldDefaultValue [From gb.db]
-04 Null / Not Null
-05 Primary Key
-06 Autoincrement / Unique
+03 Unique [YU|NU]
+04 Null / Not Null [YN|NN]
+05 Primary Key [YK|NK]
+06 Autoincrement [YA|NA]
 07 ForeignTableName
 08 ForeignFieldIndexName
 09 ForeignFieldShowName
+10 Title
 Para el caso de campos que no tienen claves foráneas las posiciones 7,8,9 seran vacias "".
+
+Para las vistas (que ademas son las que se usan en los grisdviews para mostrar los datos)
+00 ViewName
+01 FieldName [From gb.db]
+02 FieldType [From gb.db]
+03 Order ["asc" | "desc" | ""]
+04 Filter Type ["="/"<>" | ">"/"<" | ">="/"<=" | "like"/"not like" | "in" ] *
+05 Filter Value
+06 Width
+07 Spare > Future for Functions
+08 Spare
+09 Spare
+10 Title
+
+* =	Equal
+<>	Not equal. Note: In some versions of SQL this operator may be written as !=
+>	Greater than
+<	Less than
+>=	Greater than or equal
+<=	Less than or equal
+BETWEEN	Between an inclusive range
+LIKE	Search for a pattern
+IN	To specify multiple possible values for a column
+
+connDB As Connection
+strTab As String
+String[] 
+
+### getViewFields
+Extraccion de la informacion de la estructura de una vista.
+
+connDB As Connection, strView As String) As String[]
+
+### RecordDelete
+connDB As Connection, strTable As String, stxDBFields As String[], intKey As Integer
+Integer
+Devuelve -1 si no existe o un numero (la clave) si existe el texto que se pasa como parametro junto con la tabla y el campo.
+
+### RecordExist
+connDB As Connection, strTable As String, strFieldVal As String, strFieldKey As String, strValue As String
+As Integer
+Devuelve -1 si no existe o un numero (la clave) si existe el texto que se pasa como parametro junto con la tabla y el campo.
+
+### RecordForeign
+connDB As Connection
+strTable As String
+strFieldCheck As String
+strValueCheck As String
+stxDBFields As String[]
+As String
+Devuelve la clave en la tabla foránea para un valor de texto si el campo es referenciado o -1 si el campo no es referenciado o no existe el valor en el campo a mostrar.
+
+### RecordKey
+connDB As Connection Es laq conxión a la base de  datos
+strTable As String Es el nombre de la tabla sobre la que intenta saber que tipo de campo es
+stxDBFields As String[]
+As String
+
+Devuelve el nombre del campo clave de la tabla.
+
+strFieldCheck As String Es el campo a verificar.\nstrValueCheck As String Es el valor del registro para el campo a verificar.\nstxDBFields As String[] Es la lista de todos los campos de la base de datos.
+
+### RecordNew
+connDB As Connection, strTable As String, stxDBFields As String[], stxValues As String[])
+As Integer
+Inserta un registro nuevo en la base de datos. Si este es insertado correctamente la funcion devuelve la clave de dicho registro, de lo contratio devuelve -1
+
+### RecordNewRef
+connDB As Connection, strTable As String, stxInsert As String[], stxValues As String[])
+As Integer
+Inserta un registro nuevo en la base de datos, ctnVal es una coleccion opcional del pares de campo:valor.
+
+### RecordWrite
+connDB As Connection, strTable As String, stxEdit As String[], stxValues As String[])
+As Integer
+Inserta un registro nuevo en la base de datos, ctnVal es una coleccion opcional del pares de campo:valor.
 
