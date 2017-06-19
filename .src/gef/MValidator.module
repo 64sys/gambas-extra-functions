@@ -41,6 +41,28 @@ Public Function VEmail(strAddress As String) As String '' Validación de una dir
 
 End
 
+Public Function ArrangeParagraph(strInText As String) As String
+
+  Dim stxUgly As New String[]
+  Dim stxGood As New String[]
+  Dim int As Integer
+
+  stxUgly.Clear
+  stxGood.Clear
+
+  stxUgly.Add("-\n\n")
+  stxGood.Add("\n")
+
+  For int = 0 To stxUgly.Max
+    If InStr(strInText, stxUgly[int]) > 0 Then
+      strInText = Replace(strInText, stxUgly[int], stxGood[int])
+    Endif
+  Next
+
+  Return strInText
+
+End
+
 Public Function OnlyTextParenthesis(strInput As String) As String '' Validación de solo texto, espacio, punto y coma entre parentesis.
 
   Dim regex As New RegExp
@@ -57,9 +79,9 @@ Public Function OnlyTextParenthesis(strInput As String) As String '' Validación
 
 End
 
-Public Function DictFeeder(strWord As String[], strLang As String) As String '' Lista palabras en tres arcivos LANG_words.txt donde LANG es ES,EN etc.
-
-End
+' Public Function DictFeeder(strWord As String[], strLang As String) As String '' Lista palabras en tres arcivos LANG_words.txt donde LANG es ES,EN etc.
+'
+' End
 
 Public Function OnlyLeters(strInput As String) As String '' Validación de palabras.
 
@@ -79,6 +101,94 @@ Public Function OnlyLeters(strInput As String) As String '' Validación de palab
   stxLeters.Clear
 
   stxLeters = Split("a:b:c:d:e:f:g:h:i:j:k:l:m:n:o:p:q:r:s:t:u:v:w:x:y:z:A:B:C:D:E:F:G:H:I:J:K:L:M:N:O:P:Q:R:S:T:U:V:W:X:Y:Z:á:à:â:ã:é:è:ê:í:ï:ó:ô:õ:ö:ú:ç:ñ:Á:À:Â:Ã:É:È:Í:Ï:Ó:Ô:Õ:Ö:Ú:Ç:Ñ", ":")
+
+  For int = 1 To String.Len(strInput)
+    strSymbol = String.Mid(strInput, int, 1)
+    intKey = stxLeters.Find(strSymbol)
+    If intKey > -1 Then
+      stxOut.Add(strSymbol)
+    End If
+  Next
+
+  strOut = stxOut.Join("")
+
+  Return strOut
+
+End
+
+Public Function CaptionCheck(strInput As String) As String '' Validación del texto de un control en KDE el texto de los botones por ejemplo tiene un simbolo & delante del texto.
+
+  Dim strOut As String
+
+  If String.Left(strInput) = "&" Then
+    strOut = String.Right(strInput, -1)
+  Endif
+  Return strOut
+
+End
+
+Public Function NoSymbols(strInput As String) As String '' Solo letras y números, y las letras sin acentos.
+
+  Dim int As Integer
+  Dim strSymbol As String
+
+  Dim stxLeters As New String[]
+  Dim intKey As Integer
+  Dim stxOut As New String[]
+  Dim strOut As String
+
+  Dim btxLeters As New Byte[]
+  Dim stxRepin As New String[]
+  Dim stxRepout As New String[]
+  Dim intRep As Integer
+
+  btxLeters = Byte[].FromString(strInput)
+
+  stxOut.Clear
+  stxLeters.Clear
+
+  stxLeters = Split("a:b:c:d:e:f:g:h:i:j:k:l:m:n:o:p:q:r:s:t:u:v:w:x:y:z:A:B:C:D:E:F:G:H:I:J:K:L:M:N:O:P:Q:R:S:T:U:V:W:X:Y:Z:á:à:â:ã:é:è:ê:í:ï:ó:ô:õ:ö:ú:ç:ñ:Á:À:Â:Ã:É:È:Ê:Í:Ï:Ó:Ô:Õ:Ö:Ú:Ç:Ñ:0:1:2:3:4:5:6:7:8:9", ":")
+  stxRepin = Split("Á:À:Â:Ã:É:È:Ê:Í:Ï:Ó:Ô:Õ:Ö:Ú:Ñ:á:à:â:ã:é:è:ê:í:ï:ó:ô:õ:ö:ú:ñ", ":")
+  stxRepout = Split("A:A:A:A:E:E:E:I:I:O:O:O:O:U:N:a:a:a:a:e:e:e:i:i:o:o:o:o:u:n", ":")
+
+  For int = 1 To String.Len(strInput)
+    strSymbol = String.Mid(strInput, int, 1)
+    intKey = stxLeters.Find(strSymbol)
+    If intKey > -1 Then
+
+      intRep = stxRepin.Find(strSymbol)
+      If intRep > -1 Then
+        strSymbol = stxRepout[intRep]
+      Endif
+
+      stxOut.Add(strSymbol)
+    End If
+  Next
+
+  strOut = stxOut.Join("")
+
+  Return strOut
+
+End
+
+Public Function OnlyNumbers(strInput As String) As String ''Devuelve un texto solo con numeros.
+
+  Dim int As Integer
+  Dim strSymbol As String
+
+  Dim stxLeters As New String[]
+  Dim intKey As Integer
+  Dim stxOut As New String[]
+  Dim strOut As String
+
+  Dim btxLeters As New Byte[]
+
+  btxLeters = Byte[].FromString(strInput)
+
+  stxOut.Clear
+  stxLeters.Clear
+
+  stxLeters = Split("0:1:2:3:4:5:6:7:8:9", ":")
 
   For int = 1 To String.Len(strInput)
     strSymbol = String.Mid(strInput, int, 1)
@@ -115,9 +225,6 @@ Public Function OnlyCyrilic(strInput As String) As String '' Validación de pala
 
   For int = 1 To String.Len(strInput)
     strSymbol = String.Mid(strInput, int, 1)
-    If strSymbol = "ó" Then
-      Print strSymbol
-    Endif
     intKey = stxLeters.Find(strSymbol)
     If intKey > -1 Then
       stxOut.Add(strSymbol)
@@ -420,7 +527,6 @@ Public Function VDNISpain(strDNI As String) As Boolean '' Validación de un dni 
 
   Dim regex As New RegExp
   Dim strPattern As String = "^\\d{6,8}[A-Z]$"
-  'Dim strLeter As String
   Dim inxRest As New Integer[]
   Dim stxRest As New String[]
 
@@ -446,7 +552,6 @@ Public Function VRUTChile(strRutIn As String, strDigRut As String) As Boolean
   Dim intPlus As Integer
   Dim intLen As Integer
   Dim intConstant As Integer
-  'Dim strRutOut As String
   Dim strRutTmp As String
   Dim intDigit As Integer
   Dim strDigit As String

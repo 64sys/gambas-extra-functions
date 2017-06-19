@@ -21,59 +21,31 @@
 ' Boston, MA  02110-1301  USA
 '
 
-Public Function DirChooser(Optional stInputPath As String) As String  ''Selecciona la ruta de un directorio mediante una caja de dialogo.
+Public Function DirParent(strPath As String) As String  ''Devuelve el directorio padre de otro que se pasa como parámetro.
 
-  Dim stDirPath As String
+  Dim strParent As String
+  Dim intLast As Integer
 
-  If stInputPath = "" Then
-    stInputPath = User.Home
+  If strPath <> "" Then
+    intLast = String.RInStr(strPath, "/")
+    strParent = String.Mid(strPath, 1, intLast)
+    If String.Len(strParent) > 1 Then
+      If String.Right(strParent) = "/" Then
+        strParent = String.Mid(strParent, 1, String.Len(strParent) - 1)
+
+      Endif
+    Endif
+  Endif
+
+  If Exist(strParent) = False Then
+    strParent = "-1"
   Else
-    Dialog.Path = stInputPath
+    If Stat(strParent).Type <> gb.Directory Then
+      strParent = "-1"
+    Endif
   Endif
 
-  Dialog.Title = ("Seleccionar directorio")
-
-  Dialog.SelectDirectory
-
-  stDirPath = Dialog.Path
-
-  Return stDirPath
-
-End
-
-Public Function FileChooser(Optional strInputPath As String, Optional strFilter As String) As String ''Selecciona la ruta completa de un archivo, con el nombre y las extensiones. Como opcional se puede pasar un directorio que es a donde se dirigira el filechooser cuando se abra. También como opcional se pued epasar un filtro de tipos de archivos separados por :, por ejemolo "txt:csv"
-
-  Dim strFilepath, strExtension, strFilterA, strFilterB As String
-  Dim stxExtensions As New String[]
-
-  If strInputPath = "" Then
-    strInputPath = User.Home
-  Endif
-
-  Dialog.Title = ("Seleccionar archivo")
-
-  If strFilter <> "" Then
-    stxExtensions = Split(strFilter, ":")
-
-    strFilterB &= ("Filtro por:")
-    For Each strExtension In stxExtensions
-
-      strFilterA &= "*." & String.LCase(strExtension) & ";"
-      strFilterA &= "*." & String.UCase(strExtension)
-
-      strFilterB &= " *." & String.LCase(strExtension)
-
-    Next
-
-    Dialog.Filter = [strFilterA, strFilterB]
-
-  Endif
-
-  If Not Dialog.OpenFile(False) Then
-    strFilepath = Dialog.Path
-  Endif
-
-  Return strFilepath
+  Return strParent
 
 End
 
@@ -146,6 +118,36 @@ Public Function FilesNone(strDirectory As String, Optional stxFilesOpt As String
 
 End
 
+Public Function FilesList(strPath As String) As String[] '' Devuelve una lista de archivos.
+
+  Dim strPathsTmp As String
+  Dim stxPaths As New String[]
+  'Dim intP As Integer
+
+  strPathsTmp = Replace(strPath, "\n", "")
+  strPathsTmp = Replace(strPathsTmp, "\r", "")
+  If String.Mid(strPath, 1, 7) = "file://" Then
+    strPathsTmp = Right$(strPathsTmp, -7)  ' Quitando el primer "file://"
+  Endif
+
+  strPathsTmp = Replace(strPathsTmp, "file://", "\n") ' Este es por si existen mas de un archivo
+
+  strPathsTmp = Replace(strPathsTmp, "\x00", "") 'un caracter que da problemas
+
+  If InStr(strPathsTmp, "\n") Then
+    stxPaths = Split(strPathsTmp, "\n")
+  Else
+    stxPaths.Add(strPathsTmp)
+  Endif
+
+  ' For intP = 0 To stxPaths.Max
+  '   stxPaths[intP] = MUtility.ConvertPath(stxPaths[intP])
+  ' Next
+
+  Return stxPaths
+
+End
+
 Public Function FileNospace(stxParam As String[], Optional strDelim As String, Optional strExt As String) As String ''Devuelve un texto, nombre de arcivo concatenando todos los fragmentos que se le pase y pone todo en minusculas quita los caracteres fuera del rango 97-122 de ascci.
 
   Dim intPar As Integer
@@ -204,6 +206,10 @@ Public Function FileVersion(strInputPath As String) As String ''Devuelve un text
 
   Dim strVersion As String
 
+  If InStr(strInputPath, "'") Then
+    strInputPath = Replace(strInputPath, "'", "'\\''")
+  Endif
+
   Shell "file '" & strInputPath & "'" To strVersion
 
   If InStr(strVersion, ":") <> 0 Then
@@ -248,6 +254,96 @@ Public Function FileLoad(strPath As String) As String[] '' Devuelve una matriz d
 
 End
 
+Public Function FileTemplate(strFileSeed As String, strFileProduct As String, stxTag As String[], stxDat As String[]) As String[] '' Tomando un archivo template reemplaza las etiquetas por valores. Retorna una matriz con una lista de archivos, primero el producto y luego el pdf, en cas que alguno de estos no exista en la posicion de la matriz hara una cadena vacia.
+
+  Dim strTextProduct As String
+  Dim intN As Integer
+  Dim strFilePdf As String
+  Dim prsTemp As Process
+  Dim stxFilesOutput As String[]
+
+  strFilePdf = File.Dir(strFileProduct) &/ File.BaseName(strFileProduct) & ".pdf"
+
+  If Exist(strFileSeed) = True Then
+    strTextProduct = File.Load(strFileSeed)
+
+    If strTextProduct <> "" Then
+      For intN = 0 To stxTag.Max
+
+        strTextProduct = Replace(strTextProduct, stxTag[intN], stxDat[intN])
+
+      Next
+
+      File.Save(strFileProduct, strTextProduct)
+      Wait 0.1
+
+      prsTemp = Shell "dia " & strFileProduct & " -e " & strFilePdf
+      While prsTemp.State = prsTemp.Running
+        Wait 0.1
+      Wend
+
+    Endif
+
+  Endif
+
+  If Exist(strFileProduct) = True Then
+    stxFilesOutput.Add(strFileProduct)
+  Else
+    stxFilesOutput.Add("")
+  Endif
+
+  If Exist(strFilePdf) = True Then
+    stxFilesOutput.Add(strFilePdf)
+  Else
+    stxFilesOutput.Add("")
+  Endif
+
+  Return stxFilesOutput
+
+End
+
+Public Function FileReplace(strFileName As String, strSearch As String, strReplace As String) As Boolean '' Busca una cadena de texto en un archivo de entrada y la reemplaza por otra y luego pone todo en un archivo de salida. Archivos en modo input
+  '----------------------------------------------------------------------
+  'Creado por TercoIDE y formateado por Tincho
+  'https://www.gambas-es.org/viewtopic.php?f=5&t=6056&start=10
+  '----------------------------------------------------------------------
+
+  Dim f As File
+  Dim strFileOut As String
+  Dim a As String
+  Dim fo As File
+  Dim b As String
+
+  strFileOut = Mid$(strFileName, 1, Len(strFileName) - 3) & "tmp"
+
+  Try Kill strFileOut
+
+  f = Open strFileName For Input
+
+  fo = Open strFileOut For Create
+
+  Do
+    Line Input #f, a
+    '    Stop
+    b = Replace(a, strSearch, strReplace)
+
+    Write #fo, b & Chr$(13) & Chr$(10)
+  Loop Until Eof(f)
+  Close f
+  Close fo
+
+  Try Kill strFileName
+  Try Move strFileOut To strFileName
+
+  Return True
+
+Catch
+  Try Close f
+  Try Close fo
+  Return False
+
+End Function
+
 Public Function GetForeignKey(strValue As String, conRef As Connection, strTable As String, strFieldKey As String, strFieldName As String) As Integer '' Devuelve la clave del registro referenciado en otra tabla
 
   Dim intKey As Integer
@@ -288,7 +384,6 @@ Public Function GetForeignKey(strValue As String, conRef As Connection, strTable
 
       resInsert = conRef.Create(strTable)
 
-      'resInsert!strFieldKey = ' Como es autoinclemental no pongo el campo id
       resInsert[strFieldName] = strValue
 
       resInsert.update
@@ -346,130 +441,73 @@ Public Function CRC32(stInputPath As String, Optional strCase As String) As Stri
 
 End
 
-Public Function FileExif(strPath As String) As String[] '' Devuelve una matriz con los datos extraídos por el programa de la terminal ExifTool.
+Public Function ExifPages(strPath As String) As Integer '' Devuelve la cantidad de páginas del archivo si no tiene el tag entonces se devuelve 1. Para la extraccion de esta informacion se usa ExifTool.
 
-  Dim strExifRaw As String
-  Dim stxExifRaw As New String[]
-  Dim strExifTag As String
-  Dim strExifVal As String
-
-  Dim stxExifStd As New String[] ' Standard tags for sound files
-  Dim stxExiTag As New String[]
-  Dim stxExiVal As New String[]
-  Dim stxExif As New String[]
-  Dim intR As Integer
-  Dim intCursor As Integer
+  Dim strExifBruto As String
+  Dim stxExifBruto As New String[]
+  Dim intLin As Integer
+  Dim intCur As Integer
   Dim intLen As Integer
-  Dim intE As Integer
-  Dim strPkgName As String
-  Dim strExifStdFile As String
-  '  Dim bolTagExist As String
-  Dim intTagExist As Integer
 
-  'Verificacion de la existencia del archivo
+  Dim intPages As Integer
 
-  ' Nombre del paquete externo que usa esta funcion
-  strPkgName = "libimage-exiftool-perl"
+  strPath = ArrangePath(strPath)
 
-  strExifStdFile = User.Home &/ "exiftags.txt"
-  If Exist(strExifStdFile) Then
-    stxExifStd = Split(File.Load(strExifStdFile), gb.NewLine)
-  Else
-    stxExifStd = Split("Title:Track:Artist:Album:Genre:Year:FileType:AudioBitrate:ChannelMode:Duration:SampleRate", ":")
-  Endif
+  Shell "exiftool -f -s -s '" & strPath & "' 2>&1" To strExifBruto ' Toma todos los tags del archivo
 
-  If Exist(strPath) = True Then
-    If Stat(strPath).Type = gb.File Then
-      ' Toma todos los tags del archivo
-      If InStr(strPath, Chr(39)) <> 0 Then
-        strPath = Replace(strPath, Chr(39), Chr(92) & Chr(39))
+  stxExifBruto = Split(strExifBruto, "\n")
+
+  For intLin = 0 To stxExifBruto.Max
+
+    If stxExifBruto[intLin] <> "" Then
+      intCur = InStr(stxExifBruto[intLin], ": ")
+      intLen = String.Len(stxExifBruto[intLin])
+
+      If String.Mid(stxExifBruto[intLin], 1, intCur - 1) = "PageCount" Then
+        intPages = CInt(String.Mid(stxExifBruto[intLin], intCur + 2, intLen - intCur - 1))
+        Break
+      Else
+        intPages = 1
       Endif
 
-      Select Msys.DistroShort()
-        Case "manjaro", "ubuntu", "mint", "debian"
-          If Msys.PkgStat(strPkgName) = True Then
-            Shell "exiftool -f -s -s '" & strPath & "' 2>&1" To strExifRaw
-          Else
-            Message(("Falta el paquete") & " " & strPkgName)
-          Endif
+    Endif
+  Next
+  Return intPages
 
-        Case Else
-          If Msys.PkgStat(strPkgName) = True Then
-            Shell "exiftool -f -s -s '" & strPath & "' 2>&1" To strExifRaw
-          Else
-            Message(("Falta el paquete") & " " & strPkgName)
-          Endif
-      End Select
+End
 
-      stxExifRaw = Split(strExifRaw, "\n")
-      For intR = 0 To stxExifRaw.Max
-        If stxExifRaw[intR] <> "" Then
-          intCursor = InStr(stxExifRaw[intR], ": ")
-          intLen = String.Len(stxExifRaw[intR])
+Public Function ExifRaw(strPath As String) As String[] '' Devuelve una matriz con los metadatos extraídos por el programa de la terminal ExifTool.
 
-          strExifTag = String.Mid(stxExifRaw[intR], 1, intCursor - 1)
-          strExifVal = String.Mid(stxExifRaw[intR], intCursor + 2, intLen - intCursor - 1)
+  Dim strExifBruto As String
+  Dim stxExifBruto As New String[]
+  Dim intLin As Integer
+  Dim intCur As Integer
+  Dim intLen As Integer
+  Dim strExifTag As String ' Nombre de la etiqueta exif
+  Dim strExifVal As String ' Valor de la etiquieta
+  Dim strExif As String
+  Dim stxExif As New String[]
 
-          ' Retoque de la información
-          Select strExifTag
-            Case "AudioBitrate", "NominalBitrate"
-              strExifTag = "AudioBitrate"
-              strExifVal = Split(strExifVal, " ")[0]
+  Shell "exiftool -f -s -s '" & strPath & "' 2>&1" To strExifBruto ' Toma todos los tags del archivo
 
-            Case "Duration"
-              strExifVal = Split(strExifVal, " ")[0]
-              strExifVal = HMStoSeconds(strExifVal)
+  stxExifBruto = Split(strExifBruto, "\n")
 
-            Case "ChannelMode", "AudioChannels"
-              strExifTag = "ChannelMode"
-              If InStr(String.LCase(strExifVal), "stereo") <> 0 Then
-                strExifVal = 2
-              Else
-                strExifVal = 1
-              Endif
+  For intLin = 0 To stxExifBruto.Max
 
-            Case "Track", "TrackNumber"
-              strExifTag = "Track"
-              If InStr(strExifVal, "/") <> 0 Then
-                strExifVal = Split(strExifVal, "/")[0]
-              Endif
+    If stxExifBruto[intLin] <> "" Then
+      intCur = InStr(stxExifBruto[intLin], ": ")
+      intLen = String.Len(stxExifBruto[intLin])
 
-            Case "Year", "Date"
-              strExifTag = "Year"
+      strExifTag = String.Mid(stxExifBruto[intLin], 1, intCur - 1)
 
-          End Select
+      strExifVal = String.Mid(stxExifBruto[intLin], intCur + 2, intLen - intCur - 1)
 
-          If InStr(strExifVal, ":") <> 0 Then
-            strExifVal = Replace(strExifVal, ":", ".")
-          Endif
+      strExif = strExifTag & "\t" & strExifVal
 
-          'strExif = strExifTag & ":" & strExifVal
-
-          stxExiTag.Add(strExifTag)
-          stxExiVal.Add(strExifVal)
-
-          ' Preparación de la matriz de datos
-          ' stxExif.Add(strExif)
-        Endif
-      Next
-
-      For intE = 0 To stxExifStd.Max
-
-        intTagExist = stxExiTag.Find(stxExifStd[intE])
-
-        Select intTagExist
-          Case -1
-            stxExif.Add(stxExifStd[intE] & ":" & "")
-          Case Else
-            stxExif.Add(stxExiTag[intTagExist] & ":" & stxExiVal[intTagExist])
-        End Select
-
-      Next
+      stxExif.Add(strExif)
 
     Endif
-
-  Endif
-
+  Next
   Return stxExif
 
 End
@@ -594,56 +632,43 @@ Public Function FileInfo(strFilePath As String) As String[] ''Devuelve una matri
   Dim strFileBase As String
   Dim strFileSize As String
   Dim strFileTime As String
-  Dim strFileCRC32 As String
+  '  Dim strFileCRC32 As String
   Dim strFileVersion As String
+  Dim strSep As String
 
   strFilePath = ArrangePath(strFilePath)
+  strSep = "\t"
 
   If Stat(strFilePath).Type = gb.File Then
     ' Informacion básica para todo tipo de archivo
 
-    stxFileMeta.Add("FilePath:" & strFilePath)
+    stxFileMeta.Add("FilePath" & strSep & strFilePath)
 
     strFileDir = File.Dir(strFilePath)
-    stxFileMeta.Add("FileDirectory:" & strFileDir)
+    stxFileMeta.Add("FileDirectory" & strSep & strFileDir)
 
     strFileName = File.Name(strFilePath)
-    stxFileMeta.Add("FileName:" & strFileName)
+    stxFileMeta.Add("FileName" & strSep & strFileName)
 
     strFileExt = File.Ext(strFilePath)
-    stxFileMeta.Add("FileExt:" & strFileExt)
+    stxFileMeta.Add("FileExt" & strSep & strFileExt)
 
     strFileBase = File.BaseName(strFilePath)
-    stxFileMeta.Add("FileBase:" & strFileBase)
+    stxFileMeta.Add("FileBase" & strSep & strFileBase)
 
     strFileSize = Stat(strFilePath).Size
-    stxFileMeta.Add("FileSize:" & strFileSize)
+    stxFileMeta.Add("FileSize" & strSep & strFileSize)
 
     strFileTime = MUtility.Timestamp(Stat(strFilePath).Time)
     strFileTime = Replace(strFileTime, ":", ".")
-    stxFileMeta.Add("FileTime:" & strFileTime)
+    stxFileMeta.Add("FileTime" & strSep & strFileTime)
 
-    strFileCRC32 = Mutility.CRC32(strFilePath)
-    stxFileMeta.Add("FileCRC32:" & strFileCRC32)
+    ' strFileCRC32 = Mutility.CRC32(strFilePath)
+    ' stxFileMeta.Add("FileCRC32" & strSep & strFileCRC32)
 
     strFileVersion = Mutility.FileVersion(strFilePath)
     strFileVersion = Replace(strFileVersion, ":", ".")
-    stxFileMeta.Add("FileVersion:" & strFileVersion)
-
-    ' Select Lower(strFileExt)
-    '   Case "mp3", "ogg", "flac"
-    '
-    '     stxExif = Mutility.ExifTool(strFilePath)
-    '
-    '     For intF = 0 To stxExif.Max
-    '
-    '       stxFileMeta.Add(stxExif[intF])
-    '
-    '     Next
-    '
-    '   Case Else
-    '
-    ' End Select
+    stxFileMeta.Add("FileVersion" & strSep & strFileVersion)
 
   Endif
 
@@ -671,7 +696,8 @@ Public Function ConvertPath(strInput As String) As String '' Descodifica los car
     strChar = Mid$(strInput, intPos, 1)
     If strChar = "+" Then
       ' Convertir a espacio
-      strOutput = strOutput & " "
+      ' strOutput = strOutput & " " ' Lo anule porque se carga los directorios con signo +
+      strOutput = strOutput & strChar
     Else If strChar <> "%" Then
       ' Normal, no cambiar
       strOutput = strOutput & strChar
@@ -816,6 +842,41 @@ Public Function HMStoSeconds(strTime As String) As Integer '' Devuelve el tiempo
   intTime = (stxTime[0] * 3600) + (stxTime[1] * 60) + stxTime[2]
 
   Return intTime
+
+End
+
+Public Function SecondsToHMS(intTime As Integer) As Integer[] '' Devuelve el tiempo en una matriz donde: 0-Y 1-M 2-D 3-H 4-N 5-S y como parametro de entrada requiere el tiempo en segundos
+
+  Dim intH As Integer ' Horas
+  Dim intN As Integer ' Minutos
+  Dim intS As Integer ' Segundos
+  Dim stxTime As New String[]
+
+  Select intTime / 3600
+    Case 0
+      intH = 0
+    Case 1
+      intH = 1
+      intN = 0
+    Case Else
+      intH = intTime / 3600
+
+      Select (intTime Mod 3600) Mod 60
+        Case 0
+          intN = (intTime Mod 3600) / 60
+          intS = 0
+        Case Else
+          intN = (intTime Mod 3600) / 60
+          intS = (intTime Mod 3600) Mod 60
+
+      End Select
+  End Select
+
+  stxTime.Add(intH)
+  stxTime.Add(intN)
+  stxTime.Add(intS)
+
+  Return stxTime
 
 End
 
@@ -972,10 +1033,10 @@ Public Function ScanFolder(strDir As String, Optional strExt As String) As Strin
           stxFiles[intR] = strFilePro
           Kill strFileRaw
         Else
-          Message.Info(("El archivo ") &
+          Message.Info(("El archivo") & " " &
             gb.NewLine & strFileRaw &
             gb.NewLine &
-            ("Tiene caracteres no ascii"))
+            ("Tiene caracteres no compatibles con") & " ascii")
         Endif
 
       Endif
@@ -986,93 +1047,3 @@ Public Function ScanFolder(strDir As String, Optional strExt As String) As Strin
   Return stxFiles
 
 End
-
-Public Sub SendEmail(stxAddreses As String[], stxNames As String[], Optional strMode As String, Optional strSubject As String, Optional strBody As String, Optional strAttachment As String)
-
-  Dim intR As Integer
-  Dim strAddresses As String
-  Dim strNames As String
-
-  For intR = 0 To stxAddreses.Max
-
-    If intR = 0 Then
-      strAddresses = stxAddreses[intR]
-    Else
-      strAddresses = strAddresses & "; " & stxAddreses[intR]
-    Endif
-  Next
-
-  For intR = 0 To stxNames.Max
-
-    Select intR
-      Case 0
-        strNames = stxNames[intR]
-
-      Case stxNames.Max
-        strNames &= " ~ " & stxNames[intR]
-
-      Case Else
-        strNames &= " ~ " & stxNames[intR]
-    End Select
-
-  Next
-
-  If strMode = "" Then
-    strMode = "to"
-  Else
-    strMode = String.LCase(strMode)
-  Endif
-
-  If strSubject = "" Then
-    strSubject = ""
-  Endif
-
-  If strAttachment = "" Then
-    strAttachment = ""
-  Endif
-
-  If strBody = "" Then
-    strBody = ("Hola") & " " & strNames & "."
-  Endif
-
-  Desktop.SendMail(stxAddreses,,, strSubject, strBody)
-
-End
-
-Public Function file_replace(file_name As String, search_for As String, replace_with As String) As Boolean
-
-  Dim f As File, file_out As String
-  Dim a As String, fo As File, b As String
-
-  ' busca la string en el archivo y la reemplaza
-  ' pone todo en otro archivo
-  ' archivos en modo input
-  file_out = Mid$(file_name, 1, Len(file_name) - 3) & "tmp"
-
-  Try Kill file_out
-
-  f = Open file_name For Input
-
-  fo = Open file_out For Create
-
-  Do
-    Line Input #f, a
-    '    Stop
-    b = Replace(a, search_for, replace_with)
-
-    Write #fo, b & Chr$(13) & Chr$(10)
-  Loop Until Eof(f)
-  Close f
-  Close fo
-
-  Try Kill file_name
-  Try Move file_out To File_name
-
-  Return True
-
-Catch
-  Try Close f
-  Try Close fo
-  Return False
-
-End Function

@@ -1,0 +1,134 @@
+' Gambas module file
+
+'
+' Gambas extra functions
+' Compilation of utilities and functions developed by the gambas comunity.
+'
+' Copyright (C) Martín Belmonte
+'
+' This program is free software; you can redistribute it and/or modify
+' it under the terms of the GNU General Public License as published by
+' the Free Software Foundation; either version 2 of the License, or
+' (at your option) any later version.
+'
+' This program is distributed in the hope that it will be useful,
+' but WITHOUT ANY WARRANTY; without even the implied warranty of
+' MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+' GNU General Public License for more details.
+'
+' You should have received a copy of the GNU General Public License
+' along with this program; if not, write to the Free Software
+' Foundation, Inc., 51 Franklin St, Fifth Floor,
+' Boston, MA  02110-1301  USA
+'
+Public Function FileChooser(Optional strInputPath As String, Optional strFilter As String) As String[] ''Selecciona la ruta completa de un archivo, con el nombre y las extensiones. Como opcional se puede pasar un directorio que es a donde se dirigira el filechooser cuando se abra. También como opcional se pued epasar un filtro de tipos de archivos separados por :, por ejemolo "txt:csv"
+
+  Dim strExtension As String
+  Dim strFilterA As String
+  Dim strFilterB As String
+
+  Dim stxExtensions As New String[]
+  Dim stxFilepaths As New String[] ' Para el caso de seleccion de multiples archivos
+
+  If strInputPath = "" Then
+    strInputPath = User.Home
+  Endif
+
+  Dialog.Title = ("Seleccionar archivo")
+
+  If strFilter <> "" Then
+    stxExtensions = Split(strFilter, ":")
+
+    strFilterB &= ("Filtro por") & ":"
+    For Each strExtension In stxExtensions
+
+      strFilterA &= "*." & String.LCase(strExtension) & ";"
+      strFilterA &= "*." & String.UCase(strExtension)
+
+      strFilterB &= " *." & String.LCase(strExtension)
+
+    Next
+
+    Dialog.Filter = [strFilterA, strFilterB]
+
+  Endif
+
+  If Not Dialog.OpenFile(True) Then
+    stxFilepaths = Dialog.Paths
+  Endif
+
+  Return stxFilepaths
+
+End
+
+Public Function DirChooser(Optional stInputPath As String) As String  ''Selecciona la ruta de un directorio mediante una caja de dialogo.
+
+  Dim stDirPath As String
+
+  If stInputPath = "" Then
+    stInputPath = User.Home
+  Else
+    Dialog.Path = stInputPath
+  Endif
+
+  Dialog.Title = ("Seleccionar directorio")
+
+  Dialog.SelectDirectory
+
+  stDirPath = Dialog.Path
+
+  Return stDirPath
+
+End
+
+Public Sub SendEmail(stxAddreses As String[], stxNames As String[], Optional strMode As String, Optional strSubject As String, Optional strBody As String, Optional strAttachment As String)
+
+  Dim intR As Integer
+  Dim strAddresses As String
+  Dim strNames As String
+
+  For intR = 0 To stxAddreses.Max
+
+    If intR = 0 Then
+      strAddresses = stxAddreses[intR]
+    Else
+      strAddresses = strAddresses & "; " & stxAddreses[intR]
+    Endif
+  Next
+
+  For intR = 0 To stxNames.Max
+
+    Select intR
+      Case 0
+        strNames = stxNames[intR]
+
+      Case stxNames.Max
+        strNames &= " ~ " & stxNames[intR]
+
+      Case Else
+        strNames &= " ~ " & stxNames[intR]
+    End Select
+
+  Next
+
+  If strMode = "" Then
+    strMode = "to"
+  Else
+    strMode = String.LCase(strMode)
+  Endif
+
+  If strSubject = "" Then
+    strSubject = ""
+  Endif
+
+  If strAttachment = "" Then
+    strAttachment = ""
+  Endif
+
+  If strBody = "" Then
+    strBody = ("Hola") & " " & strNames & "."
+  Endif
+
+  Desktop.SendMail(stxAddreses,,, strSubject, strBody)
+
+End

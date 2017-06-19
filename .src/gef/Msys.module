@@ -34,7 +34,7 @@ Public Function Resume() As String
   strResume &= " <b>Nombre.PC: </b>" & ComputerName()
   strResume &= " <b>Usuario: </b>" & CurrentUser()
   strResume &= " <b>Usuarios: </b>" & AllUsers()
-  strResume &= " <b>Escritorio: </b>" & DskType()
+  'strResume &= " <b>Escritorio: </b>" & DskType()
   strResume &= " <b>Grupo: </b>" & WGroup()
   strResume &= " <b>Gambas: </b>" & Vgambas()
   strResume &= " <b>Actualizado: </b>" & LastUpgrade()
@@ -155,9 +155,32 @@ Public Function ComputerName() As String 'devuelve el nombre del pc
 
 End
 
-Public Function CurrentUser() As String 'devuelve el usuario activo
+Public Function CurrentUser() As String[] 'devuelve el usuario activo
 
   Return System.User.Name
+
+End
+
+Public Function GetSystemUsers() As String[] ''Devuelve el una lista de usuarios del sistema Linux.
+
+  Dim stxTUsr As New String[]
+  Dim stxUsr As New String[]
+  Dim strUser As String
+
+  stxTUsr = MUtility.FileLoad("/etc/passwd")
+
+  If stxTUsr.Count > 0 Then
+
+    For Each strUser In stxTUsr
+      If Split(strUser, ":")[5] = "/home" &/ Split(strUser, ":")[0] Then
+        If InStr(Split(strUser, ":")[6], "false") = 0 Then
+          stxUsr.Add(Split(strUser, ":")[0])
+        Endif
+      Endif
+    Next
+  Endif
+
+  Return stxUsr
 
 End
 
@@ -171,15 +194,15 @@ Public Function AllUsers() As String 'Devuelve los usuarios que hemos creado
 
 End
 
-Public Function DskType() As String 'devuelve el entorno del escritorio
-
-  Dim sEscritorio As String
-  'Shell "env | grep DESKTOP_SESSION= | cut -d '=' -f 2" To sEscritorio
-  sEscritorio = Desktop.Type
-
-  Return Replace(sEscritorio, "\n", "")
-
-End
+' Public Function DskType() As String 'devuelve el entorno del escritorio
+'
+'   Dim sEscritorio As String
+'   'Shell "env | grep DESKTOP_SESSION= | cut -d '=' -f 2" To sEscritorio
+'   sEscritorio = Desktop.Type
+'
+'   Return Replace(sEscritorio, "\n", "")
+'
+' End
 
 Public Function WGroup() As String 'devuelve el Grupo de trabajo del pc
 
@@ -377,13 +400,17 @@ Public Function PkgStat(strPkg As String) As Boolean ''Devuelve el estado respec
 
       Shell strCommand & " 2>&1" To strPkgStatus
 
-      strPkgStatus = Split(strPkgStatus, "\n")[0]
-      strPkgStatus = Split(strPkgStatus, " ")[0]
-      If strPkgStatus = "local/" & strPkg
-        bolPkgStatus = True ' "yes"
-      Else
-        bolPkgStatus = False '"no"
+      If strPkgStatus <> "" Then
+        strPkgStatus = Split(strPkgStatus, "\n")[0]
+        strPkgStatus = Split(strPkgStatus, " ")[0]
       Endif
+
+      Select strPkgStatus
+        Case "local/" & strPkg
+          bolPkgStatus = True ' "yes"
+        Case Else
+          bolPkgStatus = False '"no"
+      End Select
 
     Case "debian", "ubuntu", "mint"
 
@@ -527,16 +554,19 @@ Public Function PkgDep(stxPackages As String[]) As String[] '' Verifica si los p
         strCommand = "sudo zipper install " & stxPackagesInstall.Join(" ")
     End Select
     strCommand = Replace(strCommand, "-", Chr(45)) ' Esto es porque sendkeys tiene problermas con "-"
-    Select Message.Question(strMessage & ":" & gb.NewLine &
-          stxPackagesInstall.Join(gb.NewLine) & gb.NewLine &
-          ("Puede usar la siguente orden") & ":" & gb.NewLine &
-          strCommand & gb.NewLine &
-          ("¿Quiere abrir la terminal para poceder?"), ("Sí"), ("No"))
-      Case 1
-        Desktop.OpenTerminal
-        Wait 0.25
-        Desktop.SendKeys(strCommand)
-    End Select
+
+    strCommand = Replace(strCommand, "/", Chr(45)) ' Esto es porque sendkeys tiene problermas con "-"
+
+    ' Select Message.Question(strMessage & ":" & gb.NewLine &
+    '       stxPackagesInstall.Join(gb.NewLine) & gb.NewLine &
+    '       ("Puede usar la siguiente orden") & ":" & gb.NewLine &
+    '       strCommand & gb.NewLine &
+    '       ("¿Quiere abrir la terminal para poceder?"), ("Sí"), ("No"))
+    '   Case 1
+    '     Desktop.OpenTerminal
+    '     Wait 0.25
+    '     Desktop.SendKeys(strCommand)
+    ' End Select
   Endif
   Return stxPackagesInstall
 
@@ -579,7 +609,7 @@ Public Function PkgInstall(stxPackagesInstall As String[]) As String[] '' Instal
 
     Select Message.Question(strMessage & ":" & gb.NewLine &
           stxPackagesInstall.Join(gb.NewLine) & gb.NewLine &
-          ("Puede usar el siguente commando") & ":" & gb.NewLine &
+          ("Puede usar la siguiente orden") & ":" & gb.NewLine &
           strCommand & gb.NewLine &
           ("¿Quiere abrir la terminal para poceder?"), ("Sí"), ("No"))
 
