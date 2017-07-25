@@ -1,0 +1,382 @@
+' Gambas class file
+
+'
+' Gambas extra functions
+' Coleccion de 93 funciones desarrolladas en la comunidad gambas.
+'
+' Copyright (C) Martín Belmonte y otros
+'
+' This program is free software; you can redistribute it and/or modify
+' it under the terms of the GNU General Public License as published by
+' the Free Software Foundation; either version 2 of the License, or
+' (at your option) any later version.
+'
+' This program is distributed in the hope that it will be useful,
+' but WITHOUT ANY WARRANTY; without even the implied warranty of
+' MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+' GNU General Public License for more details.
+'
+' You should have received a copy of the GNU General Public License
+' along with this program; if not, write to the Free Software
+' Foundation, Inc., 51 Franklin St, Fifth Floor,
+' Boston, MA  02110-1301  USA
+'
+
+Public Sub Form_Open()
+
+  Dim stxLang As New String[]
+  Dim intLang As Integer
+  Dim chk As CheckBox
+  Dim scw As ScrollView
+  Dim strText As String
+  Dim stxType As New String[]
+  Dim inxTypeKey As New Integer[]
+  Dim intTab As Integer
+  Dim intCounter As Integer
+
+  stxType.Clear
+  inxTypeKey.Clear
+  stxLang.Clear
+  intCounter = 0
+
+  If stxType.Count > 0 Then
+    TabPanel1.Count = stxType.Count
+    If stxType.Count > 0 Then
+
+      Me.Height = FMain.Height
+      Me.Width = FMain.Width
+      Me.X = FMain.X
+      Me.Y = FMain.Y
+    Endif
+    ' Agregando los tipos de idiomas en la lista
+    For intTab = 0 To stxType.Max
+      TabPanel1[intTab].Text = stxType[intTab]
+      scw = New ScrollView(TabPanel1[intTab]) As "GrpView"
+      With scw
+        .Name = "scw" & CStr(intTab)
+        .Arrangement = Arrange.Row
+        .Expand = True
+        .Width = TabPanel1.Width
+        .Border = True
+
+        For intLang = 0 To GEFStarter.stxLanguage.Max
+          If GEFStarter.stxLanguage[intLang][7] = stxType[intTab] Then
+            chk = New CheckBox(scw) As "GrpCheck"
+            With chk
+              .Name = "chk" & CStr(intLang)
+              .Tooltip = GEFStarter.stxLanguage[intLang][6]
+              strText = GEFStarter.stxLanguage[intLang][2]
+              .Text = strText
+              .Tag = GEFStarter.stxLanguage[intLang][0]
+              .Width = TabPanel1.Width / 2
+              .Height = 28
+              Select GEFStarter.stxLanguage[intLang][9]
+                Case "False"
+                  .Value = 0
+                Case "True"
+                  .Value = -1
+              End Select
+            End With
+          Endif
+        Next
+      End With
+    Next
+    TabPanel1.Index = 0
+  Endif
+  '-------------------------------------
+  MakeConfigControls()
+
+End
+
+Public Sub tobSave_Click()
+
+  cmdSaveConf()
+
+End
+
+Public Sub cmdSaveConf()
+
+  'Dim int As Integer
+  Dim obj As Object
+  'Dim objScroll As Object
+  'Dim objCheck As Object
+  'Dim intLx As Integer
+
+  For Each obj In scwConfig.Children
+    If Object.Type(obj) = "Panel" Then
+      Select Object.Type(obj.Children[1]) ' El primero "0" es el label, el segundo "1" es el combo o text
+        Case "TextBox", "ComboBox", "ValueBox"
+          GEFStarter.stxProgVal[obj.Children[1].Tag] = obj.Children[1].Text
+          Print Format(obj.Children[1].Tag, "0#") & ":" & Object.Type(obj.Children[1]) & ": " & obj.Children[1].Text
+        Case "ValueBox", "ColorButton", "SpinBox"
+          GEFStarter.stxProgVal[obj.Children[1].Tag] = CStr(obj.Children[1].Value)
+          Print Format(obj.Children[1].Tag, "0#") & ":" & Object.Type(obj.Children[1]) & ": " & CStr(obj.Children[1].Value)
+        Case "SwitchButton"
+          Select obj.Children[1].Value
+            Case True
+              GEFStarter.stxProgVal[obj.Children[1].Tag] = "True"
+            Case Else
+              GEFStarter.stxProgVal[obj.Children[1].Tag] = ""
+          End Select
+
+          Print Format(obj.Children[1].Tag, "0#") & ":" & Object.Type(obj.Children[1]) & ": " & obj.Children[1].Value
+      End Select
+
+    Endif
+  Next
+
+  If GEFStarter.Terminator() = 1 Then
+    Print ("Configuración guardada con exito")
+  Endif
+
+  Me.Close
+
+End
+
+Public Sub tobExit_Click()
+
+  Me.Close
+
+End
+
+Public Sub tobClear_Click()
+
+  Dim intTab As Integer
+  Dim obj As Object
+
+  For intTab = 0 To TabPanel1.Count - 1
+    For Each obj In TabPanel1[intTab].Children
+      If Object.Type(obj) = "CheckBox" Then
+        obj.Value = 0
+      Endif
+    Next
+  Next
+
+End
+
+'----------------------------------------------------------------------------------
+
+Public Function MakeConfigControls() As Integer ''Esta funcion crea los controles para editar la configuración del programa
+
+  Dim intState As Integer
+  Dim pnl As Panel
+  Dim txo As TextBox
+  '  Dim txow As TextBox 'Password
+  '  Dim txor As TextBox 'Solo lectura
+  Dim swb As SwitchButton
+  Dim cob As ColorButton
+  Dim lbl As Label
+  Dim cmo As ComboBox
+  Dim sio As SpinBox
+  Dim vao As ValueBox
+  Dim intCfg As Integer
+  Dim intWidt As Integer
+  Dim stxParam As New String[][]
+  Dim stxTmp As New String[]
+  Dim intM As Integer
+
+  intState = 0
+
+  scwConfig.Children.Clear
+
+  stxParam.Add(["0", ("Motor de bases de datos"), "cmo", "postgresql:mysql:sqlite3:odbc", GEFStarter.stxProgVal[0]])
+  stxParam.Add(["1", ("Ruta"), "txo", "", GEFStarter.stxProgVal[1]])
+  stxParam.Add(["2", ("Nombre"), "txo", "", GEFStarter.stxProgVal[2]])
+  stxParam.Add(["3", ("Puerto"), "txo", "", GEFStarter.stxProgVal[3]])
+  stxParam.Add(["4", ("Usuario"), "txo", "", GEFStarter.stxProgVal[4]])
+  stxParam.Add(["5", ("Contraseña"), "txow", "", GEFStarter.stxProgVal[5]])
+
+  'Informes del prgrama
+  stxParam.Add(["6", ("Archivo de bitácora") & " 1", "cmo", "pandoc:wkhtmltopdf", GEFStarter.stxProgVal[6]])
+  stxParam.Add(["7", ("Verificar dependencias al inicio"), "swb", "", GEFStarter.stxProgVal[7]])
+  stxParam.Add(["8", ("Líneas vacías"), "swb", "", GEFStarter.stxProgVal[8]])
+  stxParam.Add(["9", ("Entorno de ejecucion") & " 9", "txor", "", GEFStarter.stxProgVal[9]])
+
+  stxParam.Add(["10", ("Método del informe") & " 1", "cmo", "pandoc:wkhtmltopdf", GEFStarter.stxProgVal[10]])
+  stxParam.Add(["11", ("Método del informe") & " 2", "cmo", "pandoc:wkhtmltopdf", GEFStarter.stxProgVal[11]])
+  stxParam.Add(["12", ("Método del informe") & " 3", "cmo", "pandoc:wkhtmltopdf", GEFStarter.stxProgVal[12]])
+  stxParam.Add(["13", ("Método del informe") & " 4", "cmo", "pandoc:wkhtmltopdf", GEFStarter.stxProgVal[13]])
+  stxParam.Add(["14", ("Método del informe") & " 5", "cmo", "pandoc:wkhtmltopdf", GEFStarter.stxProgVal[14]])
+
+  stxParam.Add(["15", ("Tema del editor"), "cmo", "gef:amber:blues:gambas:obsidian:quest:ruby:visual:amethyst:emerald:pastel:quick:sapphire:zen", GEFStarter.stxProgVal[15]])
+  stxParam.Add(["16", ("Mostrar") & " GEF" & " 16", "swb", "", GEFStarter.stxProgVal[16]])
+  stxParam.Add(["17", ("Nombre alternativo"), "txo", "", GEFStarter.stxProgVal[17]])
+  stxParam.Add(["18", ("Libre") & " 18", "txo", "", GEFStarter.stxProgVal[18]])
+  stxParam.Add(["19", ("Libre") & " 18", "txo", "", GEFStarter.stxProgVal[18]])
+
+  stxParam.Add(["20", ("Nombre de la fuente"), "txo", "", GEFStarter.stxProgVal[20]])
+  stxParam.Add(["21", ("Tamaño de la fuente"), "txo", "", GEFStarter.stxProgVal[21]])
+  stxParam.Add(["22", ("Color del fondo"), "cob", "", GEFStarter.stxProgVal[22]])
+  stxParam.Add(["23", ("Color del frente"), "cob", "", GEFStarter.stxProgVal[23]])
+  stxParam.Add(["24", ("Orientación"), "txo", "", GEFStarter.stxProgVal[24]])
+  stxParam.Add(["25", ("Tema"), "txo", "", GEFStarter.stxProgVal[25]])
+  stxParam.Add(["26", ("Barra de menú"), "txo", "", GEFStarter.stxProgVal[26]])
+  stxParam.Add(["27", ("Opacidad"), "sio", "100", GEFStarter.stxProgVal[27]])
+  stxParam.Add(["28", ("Transparencia"), "sio", "0", GEFStarter.stxProgVal[28]])
+  stxParam.Add(["29", ("Nueva ventana"), "txo", "", GEFStarter.stxProgVal[29]])
+  stxParam.Add(["30", ("Cerrar ventana"), "txo", "", GEFStarter.stxProgVal[30]])
+  stxParam.Add(["31", ("Nueva pestaña"), "txo", "", GEFStarter.stxProgVal[31]])
+  stxParam.Add(["32", ("Cerrar pestaña"), "txo", "", GEFStarter.stxProgVal[32]])
+  stxParam.Add(["33", ("Copiar"), "txo", "", GEFStarter.stxProgVal[33]])
+  stxParam.Add(["34", ("Pegar"), "txo", "", GEFStarter.stxProgVal[34]])
+
+  For intCfg = 0 To stxParam.Max
+
+    intWidt = 6 * String.Len(stxParam[intCfg][1]) + 21
+
+    pnl = New Panel(scwConfig)
+    pnl.Name = "pnl-" & CStr(intCfg)
+    pnl.Width = intWidt
+    pnl.Height = 49
+    pnl.Arrangement = Arrange.Vertical
+    pnl.Border = Border.Plain
+
+    lbl = New Label(pnl)
+    lbl.Name = "lbl-" & CStr(intCfg)
+    lbl.Text = " " & stxParam[intCfg][1]
+    lbl.Width = intWidt
+    lbl.Height = 21
+    lbl.Expand = True
+
+    Select stxParam[intCfg][2]
+      Case "txo", "txow", "txor"
+        txo = New TextBox(pnl) As "Box"
+        txo.Name = "txo-" & CStr(intCfg)
+        txo.Tag = intCfg
+        txo.Text = stxParam[intCfg][4]
+        Select stxParam[intCfg][2]
+          Case "txow"
+            txo.Password = True
+          Case "txor"
+            txo.ReadOnly = True
+        End Select
+
+        txo.Width = intWidt
+        txo.Height = 28
+        txo.Expand = True
+
+      Case "cmo"
+        cmo = New ComboBox(pnl) As "Box"
+        cmo.Name = "cmo-" & CStr(intCfg)
+        cmo.Text = stxParam[intCfg][4]
+        cmo.Tag = intCfg
+        cmo.Width = intWidt + 14
+        cmo.Height = 28
+        cmo.ReadOnly = True
+        cmo.Expand = True
+
+        stxTmp = Split(stxParam[intCfg][3], ":")
+        For intM = 0 To stxTmp.Max
+
+          cmo.Add(stxTmp[intM])
+        Next
+
+        If stxTmp.Find(stxParam[intCfg][4]) > -1 Then
+          cmo.Text = stxParam[intCfg][4]
+
+        Endif
+
+      Case "sio"
+        sio = New SpinBox(pnl) As "Box"
+        sio.Name = "sio-" & CStr(intCfg)
+        sio.Tag = intCfg
+        sio.Value = CInt(stxParam[intCfg][4])
+        sio.MaxValue = 300
+        sio.MinValue = 60
+        sio.Width = intWidt
+        sio.Height = 28
+        sio.Expand = True
+
+      Case "swb"
+        swb = New SwitchButton(pnl) As "Box"
+        swb.Name = "swb-" & CStr(intCfg)
+        swb.Tag = intCfg
+        swb.Value = stxParam[intCfg][4]
+        swb.Width = intWidt
+        swb.Height = 28
+        swb.Expand = True
+
+      Case "cob" ' ColorButton
+        cob = New ColorButton(pnl) As "Box"
+        cob.Name = "cob-" & CStr(intCfg)
+        cob.Tag = intCfg
+        cob.Value = CInt(stxParam[intCfg][4])
+        cob.Width = intWidt
+        cob.Height = 28
+        cob.Expand = True
+
+      Case "vao"
+        vao = New ValueBox(pnl) As "Box"
+        vao.Name = "vao-" & CStr(intCfg)
+        vao.Tag = intCfg
+        vao.Value = CInt(stxParam[intCfg][4])
+
+        vao.Width = intWidt
+        vao.Height = 28
+        vao.Expand = True
+    End Select
+
+  Next
+
+  intState = 1
+
+  Return intState
+
+End
+
+Public Sub Box_Change()
+
+  Dim obj As Object
+  Dim intW As Integer
+
+  obj = Last
+
+  Select Object.Type(obj)
+    Case "TextBox", "ComboBox", "ValueBox"
+      intW = String.Len(obj.Text) * 6 + 7
+      If obj.parent.Width < intW Then
+        obj.parent.Width = String.Len(obj.Text) * 6 + 7
+      Endif
+    Case ""
+
+  End Select
+  'intW = String.Len(obj.Text) * 6 + 7
+
+End
+
+Public Function WriteConfig() As Integer
+
+  Dim objp As Object
+  Dim objx As Object
+  Dim stxFields As New String[]
+  Dim stxValues As New String[]
+  Dim intState As Integer
+
+  stxFields.Clear
+
+  For Each objp In scwConfig.Children
+    If Object.Type(objp) = "Panel" Then
+      For Each objx In objp.Children
+        Select Object.Type(objx)
+          Case "TextBox", "ComboBox"
+            stxValues.Add(objx.Tag & ":" & objx.Text)
+        End Select
+
+      Next
+    Endif
+  Next
+
+  Return intState
+
+End
+
+Public Sub Form_KeyPress()
+
+  Select Key.Code
+    Case Key.Esc
+      Me.Close
+    Case Key.Return
+      cmdSaveConf()
+  End Select
+
+End

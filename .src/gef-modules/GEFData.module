@@ -20,18 +20,114 @@
 ' Foundation, Inc., 51 Franklin St, Fifth Floor,
 ' Boston, MA  02110-1301  USA
 '
+
+Public Function DBTemplate(stxDB As String[]) As String ''Crea una plantilla de la base de datos que se le pasa como parametros.
+
+  Dim conCreate As New Connection
+  Dim strTemplate As String
+
+  conCreate.Type = stxDB[0]
+  conCreate.Host = stxDB[1]
+  conCreate.Name = stxDB[2]
+
+  conCreate.Open
+  strTemplate = conCreate.GetTemplate()
+  conCreate.Close
+
+  Return strTemplate
+
+End
+
+Public Function DBOpen(stxDB As String[]) As Connection ''Inicia una base de datos y si no existe la crea.
+
+  Dim con As New Connection
+  Dim str As String
+  Dim tbl As Table
+  Dim fld As Field
+
+  Dim strTbN As String  ' Nombre de tabla
+  Dim strFdN As String  ' Nombre de campo
+  Dim strFdT As String  ' Tipo de campo
+  Dim strTbR As String  ' Tabla de referencia
+  Dim strFdRi As String ' Campo clave de referencia
+  Dim strFdRs As String ' Campo a mostrar de la tabla dereferencia
+
+  con.Type = stxDB[0]
+  con.Host = stxDB[1]
+  con.Name = stxDB[2]
+  con.Port = stxDB[3]
+  con.User = stxDB[4]
+  con.Password = stxDB[5]
+
+  Select con.Type
+
+    Case "sqlite3"
+      'Averiguar si la base de datos existe, que en el caso de sqlite3 es un archivo.sqlite
+      If Exist(con.Host &/ con.Name) Then
+        con.Open
+        For Each tbl In con.Tables
+          strTbN = tbl.Name
+          'Next
+          Print "Table name: " & strTbN
+
+          For Each fld In tbl.Fields
+
+            strFdN = fld.Name
+
+            If tbl.PrimaryKey.Find(fld.Name) <> -1 Then ' ¿El campo es clave primaria de la tabla?
+              strFdT = DataType(-1)
+            Else
+              strFdT = DataType(fld.Type)
+            Endif
+            strTbR = ""
+            strFdRi = ""
+            strFdRs = ""
+
+            Print "Field data > Name[" & strFdN & "] Type[" & strFdT & "]"
+
+          Next
+        Next
+      Else ' No existe el archivo
+        con.Name = "" ' Especifico un nombre vacio para poder abrir luego
+        con.Open
+        con.Databases.Add(stxDB[2]) ' Agrego la base de datos nueva
+        con.Close
+        con.Name = stxDB[2] ' Cambio el nombre de la base de datos a la recientemente creada
+        con.Open
+        str = File.Load("db.template") ' Cargo la plantilla
+        con.ApplyTemplate(str) ' Aplico la plantilla a la nueva base.
+
+      Endif
+
+    Case "sqlite2"
+
+    Case "sqlite"
+
+    Case "odbc"
+
+    Case "postgresql"
+
+    Case "mysql"
+
+  End Select
+
+  Return con
+
+End
+
 Public Function DBSqlite(stxDB As String[], Optional strMod As String) As Connection ''Inicia una base de datos o la crea y la inicia. Devuelve una conexion y como parametro de entrada requiere una matriz con los parametros de la base. Si la base de datos no existe, entonces crea una y la inicia.   ' Si la base de datos si existe, entonces puede hacer dos cosas, iniciarla o crear una copia de respaldo y crear una base nueva. stxDB contiene los paramentros de la base. 0 - DBHost. 1 - DBName. 2 - DBPath
 
   Dim conCreate As New Connection
   Dim strTimeStamp As String
   Dim strDBZip As String
   Dim strSQLCreate As String
+  '  Dim strTemplate As String
 
   If conCreate.Opened Then
     conCreate.Close
   Endif
 
-  strTimeStamp = MUtility.Timestamp(Now())
+  strTimeStamp = GEFUtility.Timestamp(Now())
 
   strDBZip = File.Dir(stxDB[3]) &/ File.BaseName(stxDB[3]) & "-" & strTimeStamp & ".zip"
 
@@ -58,13 +154,27 @@ Public Function DBSqlite(stxDB As String[], Optional strMod As String) As Connec
         conCreate.Databases.Add(stxDB[2])
       Endif
 
-    Case Else
+      'Case Else
+    Case "new"
+
       If Not conCreate.Databases.Exist(stxDB[2]) Then
         conCreate.Databases.Add(stxDB[2])
       Endif
-      If Exist("new.sql") Then
-        strSQLCreate = File.Load("new.sql")
-        conCreate.Exec(strSQLCreate)
+      'If Exist("new.sql") Then
+      If Exist("db.template") Then
+        'strSQLCreate = File.Load("new.sql")
+        strSQLCreate = File.Load("db.template")
+        'strSQLCreate = Chek4SQLscript(strSQLCreate)
+        'strSQLCreate = Replace(strSQLCreate, "BEGIN TRANSACTION;", "")
+        'strSQLCreate = Replace(strSQLCreate, "COMMIT;", "")
+
+        'conCreate.Exec(strSQLCreate)
+        'strTemplate = conCreate.GetTemplate(strSQLCreate)
+        'conCreate.Open
+        'conCreate.Databases.Add(stxDB[2])
+
+        conCreate.ApplyTemplate(strSQLCreate)
+
       Else
         Message.Warning(("No existe el archivo") & " " & "new.sql" & gb.NewLine & ("La base de datos no sera creada"))
       Endif
@@ -78,7 +188,7 @@ Public Function DBSqlite(stxDB As String[], Optional strMod As String) As Connec
 
 End
 
-Public Function RecordNew(connDB As Connection, strTable As String, stxDBFields As String[][], stxValues As String[]) As Integer '' Inserta un registro nuevo en la base de datos. Si este es insertado correctamente la funcion devuelve la clave de dicho registro, de lo contratio devuelve -1
+Public Function RecordNew(connDB As Connection, strTable As String, stxDBFields As String[][], stxValues As String[]) As Integer ''Inserta un registro nuevo en la base de datos. Si este es insertado correctamente la funcion devuelve la clave de dicho registro, de lo contratio devuelve -1
 
   Dim resIns As Result
   Dim stxTables As New String[]
@@ -252,7 +362,7 @@ Public Function RecordNew(connDB As Connection, strTable As String, stxDBFields 
 
 End
 
-Public Function RecordKey(strTable As String, stxDBFields As String[][]) As String '' Devuelve el nombre del campo clave de la tabla.\nconnDB As Connection es laq conxión a la base de  datos.\nstrTable As String es el nombre de la tabla sobre la que intenta saber que tipo de campo es.\nstrFieldCheck As String Es el campo a verificar.\nstrValueCheck As String Es el valor del registro para el campo a verificar.\nstxDBFields As String[] Es la lista de todos los campos de la base de datos.
+Public Function RecordKey(strTable As String, stxDBFields As String[][]) As String ''Devuelve el nombre del campo clave de la tabla. connDB As Connection es laq conxión a la base de  datos. strTable As String es el nombre de la tabla sobre la que intenta saber que tipo de campo es. strFieldCheck As String Es el campo a verificar. strValueCheck As String Es el valor del registro para el campo a verificar. stxDBFields As String[] Es la lista de todos los campos de la base de datos.
 
   Dim intIndex As Integer
   Dim strFieldKey As String
@@ -269,7 +379,7 @@ Public Function RecordKey(strTable As String, stxDBFields As String[][]) As Stri
 
 End
 
-Public Function RecordForeign(connDB As Connection, strTable As String, strFieldCheck As String, strValueCheck As String, stxDBFields As String[][]) As String '' Devuelve la clave en la tabla foránea para un valor de texto si el campo es referenciado o -1 si el campo no es referenciado o no existe el valor en el campo a mostrar.
+Public Function RecordForeign(connDB As Connection, strTable As String, strFieldCheck As String, strValueCheck As String, stxDBFields As String[][]) As String ''Devuelve la clave en la tabla foránea para un valor de texto si el campo es referenciado o -1 si el campo no es referenciado o no existe el valor en el campo a mostrar.
 
   Dim intIndex As Integer
   Dim intForeign As Integer
@@ -323,83 +433,83 @@ Public Function RecordForeign(connDB As Connection, strTable As String, strField
 
 End
 
-Public Function RecordWrite(connDB As Connection, strTable As String, stxEdit As String[][], stxValues As String[]) As Integer '' Inserta un registro nuevo en la base de datos, ctnVal es una coleccion opcional del pares de campo:valor.
+' Public Function RecordWrite(connDB As Connection, strTable As String, stxEdit As String[][], stxValues As String[]) As Integer ''Inserta un registro nuevo en la base de datos, ctnVal es una coleccion opcional del pares de campo:valor.
+'
+'   Dim resEdit As Result
+'   Dim intField As Integer
+'   Dim intVal As Integer
+'   Dim stxTag As New String[]
+'   Dim stxVal As New String[]
+'
+'   Dim strTag As String
+'   Dim strVal As String
+'   Dim stxVKey As New String[]
+'   Dim strFieldKey As String
+'   Dim intKey As Integer
+'   Dim intKeyRef As Integer
+'
+'   For intField = 0 To GEFStarter.stxTableFields.Max
+'     If GEFStarter.stxTableFields[intField][0] = strTable Then
+'       If GEFStarter.stxTableFields[intField][5] = "YK" Then
+'         strFieldKey = GEFStarter.stxTableFields[intField][1]
+'       Endif
+'     Endif
+'   Next
+'
+'   If stxValues.Count > 0 Then
+'     For intVal = 0 To stxValues.Max
+'       stxTag.Add(Split(stxValues[intVal], ":")[0])
+'       stxVal.Add(Split(stxValues[intVal], ":")[1])
+'       If Split(stxValues[intVal], ":")[0] = strFieldKey Then
+'         intKey = CInt(Split(stxValues[intVal], ":")[1])
+'         'Break
+'       Endif
+'     Next
+'   Endif
+'
+'   resEdit = connDB.Edit(strTable, strFieldKey & "=&1", intkey)
+'
+'   For intField = 0 To stxEdit.Max
+'     If stxEdit[intField][0] = strTable Then
+'       If stxEdit[intField][1] <> strFieldKey Then
+'         strTag = stxEdit[intField][1]
+'         intVal = stxTag.Find(strTag)
+'         If intVal > -1 Then
+'           strVal = stxVal[intVal]
+'         Else
+'           strVal = ""
+'         Endif
+'
+'         Select stxEdit[intField][7]
+'           Case ""
+'             If resEdit[strTag] <> strVal Then
+'               resEdit[strTag] = strVal
+'             Endif
+'
+'           Case Else ' Verificar si el registro existe en la tabla foránea
+'             If strVal <> "" Then
+'               intKeyRef = RecordExist(connDB, stxEdit[intField][7], stxEdit[intField][9], stxEdit[intField][8], strVal)
+'               Select intKeyRef
+'                 Case -1 'No existe el registor de referencia
+'                   stxVKey.Add(stxEdit[intField][9] & ":" & strVal)
+'                   RecordNew(connDB, stxEdit[intField][7], stxEdit, stxVKey)
+'                 Case Else ' Existe
+'                   If resEdit[strTag] <> intKeyRef Then
+'                     resEdit[strTag] = intKeyRef
+'                   Endif
+'               End Select
+'             Endif
+'         End Select
+'       Endif
+'     Endif
+'   Next
+'   resEdit.Update
+'
+'   'Comprobación de que el registro se creo correctamente
+'
+' End
 
-  Dim resEdit As Result
-  Dim intField As Integer
-  Dim intVal As Integer
-  Dim stxTag As New String[]
-  Dim stxVal As New String[]
-
-  Dim strTag As String
-  Dim strVal As String
-  Dim stxVKey As New String[]
-  Dim strFieldKey As String
-  Dim intKey As Integer
-  Dim intKeyRef As Integer
-
-  For intField = 0 To MStarter.stxTableFields.Max
-    If MStarter.stxTableFields[intField][0] = strTable Then
-      If MStarter.stxTableFields[intField][5] = "YK" Then
-        strFieldKey = MStarter.stxTableFields[intField][1]
-      Endif
-    Endif
-  Next
-
-  If stxValues.Count > 0 Then
-    For intVal = 0 To stxValues.Max
-      stxTag.Add(Split(stxValues[intVal], ":")[0])
-      stxVal.Add(Split(stxValues[intVal], ":")[1])
-      If Split(stxValues[intVal], ":")[0] = strFieldKey Then
-        intKey = CInt(Split(stxValues[intVal], ":")[1])
-        'Break
-      Endif
-    Next
-  Endif
-
-  resEdit = connDB.Edit(strTable, strFieldKey & "=&1", intkey)
-
-  For intField = 0 To stxEdit.Max
-    If stxEdit[intField][0] = strTable Then
-      If stxEdit[intField][1] <> strFieldKey Then
-        strTag = stxEdit[intField][1]
-        intVal = stxTag.Find(strTag)
-        If intVal > -1 Then
-          strVal = stxVal[intVal]
-        Else
-          strVal = ""
-        Endif
-
-        Select stxEdit[intField][7]
-          Case ""
-            If resEdit[strTag] <> strVal Then
-              resEdit[strTag] = strVal
-            Endif
-
-          Case Else ' Verificar si el registro existe en la tabla foránea
-            If strVal <> "" Then
-              intKeyRef = RecordExist(connDB, stxEdit[intField][7], stxEdit[intField][9], stxEdit[intField][8], strVal)
-              Select intKeyRef
-                Case -1 'No existe el registor de referencia
-                  stxVKey.Add(stxEdit[intField][9] & ":" & strVal)
-                  RecordNew(connDB, stxEdit[intField][7], stxEdit, stxVKey)
-                Case Else ' Existe
-                  If resEdit[strTag] <> intKeyRef Then
-                    resEdit[strTag] = intKeyRef
-                  Endif
-              End Select
-            Endif
-        End Select
-      Endif
-    Endif
-  Next
-  resEdit.Update
-
-  'Comprobación de que el registro se creo correctamente
-
-End
-
-Public Function RecordNewRef(connDB As Connection, strTable As String, stxDBFields As String[][], stxValues As String[]) As Integer '' Inserta un registro nuevo en la base de datos, ctnVal es una coleccion opcional del pares de campo:valor.
+Public Function RecordNewRef(connDB As Connection, strTable As String, stxDBFields As String[][], stxValues As String[]) As Integer ''Inserta un registro nuevo en la base de datos, ctnVal es una coleccion opcional del pares de campo:valor.
 
   Dim resIns As Result
   Dim stxTables As New String[]
@@ -481,7 +591,7 @@ Public Function getFields(connDB As Connection, strTbl As String, strMod As Stri
     For Each fld In resSQL.Fields
 
       strFld = fld.Name
-      strTyp = String.LCase(MUtility.TypeVar(fld.Type))
+      strTyp = String.LCase(GEFUtility.TypeVar(fld.Type))
 
       If stxTitles Then
         For intTl = 0 To stxTitles.Max
@@ -526,6 +636,58 @@ Public Function getFields(connDB As Connection, strTbl As String, strMod As Stri
 
 End
 
+Public Function GetForeignKey(strValue As String, conRef As Connection, strTable As String, strFieldKey As String, strFieldName As String) As Integer ''Devuelve la clave del registro referenciado en otra tabla
+
+  Dim intKey As Integer
+  Dim strSQLForeign As String
+  Dim resFeoreign As Result
+  Dim stxForeignKey As New String[]
+  Dim stxForeignName As New String[]
+  Dim intCounter As Integer
+  Dim resInsert As Result
+
+  intKey = -1
+  intCounter = 0
+
+  Repeat
+
+    stxForeignKey.Clear
+    stxForeignName.Clear
+
+    strSQLForeign = "select " & strFieldKey & ", " & strFieldName & " from " & strTable
+
+    resFeoreign = conRef.Exec(strSQLForeign)
+
+    While resFeoreign.Available
+
+      stxForeignKey.Add(resFeoreign[strFieldKey])
+      stxForeignName.Add(resFeoreign[strFieldName])
+
+      If strValue = resFeoreign[strFieldName] Then
+        intKey = resFeoreign[strFieldKey]
+        Break
+      Endif
+
+      resFeoreign.MoveNext
+
+    Wend
+
+    If intKey = -1 Then ' Quiere decir que ese nombre no esta en la tabla de referencia, entonces hay que insertarlo
+
+      resInsert = conRef.Create(strTable)
+
+      resInsert[strFieldName] = strValue
+
+      resInsert.update
+
+    Endif
+
+  Until intKey <> -1
+
+  Return intKey
+
+End
+
 Public Function AskForField(strTable As String, stxFields As String[][]) As String[] ''Devuelve informacion sobre el campo que se pregunta, devuelve una matriz con 10 valores de texto. Se le pasan el nombre de la tabla el campo y una matriz de 2 Dimensiones con tod ala informacion en bruto que genera la función getFiles().</br>Depende de si es una tabla o una vista:</br>Tabla:</br>00 TableName \ n01 FieldName[ From gb.db]</br>02 FieldType[ From gb.db]</br>03 Unique[YU |NU]</br>04 Null / Not Null[YN |NN]</br>05 Primary Key[YK |NK]</br>06 Autoincrement[YA |NA]</br>07 ForeignTableName</br>08 ForeignFieldIndexName</br>09 ForeignFieldShowName</br>Vista:</br>00 ViewName</br>01 FieldName[ From gb.db]</br>02 FieldType[ From gb.db]</br>03 Order["asc" | "desc" | ""]</br>04 Filter Type["=" / "<>" | ">"/"<" | ">="/"<=" | "like"/"not like" | "in" ]</br>05 Filter Value</br>06 Width</br>07 Spare > Future For Functions</br>08 Spare</br>09 Spare
 
   Dim stxInfo As New String[]
@@ -541,6 +703,36 @@ Public Function AskForField(strTable As String, stxFields As String[][]) As Stri
   Next
 
   Return stxInfo
+
+End
+
+Public Function Chek4SQLscript(strInput As String) As String ''Devuelve un texto apto para consulatas SQL, quita los saltos del línea y los caracteres no compatibles con sentencias SQL.
+
+  Dim strOutput As String
+
+  strOutput = Replace(strInput, "\n", "")
+  strOutput = Replace(strOutput, "\r", "")
+  strOutput = Replace(strOutput, "\t", " ")
+  strOutput = Replace(strOutput, "\x00", "")
+  strOutput = Replace(strOutput, Chr(96), Chr(39)) ' ' > .
+  'strOutput = Replace(strOutput, Chr(39), Chr(46)) ' ' > .
+  'strOutput = Replace(strOutput, Chr(44), Chr(46)) ' , > .
+
+  Return strOutput
+
+End
+
+Public Function Chek4SQL(strInput As String) As String ''Devuelve un texto apto para consulatas SQL, quita los saltos del línea y los caracteres no compatibles con sentencias SQL.
+
+  Dim strOutput As String
+
+  strOutput = Replace(strInput, "\n", "")
+  strOutput = Replace(strOutput, "\r", "")
+  strOutput = Replace(strOutput, "\x00", "")
+  strOutput = Replace(strOutput, Chr(39), Chr(46)) ' ' > .
+  strOutput = Replace(strOutput, Chr(44), Chr(46)) ' , > .
+
+  Return strOutput
 
 End
 
@@ -792,7 +984,7 @@ Public Function getIndex(connDB As Connection, strTab As String) As String[]
 
 End
 
-Public Function getTableFields(connDB As Connection, strTab As String) As String[][] ''Extraccion de la informacion de la estructura de una tabla.
+Public Function getTableFields(connDB As Connection, strTab As String) As String[][] ''<p>Extraccion de la informacion de la estructura de una tabla.</p> <ol type="0">  <li>Nombre de la tabla</li>  <li>Nombre del campo</li>  <li>Tipo de campo</li>  <li>Valores únicos</li>  <li>Valores nulos</li>  <li>Clave primaria</li>  <li>Auto incremento</li></ol>
 
   Dim strSQLk As String
   Dim resDBk As Result
@@ -864,7 +1056,7 @@ Public Function getTableFields(connDB As Connection, strTab As String) As String
 
             stxFieldInfo[0] = strTab
             stxFieldInfo[1] = fld.Name
-            stxFieldInfo[2] = String.LCase(MUtility.TypeVar(fld.Type))
+            stxFieldInfo[2] = String.LCase(GEFUtility.TypeVar(fld.Type))
             'stxFieldInfo[3] = ""
             'stxFieldInfo[4] = ""
             'stxFieldInfo[5] = ""
@@ -987,7 +1179,7 @@ Public Function getViewFields(connDB As Connection, strView As String) As String
 
             stxFieldInfo[0] = strView
             stxFieldInfo[1] = fld.Name
-            stxFieldInfo[2] = String.LCase(MUtility.TypeVar(fld.Type))
+            stxFieldInfo[2] = String.LCase(GEFUtility.TypeVar(fld.Type))
             stxFieldInfo[3] = CStr(intOrd) ' Numero de columna
 
             strOrderTmp = Settings[strView & "-order/" & CStr(intOrd), ""]
@@ -1015,7 +1207,7 @@ Public Function getViewFields(connDB As Connection, strView As String) As String
 
 End
 
-Public Function RecordExist(connDB As Connection, strTable As String, strFieldVal As String, strFieldKey As String, strValue As String) As Integer '' Devuelve -1 si no existe o un numero (la clave) si existe el texto que se pasa como parametro junto con la tabla y el campo.
+Public Function RecordExist(connDB As Connection, strTable As String, strFieldVal As String, strFieldKey As String, strValue As String) As Integer ''Devuelve -1 si no existe o un numero (la clave) si existe el texto que se pasa como parametro junto con la tabla y el campo.
 
   Dim strSQLCheck As String
   Dim resCheckRef As Result
@@ -1042,7 +1234,7 @@ Public Function RecordExist(connDB As Connection, strTable As String, strFieldVa
 
 End
 
-Public Function RecordDelete(connDB As Connection, strTable As String, stxDBFields As String[][], intKey As Integer) As Integer '' Devuelve -1 si no existe o un numero (la clave) si existe el texto que se pasa como parametro junto con la tabla y el campo.
+Public Function RecordDelete(connDB As Connection, strTable As String, stxDBFields As String[][], intKey As Integer) As Integer ''Devuelve -1 si no existe o un numero (la clave) si existe el texto que se pasa como parametro junto con la tabla y el campo.
 
   Dim strSQLDelete As String
   Dim resCheck As Result
@@ -1234,7 +1426,7 @@ Public Function TableMake2(cnx As Connection, stxParam As String[]) As Integer '
 
 End
 
-Public Function ViewMake1(cnx As Connection, stxParam As String[]) As Integer ''<p>Crea una Vista en la conexion que se le pasa como parametro.</p><p>La funcion trabaja con campos que se llaman TABLA+i y TABLA+n donde n es un numero correlativo</p><p>Todos los vinculas seran left join y el orden sera por la segunda columna</p><p>Por ejemplo para una tabla de productos donde hay un campo color y otro clase y ambos son tablas relacionadas</p><p></p><p>Donde el orden de los paramentros dentro de la matriz debe ser el siguiente:</p><ul><li>0 Nombre de la tabla base</li><li>1 Este y en adelante, nombre las tablas secundarias</li></ul><p>Para el ejemplo</p><ul><li>0 productos</li><li>1 color</li><li>2 clase</li></ul><p>Donde <b>color</b> tendra los campos colori, color1 y <b>clase<b> tendrá los campos clasei, clase1. La tabla principal tendra los campos productosi, productos1, productos2</p>
+Public Function ViewMake1(cnx As Connection, stxParam As String[]) As Integer ''Crea una Vista en la conexion que se le pasa como parametro. La funcion trabaja con campos que se llaman TABLA+i y TABLA+n donde n es un numero correlativo. Todos los vinculas seran left join y el orden sera por la segunda columna. Por ejemplo para una tabla de productos donde hay un campo color y otro clase y ambos son tablas relacionadas. Donde el orden de los paramentros dentro de la matriz debe ser el siguiente: <ul><li>0 Nombre de la tabla base</li><li>1 Este y en adelante, nombre las tablas secundarias</li></ul>Para el ejemplo<ul><li>0 productos</li><li>1 color</li><li>2 clase</li></ul><p>Donde color tendra los campos colori, color1 y clase tendrá los campos clasei, clase1. La tabla principal tendra los campos productosi, productos1, productos2
 
   Dim ptbl As Table
   Dim strType As String
@@ -1326,7 +1518,7 @@ Public Function ViewMake1(cnx As Connection, stxParam As String[]) As Integer ''
 
 End
 
-Public Function RecordNewTest(cnx As Connection, strTbl As String, stxIns As String[][]) As Integer '' Inserta un registro nuevo en la base de datos.
+Public Function RecordNewTest(cnx As Connection, strTbl As String, stxIns As String[][]) As Integer ''Inserta un registro nuevo en la base de datos.
 
   Dim resIns As Result
   Dim int As Integer
@@ -1351,7 +1543,7 @@ Public Function RecordNewTest(cnx As Connection, strTbl As String, stxIns As Str
 
 End
 
-Public Function RecordNewRefTest(cnx As Connection, stxTbl As String[], stxIns As String[][]) As Integer '' Inserta un registro nuevo en la base de datos.
+Public Function RecordNewRefTest(cnx As Connection, stxTbl As String[], stxIns As String[][]) As Integer ''Inserta un registro nuevo en la base de datos.
 
   Dim resIns As Result
   Dim int As Integer
@@ -1395,7 +1587,58 @@ Public Function RecordNewRefTest(cnx As Connection, stxTbl As String[], stxIns A
 
 End
 
-Public Sub MDBtoSQL(strFilePath As Strin) As String[] '' Estadisticas de bases de datos .mdb usando mdbtools. Como parametro de entrada precisa la ruta completa del archivo .mdb Dependencias: mdbtools DB.V.T.Bytes TB.R.C.Bytes
+Public Function RecordEdit(connDB As Connection, strTable As String, stxValues As String[]) As Integer '' Inserta un registro nuevo en la base de datos, ctnVal es una coleccion opcional del pares de campo:valor.
+
+  Dim intVal As Integer
+  Dim strTag As String
+  Dim strVal As String
+  Dim stxTag As New String[]
+  Dim stxVal As New String[]
+  Dim strKey As String
+  Dim intKey As Integer
+  Dim resEdit As Result
+  Dim int As Integer
+
+  For int = 0 To GEFStarter.stxTableFields.Max
+    If GEFStarter.stxTableFields[int][0] = strTable Then
+      If GEFStarter.stxTableFields[int][5] = "YK" Then
+        strKey = GEFStarter.stxTableFields[int][1]
+      Endif
+    Endif
+  Next
+
+  If stxValues.Count > 0 Then
+    For intVal = 0 To stxValues.Max
+      strTag = Split(stxValues[intVal], "\t")[0]
+      strVal = Split(stxValues[intVal], "\t")[1]
+      stxTag.Add(strTag)
+      stxVal.Add(strVal)
+
+      If strTag = strKey Then
+        intKey = CInt(strVal)
+        'Break
+      Endif
+    Next
+  Endif
+
+  resEdit = connDB.Edit(strTable, strKey & "=&1", intkey)
+
+  For int = 0 To stxTag.Max
+
+    strTag = stxTag[int]
+    strVal = stxVal[int]
+
+    If resEdit[strTag] <> strVal Then
+      resEdit[strTag] = strVal
+    Endif
+
+  Next
+
+  resEdit.Update
+
+End
+
+Public Sub MDBtoSQL(strFilePath As String) As String[] ''Estadisticas de bases de datos .mdb usando mdbtools. Como parametro de entrada precisa la ruta completa del archivo .mdb Dependencias: mdbtools DB.V.T.Bytes TB.R.C.Bytes
 
   Dim strTools As String
   Dim strPkg As String
@@ -1429,7 +1672,7 @@ Public Sub MDBtoSQL(strFilePath As Strin) As String[] '' Estadisticas de bases d
 
   ' Primera verificación ¿El paquete mdbtools esta instalado en el sistema?
   strPkg = "mdbtools"
-  strTools = Msys.PkgStat(strPkg)
+  strTools = GEFSys.PkgStat(strPkg)
 
   Print "mdbtools " & ("instalado correctamente")
 
@@ -1449,7 +1692,7 @@ Public Sub MDBtoSQL(strFilePath As Strin) As String[] '' Estadisticas de bases d
       strFinalPath = File.Dir(strFilePath)
   End Select
 
-  Print = strJobPath
+  Print strJobPath
 
   If Exist(strJobPath) = False Then
     Shell "mkdir -p '" & strJobPath & "'"
@@ -1459,7 +1702,7 @@ Public Sub MDBtoSQL(strFilePath As Strin) As String[] '' Estadisticas de bases d
   Shell "mdb-ver '" & strFilePath & "' 2>&1" To strStatVersion
   strStatVersion = Replace(strStatVersion, "\n", "")
 
-  Print = strStatVersion
+  Print strStatVersion
 
   Shell "mdb-tables -S -1 '" & strFilePath & "' 2>&1" To strStatTables
 
@@ -1592,5 +1835,47 @@ Public Sub MDBtoSQL(strFilePath As Strin) As String[] '' Estadisticas de bases d
   Print ("Conversion terminada satisfactoriamente")
 
   Return stxDatabaseInfo
+
+End
+
+Public Function DataType(int As Integer) As String ''Devuelve el nombre del tipo de dato, la constante del gb.db <ul><li>-2 = Blob</li><li>-1 = Serial</li><li>1 = Boolean</li><li>2 = Serial</li><li>4 = Integer</li><li>5 = Long</li><li>7 = Float</li><li>8 = Date</li><li>9 = String</li></ul>
+
+  Dim stx As New String[]
+  Dim inx As New Integer[]
+  Dim str As String
+  Dim intKey As Integer
+
+  inx.Add(-2)
+  stx.Add("Blob")
+
+  inx.Add(1)
+  stx.Add("Boolean")
+
+  inx.Add(8)
+  stx.Add("Date")
+
+  inx.Add(7)
+  stx.Add("Float")
+
+  inx.Add(4)
+  stx.Add("Integer")
+
+  inx.Add(5)
+  stx.Add("Long")
+
+  inx.Add(-1)
+  stx.Add("Serial")
+
+  inx.Add(9)
+  stx.Add("String ")
+
+  intKey = inx.Find(int)
+  If intKey <> -1 Then
+    str = stx[intKey]
+  Else
+    str = ""
+  Endif
+
+  Return str
 
 End

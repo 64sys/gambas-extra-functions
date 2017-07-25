@@ -1,0 +1,298 @@
+' Gambas class file
+
+'
+' Gambas extra functions
+' Armazón para contruir pogramas.
+'
+' Copyright (C) Martín Belmonte y otros
+'
+' This program is free software; you can redistribute it and/or modify
+' it under the terms of the GNU General Public License as published by
+' the Free Software Foundation; either version 2 of the License, or
+' (at your option) any later version.
+'
+' This program is distributed in the hope that it will be useful,
+' but WITHOUT ANY WARRANTY; without even the implied warranty of
+' MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+' GNU General Public License for more details.
+'
+' You should have received a copy of the GNU General Public License
+' along with this program; if not, write to the Free Software
+' Foundation, Inc., 51 Franklin St, Fifth Floor,
+' Boston, MA  02110-1301  USA
+'
+
+Public Sub Form_Open()
+
+  Dim stxInfo As New String[]
+  Dim pnl As Panel
+  Dim txa As TextLabel
+  Dim tob As ToolButton
+  Dim stxComp As String[]
+  Dim intComp As Integer
+
+  If Exist("logo.png") Then
+    pioLogo.Picture = Picture.Load("logo.png")
+  Else
+    pioLogo.Picture = Null
+  Endif
+
+  Me.Move(FMain.X + 50, FMain.Y + 70)
+
+  stxInfo = GEFSys.ProjInfo()
+
+  stxComp = Split(stxInfo[5], ":")
+
+  txa = New TextLabel(pnlAbout)
+  txa.Name = "txa-" & "Title"
+  txa.Text = GEFValidator.Capital(Application.Title)
+  txa.Font.Grade = 4
+  txa.Alignment = Align.Center
+  txa.Height = 35
+
+  txa = New TextLabel(pnlAbout)
+  txa.Name = "txa-" & "Description"
+  txa.Text = stxInfo[1]
+  txa.Font.Grade = 0
+  txa.Alignment = Align.Center
+  txa.Height = 28
+
+  txa = New TextLabel(pnlAbout)
+  txa.Name = "txa-" & "Version"
+  txa.Text = Application.Version
+  txa.Font.Grade = 0
+  txa.Alignment = Align.Center
+  txa.Height = 28
+
+  txa = New TextLabel(pnlAbout)
+  txa.Name = "txa-" & "Copy"
+  txa.Text = "Copyright (c)" & " 2016-" & Year(Now)
+  txa.Font.Grade = 0
+  txa.Alignment = Align.Center
+  txa.Height = 28
+
+  txa = New TextLabel(pnlAbout)
+  txa.Name = "txa-" & "Authors"
+  txa.Text = stxInfo[2]
+  txa.Font.Grade = 0
+  txa.Alignment = Align.Center
+  txa.Height = 28
+  '///////////
+  tob = New ToolButton(pnlAbout) As "Url"
+  tob.Name = "tob-" & "Web"
+  tob.Text = ("Pagina web") & ": https://github.com/" & String.LCase(stxInfo[3]) &/ String.LCase(Application.Name)
+  tob.Tag = "https://github.com/" & String.LCase(stxInfo[3]) &/ String.LCase(Application.Name)
+  tob.Font.Grade = 0
+  tob.Height = 28
+  tob.Border = False
+  tob.Tooltip = ("Código fuente")
+
+  tob = New ToolButton(pnlAbout) As "Url"
+  tob.Name = "tob-" & "Email"
+  tob.Text = ("Correo de contacto") & ": info@belmotek.net"
+  tob.Tag = "info@belmotek.net"
+  tob.Font.Grade = 0
+  tob.Height = 28
+  tob.Border = False
+
+  tob.Tooltip = ("Enviar un correo al desarrollador")
+
+  txa = New TextLabel(pnlAbout)
+  txa.Name = "txa-" & "Components"
+  txa.Text = ("Componentes utilizados en este programa") & ":"
+  txa.Font.Grade = 0
+  txa.Alignment = Align.Center
+  txa.Height = 28
+
+  pnl = New Panel(pnlAbout)
+  pnl.Name = "pnl-" & "Components"
+  pnl.Arrangement = Arrange.Row
+  pnl.Height = 56
+
+  For intComp = 0 To stxComp.Max
+    tob = New ToolButton(pnl) As "Url"
+    tob.Name = "tob-" & stxComp[intComp]
+    tob.Text = stxComp[intComp]
+    tob.Tag = "http://gambaswiki.org/wiki/comp/" & stxComp[intComp]
+    tob.Tooltip = ("Clic para ver detalles en") & " " & "GambasForge/Wiki"
+    tob.Font.Grade = 0
+    tob.Height = 28
+    tob.Width = 7 * String.Len(stxComp[intComp])
+    tob.Border = False
+
+  Next
+
+  txa = New TextLabel(pnlAbout)
+  txa.Name = "txa-" & "Warranty"
+  txa.Text = ("Este programa se entrega sin ningún tipo de garantía")
+  txa.Font.Grade = 0
+  txa.Alignment = Align.Center
+  txa.Height = 56
+
+  tob = New ToolButton(pnlAbout) As "Url"
+  tob.Name = "tob-" & "License"
+  tob.Text = ("Licencia") & " GPL v3. "
+  tob.Tooltip = ("Clic para ver la licencia en") & " gnu.org"
+  tob.Tag = "http://www.gnu.org/licenses/old-licenses/gpl-2.0.html"
+  tob.Font.Grade = 0
+  tob.Height = 28
+  tob.Border = False
+
+  Me.Caption = ("Acerca de") & " " & Application.Title
+
+End
+
+' Private Function LoadForm()
+'
+'   Dim stxInfo As New String[]
+'   Dim pnl As Panel
+'   Dim txa As TextLabel
+'   Dim tob As ToolButton
+'   Dim stxComp As New String[]
+'   Dim stxLabel As New String[]
+'   Dim intComp As Integer
+'
+'   If Exist("logo.png") Then
+'     pioLogo.Picture = Picture.Load("logo.png")
+'   Else
+'     pioLogo.Picture = Null
+'   Endif
+'
+'   Me.Move(FMain.X + 50, FMain.Y + 70)
+'
+'   stxInfo = GEFSys.ProjInfo()
+'   stxComp = Split(stxInfo[5], ":")
+'
+'   stxCtrl.Add("TextLabel:Title:" & GEFValidator.Capital(Application.Title) & ":0:35")
+'   stxCtrl.Add("TextLabel:Description:" & stxInfo[1] & ":0:28")
+'   stxCtrl.Add("TextLabel:Versión:" & Application.Version & ":0:28")
+'   stxCtrl.Add("TextLabel:Copy:" & "Copyright (c)" & " 2016-" & Year(Now) & ":0:28")
+'   stxCtrl.Add("TextLabel:Authors:" & stxInfo[2] & ":0:28")
+'
+'   stxCtrl.Add("ToolButton:Versión:0:28")
+'   stxCtrl.Add("ToolButton:Versión:0:28")
+'
+'   stxCtrl.Add("TextLabel:Authors:" & stxInfo[2] & ":0:28")
+'
+'   For
+'
+'     For int = 0 To stxCtrl.Max
+'
+'       Select Split(stxCtrl[int], ":")[0]
+'         Case "TextLabel"
+'           txa = New TextLabel(pnlAbout)
+'           txa.Name = "txa-" & Split(stxCtrl[int], ":")[1]
+'           txa.Text = Split(stxCtrl[int], ":")[2]
+'           txa.Font.Grade = CInt(Split(stxCtrl[int], ":")[3])
+'           txa.Alignment = Align.Center
+'           txa.Height = CInt(Split(stxCtrl[int], ":")[4])
+'         Case "TextLabel"
+'
+'       End Select
+'     Next
+'
+'     '///////////
+'     tob = New ToolButton(pnlAbout) As "Url"
+'     tob.Name = "tob-" & "Web"
+'     tob.Text = ("Pagina web") & ": https://github.com/" & String.LCase(stxInfo[3]) &/ String.LCase(Application.Name)
+'     tob.Tag = "https://github.com/" & String.LCase(stxInfo[3]) &/ String.LCase(Application.Name)
+'     tob.Font.Grade = 0
+'     tob.Height = 28
+'     tob.Border = False
+'     tob.Tooltip = ("Código fuente")
+'
+'     tob = New ToolButton(pnlAbout) As "Url"
+'     tob.Name = "tob-" & "Email"
+'     tob.Text = ("Correo de contacto") & ": info@belmotek.net"
+'     tob.Tag = "info@belmotek.net"
+'     tob.Font.Grade = 0
+'     tob.Height = 28
+'     tob.Border = False
+'
+'     tob.Tooltip = ("Enviar un correo al desarrollador")
+'
+'     txa = New TextLabel(pnlAbout)
+'     txa.Name = "txa-" & "Components"
+'     txa.Text = ("Componentes utilizados en este programa") & ":"
+'     txa.Font.Grade = 0
+'     txa.Alignment = Align.Center
+'     txa.Height = 28
+'
+'     pnl = New Panel(pnlAbout)
+'     pnl.Name = "pnl-" & "Components"
+'     pnl.Arrangement = Arrange.Row
+'     pnl.Height = 56
+'
+'     For intComp = 0 To stxComp.Max
+'       tob = New ToolButton(pnl) As "Url"
+'       tob.Name = "tob-" & stxComp[intComp]
+'       tob.Text = stxComp[intComp]
+'       tob.Tag = "http://gambaswiki.org/wiki/comp/" & stxComp[intComp]
+'       tob.Tooltip = ("Clic para ver detalles en") & " " & "GambasForge/Wiki"
+'       tob.Font.Grade = 0
+'       tob.Height = 28
+'       tob.Width = 7 * String.Len(stxComp[intComp])
+'       tob.Border = False
+'
+'     Next
+'
+'     txa = New TextLabel(pnlAbout)
+'     txa.Name = "txa-" & "Warranty"
+'     txa.Text = ("Este programa se entrega sin ningún tipo de garantía")
+'     txa.Font.Grade = 0
+'     txa.Alignment = Align.Center
+'     txa.Height = 56
+'
+'     tob = New ToolButton(pnlAbout) As "Url"
+'     tob.Name = "tob-" & "License"
+'     tob.Text = ("Licencia") & " GPL v3. "
+'     tob.Tooltip = ("Clic para ver la licencia en") & " gnu.org"
+'     tob.Tag = "http://www.gnu.org/licenses/old-licenses/gpl-2.0.html"
+'     tob.Font.Grade = 0
+'     tob.Height = 28
+'     tob.Border = False
+'
+'     Me.Caption = ("Acerca de") & " " & Application.Title
+'
+' End
+
+Public Sub Url_Click()
+
+  Dim tob As ToolButton
+  Dim strUrl As String
+  Dim strType As String
+  Dim strSubject As String
+  Dim stxAddress As New String[]
+
+  tob = Last
+
+  strUrl = tob.Tag
+
+  If InStr(strUrl, "@") > 0 Then
+    strType = "email"
+    stxAddress.Add(strUrl)
+
+    strSubject = ("Hola desarrolladores de") & " " & Application.Name & " [" & GEFUtility.Timestamp(Now()) & "]"
+
+  Else
+    If InStr(strUrl, "http") > 0 Then
+      strType = "web"
+    Else
+      strType = "Unknown"
+    Endif
+  Endif
+
+  Select strType
+    Case "email"
+      Desktop.SendMail(stxAddress,,, strSubject)
+    Case "web"
+      Desktop.Open(strUrl)
+  End Select
+
+End
+
+Public Sub btnClose_Click()
+
+  Me.Close
+
+End

@@ -1,0 +1,23 @@
+# Gambas Form File 3.0
+
+{ Form Form
+  MoveScaled(0,0,57,64)
+  Arrangement = Arrange.Vertical
+  { Panel1 Panel
+    MoveScaled(0,0,56,5)
+    Arrangement = Arrange.Horizontal
+    { tobPrint ToolButton
+      MoveScaled(7,0,13,5)
+      ToolTip = ("Imprimir informe de archivos procesados")
+      Picture = Picture["icon:/22/print"]
+    }
+    { Panel5 Panel
+      MoveScaled(47,0,7,5)
+      Expand = True
+    }
+  }
+  { WebView1 WebView
+    MoveScaled(8,15,42,35)
+    Expand = True
+  }
+}

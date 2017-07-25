@@ -1,0 +1,19 @@
+' Gambas class file
+
+Public Sub btnAddressIP_Click()
+
+  Dim strIP As String
+
+  strIP = GEFSys.AddressIP()
+  Message.Info(strIP)
+
+End
+
+Public Sub btnLANIP_Click()
+
+  Dim stxIP As New String[]
+
+  stxIP = GEFSys.LANIP()
+  Message.Info(stxIP.Join("\n"))
+
+End

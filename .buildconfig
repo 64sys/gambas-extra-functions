@@ -1,0 +1,8 @@
+[default]
+name=Predeterminado
+device=local
+runtime=host
+config-opts=
+prefix=/home/administrador/.cache/gnome-builder/install/.src/host
+app-id=
+default=true

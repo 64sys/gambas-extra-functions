@@ -1,0 +1,979 @@
+' Gambas class file
+
+'
+' Gambas extra functions
+' Armazón para contruir pogramas.
+'
+' Copyright (C) Martín Belmonte y otros
+'
+' This program is free software; you can redistribute it and/or modify
+' it under the terms of the GNU General Public License as published by
+' the Free Software Foundation; either version 2 of the License, or
+' (at your option) any later version.
+'
+' This program is distributed in the hope that it will be useful,
+' but WITHOUT ANY WARRANTY; without even the implied warranty of
+' MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+' GNU General Public License for more details.
+'
+' You should have received a copy of the GNU General Public License
+' along with this program; if not, write to the Free Software
+' Foundation, Inc., 51 Franklin St, Fifth Floor,
+' Boston, MA  02110-1301  USA
+'
+
+'### Eventos básicos de la interfaz como, por ejemplo, ayuda, "acerca de..." etc. En general comúnes a todas los programas ###
+
+Public stxClass As New String[]
+Public stxFast As New String[]
+Public stxMod As New String[]
+Public stxScope As New String[]
+Public stxType As New String[]
+Public stxName As New String[]
+Public stxArgs As New String[]
+Public stxRetn As New String[]
+Public stxDesc As New String[]
+Public stxCode As New String[]
+Public stxVars As New String[]
+
+Public stxMethod As New String[]
+Public strClass As String
+Public strFast As String
+Public strMod As String
+Public strScope As String
+Public strType As String
+Public strName As String
+Public strArgs As String
+Public strRetn As String
+Public strDesc As String
+Public strCode As String
+Public strVars As String
+
+Public inx As New Integer[]
+Public bolLoaded As Boolean
+Public strFilterText As String
+' // variables para la solapa de datos
+Public strGridState As String
+
+Public Sub Form_Open()
+
+  HSplit2.Layout = [1, 4, 1]
+
+  txeCode.View.Highlight = "gambas"
+
+  If LoadModel(Application.Path) > 0 Then
+    ArrangeMethods()
+  Else
+    Message.Info(("El proyecto no pudo ser cargado"))
+  Endif
+
+  ShowData()
+
+End
+
+Public Function ObjectInfo(obj As Object) As String[] ''Devuelve una matriz con la informacion de un objeto
+
+  Dim stx As New String[]
+
+  stx.Add(Object.Type(obj))
+  stx.Add(obj.Name)
+  stx.Add(obj.Background)
+  stx.Add(obj.Foreground)
+  stx.Add(CStr(obj.Children.Count))
+
+  Return stx
+
+End
+
+Public Sub tobAbout_Click()
+
+  GEFAbout.ShowModal()
+
+End
+
+Public Sub mnuAbout_Click()
+
+  GEFAbout.ShowModal()
+
+End
+
+Public Sub tobConfig_Click()
+
+  GEFConfig.ShowModal()
+
+End
+
+Public Sub mnuConfig_Click()
+
+  GEFConfig.ShowModal()
+
+End
+
+Public Sub tobHelp_Click()
+
+  Dim strHtml As String
+
+  Dim strPDF As String
+  Dim prsRM As Process
+  Dim prsMd As Process
+
+  'Select GEFStarter.stxProgVal[9]
+  '  Case "ide"
+  strHtml = GEFUtility.DokuHtm2()
+  '  Case Else
+  'strHtml = File.Load(Application.Path &/ "readme.html")
+  'End Select
+
+  If Exist("/tmp/pdf") Then
+    prsRM = Shell "rm -r -f /tmp/pdf"
+    While
+      prsRM.State = prsRM.Running
+      Wait 0.1
+    Wend
+  Endif
+
+  prsMd = Shell "mkdir -p /tmp/pdf"
+  While
+    prsMd.State = prsMd.Running
+    Wait 0.1
+  Wend
+
+  File.Save("/tmp/pdf/help.html", strHtml)
+
+  Copy "logo.png" To "/tmp/pdf/logo.png"
+  Wait 0.5
+
+  strPDF = GEFBatch.HTMLPDF("/tmp/pdf/help.html", "pandoc")
+
+  If Exist(strPDF) Then
+    Desktop.Open(strPDF)
+  Endif
+
+  'GEFPrint.Preview(strHtml)
+
+End
+
+Public Sub mnuHelp_Click()
+
+  Dim strHtml As String
+
+  Select GEFStarter.stxProgVal[9]
+    Case "ide"
+      strHtml = GEFUtility.DokuHtml(Application.Path)
+    Case Else
+      strHtml = File.Load(Application.Path &/ "readme.html")
+  End Select
+
+  GEFPrint.Preview(strHtml)
+
+End
+
+Public Sub mnuDevHelp_Click()
+
+  DevDocument()
+
+End
+
+Public Sub tobReport_Click()
+
+  Dim strHtml As String
+
+  strHtml = File.Load(Application.Path &/ "readme.html")
+
+  GEFPrint.Preview(strHtml)
+
+End
+
+Public Sub mnuPrint_Click()
+
+  GEFPrint.ShowModal()
+
+End
+
+Public Sub OpenHelp()
+
+  Dim strFile As String
+
+  strFile = GEFStarter.strAppPath &/ "README.md"
+  If Exist(strFile)
+    Desktop.Open(strFile)
+  Endif
+
+End
+
+' Public Sub grwData_ColumnResize(Column As Integer)
+'
+'   Settings["GridColumn/" & CStr(Column)] = grwData.Columns[Column].Width
+'
+' End
+
+'### Fin de eventos básicos de la interfaz.
+
+Public Sub DevDocument()
+
+  Dim strPath As String
+  Dim strInput As String
+  Dim strOutput As String
+
+  ' Aquí se genera el documento html
+  strInput = GEFUtility.DokuHtml(Application.Path &/ ".src")
+
+  strPath = Application.Path &/ "devdoc.html"
+
+  File.Save(strPath, strInput)
+  Wait 2
+
+  Select GEFStarter.stxProgVal[9]
+    Case "ide"
+      ' [10] es el método de creación para el tipo de documento 1
+      strOutput = GEFBatch.HTMLPDF(strPath, GEFStarter.stxProgVal[10])
+      Desktop.Open(strOutput, True)
+
+    Case Else
+      If Exist(strOutput) Then
+        Desktop.Open(strOutput, True)
+      Else
+        Message.Info("La documentacion para el desarrollador no esta disponible")
+      Endif
+  End Select
+
+End
+
+Public Function LoadModel(strPath As String) As Integer ''Carga la lista de metodos del proyecto.
+
+  Dim stx As New String[]
+  Dim int As Integer
+
+  If strPath = "" Then
+    strPath = Application.Path
+  Else
+    If Exist(Application.Path) = False Then
+      strPath = Application.Path
+    Endif
+  Endif
+  stx = GEFUtility.DokuProj(Application.Path)
+
+  For int = 0 To stx.Max
+    stxClass.Add(Split(stx[int], "\t")[0])
+    stxMethod.Add(Split(stx[int], "\t")[1])
+    stxCode.Add(Split(stx[int], "\t")[2])
+    stxVars.Add(Split(stx[int], "\t")[3])
+  Next
+
+  int = stx.Count
+
+  Return int
+
+End
+
+Public Function ArrangeMethods()
+
+  Dim int As Integer
+  Dim strClassCurrent As String
+
+  If bolLoaded = False Then
+    trvMethods.Clear
+    strClassCurrent = ""
+    trvMethods.Add(Application.Name, Application.Name, Picture["icon:/16/linux"])
+    For int = 0 To stxMethod.Max
+      TreeIndoLoad(int)
+      Select inx.Count
+        Case 0
+          If strFilterText = "" Then
+            If trvMethods.Exist(strClass) = False Then
+              trvMethods.Add(strClass, strClass, Picture["icon:/16/add"], Application.Name)
+            Endif
+            trvMethods.Add(strClass & "." & strName, strName, Picture["icon:/16/apply"], strClass)
+          Else
+            'skip
+          Endif
+
+        Case Else
+          If inx.Find(int) > -1 Then
+            If trvMethods.Exist(strClass) = False Then
+              trvMethods.Add(strClass, strClass, Picture["icon:/16/add"], Application.Name)
+            Endif
+            trvMethods.Add(strClass & "." & strName, strName, Picture["icon:/16/apply"], strClass)
+          Endif
+      End Select
+      strClassCurrent = strClass
+    Next
+    trvMethods[Application.Name].Expanded = True
+    txeCode.Text = ""
+  Endif
+
+  Select GEFStarter.stxProgVal[16]
+    Case "True", "T"
+      TabPanel1[0].Visible = True
+    Case Else
+      TabPanel1[0].Visible = False
+  End Select
+
+End
+
+Public Sub TreeIndoLoad(int As Integer)
+
+  'Dim stxMethod As New String[]
+
+  strClass = stxClass[int]
+  strFast = Split(stxMethod[int], "\n")[0]
+  stxFast.Add(strFast)
+  strMod = Split(stxMethod[int], "\n")[1]
+  stxMod.add(strMod)
+  strScope = Split(stxMethod[int], "\n")[2]
+  stxScope.Add(strScope)
+  strType = Split(stxMethod[int], "\n")[3]
+  stxType.Add(strType)
+  strName = Split(stxMethod[int], "\n")[4]
+  stxName.Add(strName)
+  strArgs = Split(stxMethod[int], "\n")[5]
+  stxArgs.Add(strArgs)
+  strRetn = Split(stxMethod[int], "\n")[6]
+  stxRetn.Add(strRetn)
+  strDesc = Split(stxMethod[int], "\n")[7]
+  stxDesc.Add(strDesc)
+  strCode = stxCode[int]
+
+End
+
+Public Sub trvMethods_Select()
+
+  Dim strMeClass As String
+  Dim strMeName As String
+  Dim intKeyCls As Integer
+  Dim intKeyMet As Integer
+  Dim inxKey As New Integer[]
+  Dim intKey As Integer
+
+  If InStr(trvMethods.Key, ".") > 0 Then
+    strMeClass = Split(trvMethods.Key, ".")[0]
+    strMeName = Split(trvMethods.Key, ".")[1] ' NOmbre del método
+
+    For intKeyMet = 0 To stxName.Max
+      If stxName[intKeyMet] = strMeName Then
+        inxKey.Add(intKeyMet)
+      Endif
+    Next
+    Wait 0.01
+
+    For intKeyCls = 0 To inxKey.Max
+      If stxClass[inxKey[intKeyCls]] = strMeClass Then
+        intKey = inxKey[intKeyCls]
+        Break
+      Endif
+    Next
+
+    txeCode.Text = stxCode[intKey]
+    lblInformation.Text = stxDesc[intKey]
+    lblInformation.Refresh
+  Endif
+
+End
+
+Public Sub EditorTheme(txe As TextEditor)
+
+  Dim stxTheme As New String[]
+  Dim int As Integer
+  Dim stxKey As New String[]
+  Dim stxVal As New String[]
+
+  Dim strBack As String
+  Dim strFront As String
+  Dim strTheme As String
+
+  strTheme = GEFStarter.stxProgVal[15]
+
+  If strTheme = "" Then
+    strTheme = "gef"
+  Endif
+
+  If Exist("./theme/" & strTheme) Then
+    stxTheme = GEFUtility.FileLoad("./theme/" & strTheme)
+    For int = 0 To stxTheme.Max
+
+      Select stxTheme[int]
+        Case "[Theme]", ""
+          'skip
+        Case Else
+          stxKey.Add(Split(stxTheme[int], "=")[0])
+          stxVal.Add(Replace(Split(stxTheme[int], "=")[1], "\"", ""))
+      End Select
+    Next
+
+  Endif
+
+End
+
+Public Sub Search_Change()
+
+  Dim bto As ButtonBox
+
+  bto = Last
+  strFilterText = bto.Text
+  Print bto.Tag & ":" & bto.Text
+  Strainer(bto.Tag, bto.Text)
+
+End
+
+Public Sub Search_Click()
+
+  Dim bto As ButtonBox
+
+  bto = Last
+  strFilterText = bto.Text
+  Print bto.Tag & ":" & bto.Text
+  Strainer(bto.Tag, bto.Text)
+
+End
+
+Public Sub Strainer(strMode As String, strText As String) '' Filtrado de métodos y codigo.
+
+  Dim intS As Integer
+  Dim intQty As Integer
+
+  inx.Clear
+
+  Select strMode
+    Case "method"
+      For intS = 0 To stxName.Max
+        If InStr(String.LCase(stxName[intS]), String.LCase(strText))
+          inx.Add(intS)
+        Endif
+      Next
+    Case "code"
+      For intS = 0 To stxCode.Max
+        If InStr(String.LCase(stxCode[intS]), String.LCase(strText))
+          inx.Add(intS)
+        Endif
+      Next
+  End Select
+
+  intQty = inx.Count
+  If intQty > 0 Then
+    Print "Cantidad de coincidencias" & ": " & CStr(intQty)
+    ArrangeMethods()
+  Else
+    Print "No hay coincidencias"
+    ArrangeMethods()
+    'Message.Info(("La busqueda no ha devuelto coincidencias."))
+  Endif
+
+End
+
+Public Sub tobDevHelp_Click()
+
+  Dim stx As New String[]
+  Dim int As Integer
+  Dim strNode As String
+  Dim strNodeCurrent As String
+  Dim strChild As String
+  Dim strData As String
+  Dim strOutput As String
+  Dim intColor As Integer
+  Dim stxColor As New String[]
+  Dim strFilePdf As String
+
+  strOutput = User.Home &/ "tmp.tex"
+  strFilePdf = User.Home &/ "tmp.pdf"
+
+  stx = GEFUtility.RelationProj(stxName, stxCode)
+
+  stxColor.Add("blue!30")
+  stxColor.Add("green!40")
+  stxColor.Add("red!30")
+  stxColor.Add("purple!50")
+  stxColor.Add("teal!40")
+  stxColor.Add("yellow!30")
+
+  If stx.Count > 0 Then
+    'strData &= "\\documentclass{article}\n"
+    strData &= "\\documentclass[landscape]{article}\n"
+    strData &= "\\usepackage[utf8]{inputenc}\n"
+    strData &= "\\usepackage{tikz}\n"
+    strData &= "\\usepackage[a2paper]{geometry}\n"
+    strData &= "\\usetikzlibrary{mindmap}\n"
+    strData &= "\\pagestyle{empty}\n"
+    strData &= "\\begin{document}\n"
+    strData &= "\\begin{tikzpicture}[mindmap, grow cyclic, every node/.style=concept, concept color=orange!40,\n"
+    strData &= "    level 1/.append style={level distance=8cm,sibling angle=25},\n"
+    strData &= "    level 2/.append style={level distance=6cm,sibling angle=25}]\n"
+    strData &= "\\node{" & Application.Name & "}\n"
+
+    For int = 0 To stx.Max
+      strNode = Split(stx[int], "=")[0]
+      strNode = Replace(strNode, "_", "")
+
+      strChild = Split(stx[int], "=")[1]
+      strChild = Replace(strChild, "_", "")
+
+      If strNode <> strNodeCurrent Then
+        Select int
+          Case 0
+            'skip
+          Case stx.Max
+            strData &= "}\n"
+          Case Else
+            strData &= "}\n"
+
+        End Select
+        strData &= "  child [concept color=" & stxColor[intColor] & "] { node {" & strNode & "}\n"
+        strData &= "    child { node {" & strChild & "}}\n"
+        If intColor < 5 Then
+          Inc intColor
+        Else
+          intColor = 0
+        Endif
+        strNodeCurrent = strNode
+
+      Else
+        strData &= "    child { node {" & strChild & "}}\n"
+      Endif
+      Select int
+        Case stx.Max
+          strData &= "}\n"
+      End Select
+
+    Next
+
+    strData &= ";\n"
+    strData &= "\\end{tikzpicture}\n"
+    strData &= "\\end{document}"
+
+    File.Save(strOutput, strData)
+    Wait 1
+    If Exist(strOutput) = True Then
+      If GEFBatch.LATEXPDF(strOutput, "pdflatex") = strFilePdf Then
+        Desktop.Open(strFilePdf)
+      Endif
+    Endif
+    Desktop.Open(strOutput)
+  Endif
+
+End
+
+Public Sub tobTerm3_Click()
+
+  FTest.Show()
+
+End
+
+Public Sub mnuExit_Click()
+
+  Me.Close
+
+End
+
+' /// Solapa de datos ///////////////////////////////////////////////////////////////////
+
+Public Function ShowData() ''Muestra los datos de la base de datos, suas vistas y consultas SQL que den un resultado en el gridview y en el Treeview
+
+  Dim intTree As Integer
+  Dim strText As String
+  Dim strKey As String
+  Dim picTab As Picture
+  '
+  Dim strRoot As String
+  Dim strRootAlt As String
+
+  If GEFStarter.stxViews.Count > 0 Then
+    strRoot = GEFStarter.stxProgVal[2] ' Nombre de la conexion a BBDD
+    strRootAlt = GEFStarter.stxProgVal[17] ' Nombre alternativo de la aplicación
+    picTab = Picture["icon:/16/sun"]
+
+    trvData.Add(strRoot, strRootAlt, Picture["icon:/16/sun"])
+    For intTree = 0 To GEFStarter.stxViewsEx.Max
+      strKey = GEFStarter.stxViewsEx[intTree][0]
+      strText = GEFStarter.stxViewsEx[intTree][1]
+      picTab = Picture[GEFStarter.stxViewsEx[intTree][2]]
+      trvData.Add(strKey, strText, picTab, strRoot)
+    Next
+  Endif
+
+  'grwData
+
+End
+
+Public Sub trvData_Select()
+
+  Dim intFld As Integer
+  Dim strKeyText As String
+  Dim intx As Integer
+
+  strKeyText = trvData.Current.Key
+
+  If strKeyText <> GEFStarter.stxProgVal[2] Then
+    'GEFStarter.stxProgVal[2] es el nombre de la base de datos, que se usa como Clave raíz del treeview
+
+    GEFStarter.strViewNameSqlCurrent = strKeyText
+
+    GEFStarter.stxFieldsTableCurrent.Clear
+    GEFStarter.stxFieldsViewCurrent.Clear
+
+    For intFld = 0 To GEFStarter.stxViewFields.Max
+      If GEFStarter.stxViewFields[intFld][0] = strKeyText Then
+        GEFStarter.stxFieldsViewCurrent.Add(GEFStarter.stxViewFields[intFld][1])
+      Endif
+    Next
+
+    For intFld = 0 To GEFStarter.stxTableFields.Max
+      If GEFStarter.stxTableFields[intFld][0] = Replace(strKeyText, "view_", "") Then
+        GEFStarter.stxFieldsTableCurrent.Add(GEFStarter.stxTableFields[intFld][1])
+      Endif
+    Next
+
+    strGridState = "loading"
+
+    If UpdateGrid() = 1 Then
+      If strGridState = "loaded" Then
+        cmdArrangeButtonOrders(GEFStarter.stxFieldsViewCurrent)
+        cmdArrangeButtonFilters()
+
+        For intx = 0 To GEFStarter.stxViewsEx.Max
+          If GEFStarter.stxViewsEx[intx][0] = GEFStarter.strViewNameSqlCurrent Then
+            'GEFStarter.stxProgVal[7] = GEFStarter.stxViewsEx[intx][1]
+            GEFStarter.strViewNameHumanCurrent = GEFStarter.stxViewsEx[intx][1]
+
+          Endif
+        Next
+        tobImport.Enabled = True
+        tobImport.Tooltip = ("Importar") & " " & GEFStarter.strViewNameHumanCurrent
+
+        tobExport.Enabled = True
+        tobExport.Tooltip = ("Exportar") & " " & GEFStarter.strViewNameHumanCurrent
+      Endif
+    Endif
+  Endif
+
+End
+
+Public Function UpdateGrid() As Integer
+
+  Dim intFld As Integer
+  Dim int As Integer
+
+  grwData.Header = 1 ' Muestra solo el encabezado
+  grwData.ScrollBar = 3 ' Muestra los scrol vertical y horizontal
+  grwData.Mode = Select.Multiple
+
+  GEFStarter.strSQLCurrent = GEFData.SqlMake(GEFStarter.strViewNameSqlCurrent, GEFStarter.stxViewFields)
+  GEFStarter.resProgram = GEFStarter.conProgram.Exec(GEFStarter.strSQLCurrent)
+
+  grwData.Rows.Count = 0
+
+  If GEFStarter.resProgram.Available Then
+    If GEFStarter.resProgram.Count > 0 Then
+      grwData.Rows.Count = 0
+      grwData.Rows.Count = GEFStarter.resProgram.Count
+    Endif
+  Endif
+
+  grwData.Columns.Count = GEFStarter.resProgram.Fields.Count
+
+  intFld = 0
+
+  For int = 0 To GEFStarter.stxViewFields.Max
+
+    If GEFStarter.stxViewFields[int][0] = GEFStarter.strViewNameSqlCurrent Then
+
+      grwData.Columns[intFld].Title = GEFStarter.stxViewFields[int][10]
+
+      Select GEFStarter.stxViewFields[int][6]
+        Case ""
+          GEFStarter.stxViewFields[int][6] = 75
+      End Select
+      grwData.Columns[intFld].Width = GEFStarter.stxViewFields[int][6]
+      strGridState = "loading"
+      Inc intFld
+
+    Endif
+
+  Next
+
+  If strGridState = "loading" Then
+    strGridState = "loaded"
+  Endif
+
+  Print GEFStarter.strSQLCurrent
+
+  Return 1
+
+End
+
+Public Sub grwData_Data(Row As Integer, Column As Integer)
+
+  If GEFStarter.resProgram.Available Then
+
+    GEFStarter.resProgram.MoveTo(Row)
+
+    grwData.Data.Text = GEFStarter.resProgram[GEFStarter.resProgram.Fields[Column].Name]
+
+  Else
+    grwData.Data.Text = ""
+  Endif
+
+End
+
+Public Sub tobNewRecord_Click()
+
+  cmdRecordNew()
+
+End
+
+Public Sub tobDeleteRecord_Click()
+
+  cmdRecordDelete()
+
+End
+
+Public Sub tobEditRecord_Click()
+
+  cmdRecordEdit()
+
+End
+
+Public Sub grwData_Click()
+
+  Dim intR As Integer
+
+  tobEmail.Enabled = False
+
+  Select grwData.Row
+    Case -1
+
+    Case Else
+
+      Select GEFStarter.strViewNameSqlCurrent
+        Case "view_owners", "view_suppliers"
+
+          For intR = 0 To grwData.Rows.Max
+            If grwData.Rows[intR].Selected = True Then
+              tobEmail.Enabled = True
+              Break
+            Endif
+          Next
+
+      End Select
+
+  End Select
+
+End
+
+Public Sub grwData_ColumnResize(Column As Integer)
+
+  Dim intY As Integer
+
+  Select GEFStarter.stxViews.Find(GEFStarter.strViewNameSqlCurrent)
+    Case -1
+      Message.Info(("La vista que intenta guardar no esta configurada adecuadamente.") & gb.NewLine & ("Contacte al desarrollador del programa para reportar el error."))
+    Case Else
+      For intY = 0 To GEFStarter.stxViewFields.Max
+        If GEFStarter.stxViewFields[intY][0] = GEFStarter.strViewNameSqlCurrent Then
+          If GEFStarter.stxViewFields[intY][1] = GEFStarter.stxFieldsViewCurrent[Column] Then
+            GEFStarter.stxViewFields[intY][6] = CStr(grwData.Columns[Column].Width)
+          Endif
+        Endif
+
+      Next
+
+      Wait 0.01
+
+      If strGridState = "loaded" Then
+        cmdArrangeButtonOrders(GEFStarter.stxFieldsViewCurrent)
+        cmdArrangeButtonFilters()
+      Endif
+
+  End Select
+
+End
+
+Public Sub cmdArrangeButtonFilters()
+
+  Dim btnFilter As Button
+
+  pnlDataFilter.Children.Clear
+  pnlDataFilter.Arrangement = Arrange.Fill
+
+  btnFilter = New Button(pnlDataFilter) As "GFilterType"
+
+  With btnFilter
+    .Name = "btnFilter~" & "OnWorking" '& stxButtonsFields[intA]
+    .Border = False
+    .Picture = Picture["icon:/16/filter"]
+    .Text = ("Los filtros todavía no están implementados")
+    .Tag = 0
+    .Expand = True
+    .Width = pnlDataFilter.Width
+    .Height = pnlDataFilter.Height
+  End With
+
+End
+
+Public Sub cmdArrangeButtonOrders(stxButtonsFields As String[])
+
+  Dim pnlOrder As Panel
+  Dim btnOrder As Button
+  Dim intView As Integer
+  Dim intA, intB, intXbtn As Integer
+  Dim stxFieldInfoTmp As New String[]
+
+  stxFieldInfoTmp.Clear
+  pnlDataOrder.Children.Clear
+  For intView = 0 To GEFStarter.stxViewFields.Max
+    If GEFStarter.stxViewFields[intView][0] = GEFStarter.strViewNameSqlCurrent Then
+      intA = GEFStarter.stxFieldsViewCurrent.Find(GEFStarter.stxViewFields[intView][1]) ' Busco el campo en la lista
+      If intA > -1 Then
+        pnlOrder = New Panel(pnlDataOrder)
+        With pnlOrder
+          .Name = "pnlOrder~" & stxButtonsFields[intA]
+          .Tag = intA
+          .Height = pnlDataOrder.Height - 2
+          .Width = grwData.Columns[intA].Width
+          Select intA
+            Case 0
+              intXbtn = 0
+            Case Else
+              intXbtn = 0
+              For intB = 0 To intA - 1
+                intXbtn = intXbtn + grwData.Columns[intB].Width
+              Next
+          End Select
+          .X = intXbtn
+          .Y = 0
+          .Arrangement = Arrange.Vertical
+        End With
+        btnOrder = New Button(pnlOrder) As "GOrderType"
+        With btnOrder
+          .Name = "btnOrder~" & stxButtonsFields[intA]
+          .Border = True
+          .Tag = intA
+          Select GEFStarter.stxViewFields[intView][3] ' Tipo de orden
+            Case "asc"
+              .Picture = Picture["icon:/16/sort-ascent"]
+            Case "desc"
+              .Picture = Picture["icon:/16/sort-descent"]
+            Case ""
+              .Picture = Null
+          End Select
+          .Expand = True
+          .Width = pnlOrder.Height
+          .Height = pnlOrder.Height
+        End With
+      Endif
+    Endif
+  Next
+
+End
+
+Public Sub GOrderType_Click()
+
+  Dim btn As Button
+  Dim int As Integer
+  Dim intColumn As Integer
+  Dim strFieldName As String
+
+  btn = Last
+  intColumn = CInt(btn.Tag)
+  strFieldName = GEFStarter.stxFieldsViewCurrent[intColumn]
+
+  For int = 0 To GEFStarter.stxViewFields.Max
+    If GEFStarter.stxViewFields[int][0] = GEFStarter.strViewNameSqlCurrent Then
+      If GEFStarter.stxViewFields[int][1] = strFieldName Then
+
+        Select btn.Picture
+          Case Null
+            btn.Picture = Picture["icon:/16/sort-ascent"]
+            GEFStarter.stxViewFields[int][3] = "asc"
+
+          Case Picture["icon:/16/sort-ascent"]
+            btn.Picture = Picture["icon:/16/sort-descent"]
+            GEFStarter.stxViewFields[int][3] = "desc"
+
+          Case Picture["icon:/16/sort-descent"]
+            btn.Picture = Null
+            GEFStarter.stxViewFields[int][3] = ""
+        End Select
+      Endif
+    Endif
+  Next
+
+  UpdateGrid()
+
+End
+
+Public Sub grwData_Scroll()
+
+  pnlDataFilter.ScrollX = grwData.ScrollX
+
+End
+
+Public Sub grwData_DblClick()
+
+  cmdRecordEdit()
+
+End
+
+' / Trabajando con registros ////////////////////////
+
+Public Sub cmdRecordNew()
+
+  Dim strTable As String
+
+  strTable = Replace(GEFStarter.strViewNameSqlCurrent, "view_", "")
+
+  GEFDataEdit.RunEditor(GEFStarter.conProgram, strTable)
+
+End
+
+Public Sub cmdRecordEdit()
+
+  Dim intKey As Integer
+  Dim strTable As String
+
+  strTable = Replace(GEFStarter.strViewNameSqlCurrent, "view_", "")
+
+  If grwData.Current Then
+    intKey = CInt(grwData[grwData.Row, 0].Text)
+    GEFDataEdit.RunEditor(GEFStarter.conProgram, strTable, intKey)
+  Else
+    Message.Info("Debe seleccionar un registro de la lista")
+  Endif
+
+End
+
+Public Sub cmdRecordDelete()
+
+  Dim intKey As Integer
+  Dim intCount As Integer
+  Dim intOk As Integer
+  Dim intR As Integer
+  Dim strTable As String
+
+  strTable = Replace(GEFStarter.strViewNameSqlCurrent, "view_", "")
+
+  For intR = 0 To grwData.Rows.Max
+    If grwData.Rows[intR].Selected = True Then
+      Inc intCount
+      intKey = CInt(grwData[intR, 0].Text)
+      If GEFData.RecordDelete(GEFStarter.conProgram, strTable, GEFStarter.stxTableFields, intKey) = -1 Then
+        Inc intOk
+      Endif
+    Endif
+  Next
+
+  If intCount > 0 Then
+    If intOk = intCount Then
+      UpdateGrid()
+    Else
+      Select intOk
+        Case 0
+          Message.Info("No se pudo borrar ningun registro")
+        Case Else
+          Message.Info("Hay registros que no se pudieron borrar")
+      End Select
+    Endif
+    UpdateGrid()
+  Else
+    Message.Info("Debe seleccionar registros de la lista")
+  Endif
+
+End

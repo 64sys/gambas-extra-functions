@@ -1,0 +1,388 @@
+' Gambas class file
+
+'
+' Gambas extra functions
+' Coleccion de 93 funciones desarrolladas en la comunidad gambas.
+'
+' Copyright (C) Martín Belmonte y otros
+'
+' This program is free software; you can redistribute it and/or modify
+' it under the terms of the GNU General Public License as published by
+' the Free Software Foundation; either version 2 of the License, or
+' (at your option) any later version.
+'
+' This program is distributed in the hope that it will be useful,
+' but WITHOUT ANY WARRANTY; without even the implied warranty of
+' MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+' GNU General Public License for more details.
+'
+' You should have received a copy of the GNU General Public License
+' along with this program; if not, write to the Free Software
+' Foundation, Inc., 51 Franklin St, Fifth Floor,
+' Boston, MA  02110-1301  USA
+'
+
+Public conData As Connection
+Public strTab As String
+Public intKey As Integer
+Public strField As String
+
+Public Sub RunEditor(con As Connection, strTable As String, Optional intKx As Integer)
+
+  conData = con
+  strTab = strTable
+  If IsNull(intKx) = False Then
+    intKey = intKx
+    If MakeControls(strTable, intKx) = 1 Then
+      Me.Tag = intKx
+      Me.Height = 28 * 6
+      Me.ShowModal()
+    Endif
+  Else
+    intKey = Null
+  Endif
+
+End
+
+Public Sub btnOK_Click()
+
+  Dim objp As Object
+  Dim objx As Object
+  Dim stxFields As New String[]
+  Dim stxValues As New String[]
+
+  stxFields.Clear
+
+  For Each objp In pnlData.Children
+    If Object.Type(objp) = "Panel" Then
+      For Each objx In objp.Children
+        Select Object.Type(objx)
+          Case "TextBox", "ComboBox"
+            stxValues.Add(objx.Tag & "\t" & objx.Text)
+        End Select
+
+      Next
+    Endif
+  Next
+
+  If intKey Then ' Editando registro existente
+    GEFData.RecordEdit(conData, strTab, stxValues)
+  Else ' Nuevo registro
+    GEFData.RecordNew(conData, strTab, GEFStarter.stxTableFields, stxValues)
+  Endif
+
+  FMain.UpdateGrid()
+
+  Me.Close
+
+End
+
+Public Sub btnCancel_Click()
+
+  Me.Close
+
+End
+
+' Public Function MakeControls(strTable As String, Optional intKx As Integer) As Integer
+'
+'   Dim intState As Integer
+'   Dim pnl As Panel
+'   Dim txo As TextBox
+'   Dim lbl As Label
+'   Dim resEdit As Result
+'   Dim strSQLEdit As String
+'   Dim tbl As Table
+'   Dim fld As Field
+'   Dim stxField As New String[]
+'   Dim strSQLRef As String
+'   Dim resRef As Result
+'   Dim strF1 As String
+'   Dim strF2 As String
+'   Dim strX1 As String
+'   Dim strT1 As String
+'   Dim strT2 As String
+'   Dim strX2 As String
+'   Dim strRField As String
+'   Dim strSField As String
+'   Dim strBox As String
+'   Dim intLx As Integer
+'   Dim strTitle1 As String
+'   Dim strTitle2 As String
+'
+'   intState = 0
+'
+'   pnlData.Children.Clear
+'
+'   If intKx <> "" Then
+'
+'     tbl = GEFStarter.conProgram.Tables[strTable]
+'
+'     For Each fld In tbl.Fields
+'
+'       stxField.Clear
+'       stxField = GEFData.getFieldInfo(GEFStarter.conProgram, strTable, fld.Name)
+'
+'       If fld.Type = db.Serial Then
+'
+'         strSQLEdit = "select * from " & strTable
+'         strSQLEdit &= " where " & fld.Name
+'         strSQLEdit &= "='" & CStr(intKx) & "'"
+'         resEdit = GEFStarter.conProgram.Exec(strSQLEdit)
+'         Break
+'       Endif
+'     Next
+'
+'     For Each fld In tbl.Fields
+'       strT1 = String.Mid(strTable, 1, 2)
+'       strF1 = strT1 & "1"
+'       strX1 = strT1 & "i"
+'
+'       strT2 = String.Mid(strTable, 3, 2)
+'       strF2 = strT2 & "1"
+'       strX2 = strT2 & "i"
+'
+'       For intLx = 0 To GEFStarter.stxLanguage.Max
+'         If GEFStarter.stxLanguage[intLx][0] = strT1 Then
+'           strTitle1 = GEFStarter.stxLanguage[intLx][2]
+'           Break
+'         Endif
+'       Next
+'
+'       For intLx = 0 To GEFStarter.stxLanguage.Max
+'         If GEFStarter.stxLanguage[intLx][0] = strT2 Then
+'           strTitle2 = GEFStarter.stxLanguage[intLx][2]
+'           Break
+'         Endif
+'       Next
+'
+'       Select fld.Type
+'         Case db.Serial
+'
+'           Me.Tag = resEdit[fld.Name]
+'
+'         Case db.String
+'           pnl = New Panel(pnlData)
+'           pnl.Name = "pnl-" & fld.Name
+'           pnl.Width = Me.Width
+'           pnl.Height = 58
+'           pnl.Arrangement = Arrange.Vertical
+'           pnl.Border = Border.Solid
+'
+'           lbl = New Label(pnl)
+'           lbl.Name = "lbl-" & fld.Name
+'           lbl.Height = 28
+'           lbl.Alignment = Align.Center
+'
+'           Select String.Mid(fld.Name, 5, 1)
+'             Case "1"
+'               lbl.Text = strTitle1
+'             Case "2"
+'               lbl.Text = strTitle2
+'           End Select
+'
+'           txo = New TextBox(pnl)
+'           txo.Name = "txo-" & fld.Name
+'           txo.Tag = fld.Name
+'           txo.Height = 28
+'           txo.ReadOnly = False
+'           txo.Border = False
+'
+'           If resEdit.Available Then
+'             txo.Text = resEdit[fld.Name]
+'           Endif
+'
+'         Case db.Integer
+'           pnl = New Panel(pnlData)
+'           pnl.Name = "pnl-" & fld.Name
+'           pnl.Width = Me.Width
+'           pnl.Height = 58
+'           pnl.Arrangement = Arrange.Vertical
+'           pnl.Border = Border.Solid
+'
+'           lbl = New Label(pnl)
+'           lbl.Name = "lbl-" & fld.Name
+'
+'           lbl.Height = 28
+'           lbl.Alignment = Align.Center
+'
+'           Select String.Mid(fld.Name, 5, 1)
+'             Case "1"
+'               lbl.Text = strTitle1
+'             Case "2"
+'               lbl.Text = strTitle2
+'           End Select
+'
+'           txo = New TextBox(pnl)
+'
+'           If resEdit[fld.Name] <> Null Then
+'             Select String.Mid(fld.Name, 5, 1)
+'               Case "1"
+'                 strSQLRef = "select " & strX1 & ", " & strF1 & " from " & strT1 & " where " & strX1 & "=" & resEdit[fld.Name]
+'                 strRField = strF1
+'                 strSField = strX1
+'                 txo.ReadOnly = True
+'
+'               Case "2"
+'
+'                 strSQLRef = "select " & strX2 & ", " & strF2 & " from " & strT2 & " where " & strX2 & "=" & resEdit[fld.Name]
+'                 strRField = strF2
+'                 strSField = strX2
+'                 txo.ReadOnly = False
+'             End Select
+'             resRef = GEFStarter.conProgram.Exec(strSQLRef)
+'             strBox = resRef[strRField]
+'           Else
+'             strBox = ""
+'           Endif
+'
+'           txo.Name = "txo-" & fld.Name
+'           txo.Tag = fld.Name
+'           txo.Height = 28
+'           txo.Text = strBox
+'           txo.Border = False
+'
+'       End Select
+'
+'     Next
+'   Endif
+'
+'   intState = 1
+'
+'   Return intState
+'
+' End
+
+Public Function MakeControls(strTable As String, Optional intKey As Integer) As Integer
+
+  Dim intState As Integer
+  Dim pnl As Panel
+  Dim txo As TextBox
+  Dim lbl As Label
+  Dim cmo As ComboBox
+  Dim strComboSql As String
+  Dim resCombo As Result
+  Dim resEdit As Result
+  Dim strSQLEdit As String
+  Dim intFld As Integer
+  Dim bolReadonly As Boolean
+  Dim intWidt As Integer
+
+  intState = 0
+
+  pnlData.Children.Clear
+  pnlData.Arrangement = 3
+
+  If IsNull(intKey) = False Then
+    ' Busqueda del campo primary key de la tabla
+    For intFld = 0 To GEFStarter.stxTableFields.Max
+      If GEFStarter.stxTableFields[intFld][0] = strTable Then
+        If GEFStarter.stxTableFields[intFld][5] = "YK" Then
+          strSQLEdit = "select * from " & GEFStarter.stxTableFields[intFld][0]
+          strSQLEdit &= " where " & GEFStarter.stxTableFields[intFld][1]
+          strSQLEdit &= "='" & CStr(intKey) & "'"
+
+          resEdit = conData.Exec(strSQLEdit)
+
+        Endif
+      Endif
+    Next
+
+    For intFld = 0 To GEFStarter.stxTableFields.Max
+      If GEFStarter.stxTableFields[intFld][0] = strTable Then
+        'If GEFStarter.stxTableFields[intFld][5] <> "YK" Then
+        Select GEFStarter.stxTableFields[intFld][5] ' Si el campo es Primary Key o no
+          Case "YK"
+            bolReadonly = True
+            intWidt = 60
+
+          Case "NK"
+            bolReadonly = False
+            intWidt = 120
+        End Select
+        '--------------------------------
+        pnl = New Panel(pnlData)
+        pnl.Name = "pnl-" & GEFStarter.stxTableFields[intFld][1] 'strFieldName
+        pnl.Width = intWidt
+        pnl.Height = 58
+        pnl.Arrangement = 2
+        pnl.Padding = 2
+
+        lbl = New Label(pnl)
+        lbl.Name = "lbl-" & GEFStarter.stxTableFields[intFld][1] 'strFieldName
+        lbl.Text = GEFStarter.stxTableFields[intFld][10] 'strFieldName
+        lbl.Width = intWidt
+        lbl.Height = 28
+
+        Select GEFStarter.stxTableFields[intFld][7]
+          Case ""
+            txo = New TextBox(pnl)
+            txo.Name = "txo-" & GEFStarter.stxTableFields[intFld][1] 'strFieldName
+            txo.Tag = GEFStarter.stxTableFields[intFld][1] 'strFieldName
+            txo.Width = intWidt
+            txo.Height = 28
+            txo.ReadOnly = bolReadonly
+
+            If resEdit.Available Then
+              txo.Text = resEdit[GEFStarter.stxTableFields[intFld][1]]
+            Endif
+
+          Case Else
+            strComboSql = "select " & GEFStarter.stxTableFields[intFld][8] & ", "
+            strComboSql &= GEFStarter.stxTableFields[intFld][9] & " from "
+            strComboSql &= GEFStarter.stxTableFields[intFld][7] & " order by " & GEFStarter.stxTableFields[intFld][9] & " asc"
+
+            resCombo = conData.Exec(strComboSql)
+
+            cmo = New ComboBox(pnl)
+            cmo.Name = "cmo-" & GEFStarter.stxTableFields[intFld][1]
+            cmo.Tag = GEFStarter.stxTableFields[intFld][1]
+            cmo.Width = pnl.Width
+            cmo.Height = 28
+            While resCombo.Available
+              cmo.Add(resCombo[GEFStarter.stxTableFields[intFld][9]])
+              If resEdit.Available Then
+                If resCombo[GEFStarter.stxTableFields[intFld][8]] = resEdit[GEFStarter.stxTableFields[intFld][1]] Then
+                  cmo.Text = resCombo[GEFStarter.stxTableFields[intFld][9]]
+                Endif
+              Endif
+              resCombo.MoveNext
+            Wend
+        End Select
+        '--------------------------------
+      Endif
+    Next
+  Endif
+
+  intState = 1
+
+  Return intState
+
+End
+
+Public Function WriteRecord() As Integer
+
+  Dim objp As Object
+  Dim objx As Object
+  Dim stxFields As New String[]
+  Dim stxValues As New String[]
+  Dim intState As Integer
+
+  stxFields.Clear
+
+  For Each objp In pnlData.Children
+    If Object.Type(objp) = "Panel" Then
+      For Each objx In objp.Children
+        Select Object.Type(objx)
+          Case "TextBox", "ComboBox"
+            stxValues.Add(objx.Tag & ":" & objx.Text)
+        End Select
+
+      Next
+    Endif
+  Next
+
+  GEFData.RecordNew(conData, strTab, GEFStarter.stxFieldsTableCurrentrent, stxValues)
+
+  Return intState
+
+End

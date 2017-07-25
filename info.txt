@@ -1,0 +1,5 @@
+<img src="https://github.com/belmotek/gambas-extra-functions/blob/master/tools-header.jpg" alt="tools-header.jpg">
+<h2>Wiki de Gambas Extra Functions</h2>
+<p>GEF es una recopilación de funciones que en general son comunes a muchos proyectos de gambas. Esto permite agilizar y estandarizar la programación e intenta mejorar la colaboración en equipo.</p>
+<h2>Organizadas las funciones</h2>
+<p>Las funciones están contenidas en archivos .module y de acuerdo a la finalidad del proyecto en que se usen estas funciones aplicaran algunos de estos módulos u otros. por ejemplo si se hace un proyecto web o de terminal de ordenes este no podra usar MDesk.module puesto que este tiene funciones que trabajan con componentes de escritorio como gb.gui.</p>

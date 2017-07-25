@@ -1,0 +1,39 @@
+CREATE VIEW "view_jobs" AS select
+jidx,
+jname,
+jdate,
+oname as jowner
+from jobs
+left join owners on jowner=oidx
+order by jdate,jname asc
+
+CREATE VIEW "view_codes" AS select
+cidx,
+cname,
+sname as cclass,
+cprice,
+fname as csuppllier,
+uname as cuom
+
+from codes
+left join codcls on cclass=sidx
+left join suppliers on csupplier=fidx
+left join uoms on cuom=uidx
+
+order by cname asc
+
+CREATE VIEW "view_boms" AS select
+midx,
+jname as mjob,
+cname as mcod,
+cclass as mclass,
+mqty,
+cprice as mprice,
+cuom as muom,
+csupplier as msupplier
+
+from boms
+left join jobs on mjob=jidx
+left join view_codes on mcod=cidx
+
+order by mjob,mcod asc

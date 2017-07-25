@@ -1,0 +1,162 @@
+' Gambas class file
+
+'
+' Gambas extra functions
+' Coleccion de 93 funciones desarrolladas en la comunidad gambas.
+'
+' Copyright (C) Martín Belmonte y otros
+'
+' This program is free software; you can redistribute it and/or modify
+' it under the terms of the GNU General Public License as published by
+' the Free Software Foundation; either version 2 of the License, or
+' (at your option) any later version.
+'
+' This program is distributed in the hope that it will be useful,
+' but WITHOUT ANY WARRANTY; without even the implied warranty of
+' MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+' GNU General Public License for more details.
+'
+' You should have received a copy of the GNU General Public License
+' along with this program; if not, write to the Free Software
+' Foundation, Inc., 51 Franklin St, Fifth Floor,
+' Boston, MA  02110-1301  USA
+'
+
+Public strHtml As String
+Public fnt As Font
+
+Public Sub Preview(str As String)
+
+  'Dim strHtml As String
+  'Dim strFontName As String
+  'Dim prs As Process
+
+  'strHtml = Replace(str, "logo.png", GEFStarter.strAppPath &/ "logo.png")
+  strHtml = str
+  File.Save("/tmp/tmp.html", strHtml)
+  'Wait 0.3
+  'Desktop.Open("/tmp/tmp.html")
+
+  Me.Text = ("Vista previa de impresión")
+  tobPrint.Tooltip = ("Imprimir la ayuda")
+  'strHtml = File.Load("readme.html")
+  WebView1.Url = "html/readme.html"
+
+  WebView1.Reload
+  'WebView1.Background = Color.Background
+  'WebView1.Foreground = Color.DarkGreen
+
+  'strFontName = Settings["Font", ""]
+
+  'If strFontName = "" Then
+  '  Dialog.Title = ("Elija una fuente")
+  '  Dialog.Font = Font[""]
+  '  If Dialog.SelectFont() Then Return
+
+  '  strFontName = Dialog.Font.ToString()
+
+  'Endif
+
+  'fnt = Font[strFontName]
+  Me.Height = FMain.Height
+  Me.Width = FMain.Height / 1.414213562
+
+  Me.Show
+
+End
+
+' Public Sub tobPrint_Click()
+'
+'   If prtText.Configure() Then Return
+'
+'   Me.Enabled = False
+'   Inc Application.Busy
+'   prtText.Print
+'   WebView1.
+'   Dec Application.Busy
+'   Me.Enabled = True
+'
+' End
+
+' Public Sub prtText_Begin()
+'
+'   Dim floMgin As Float = Paint.Width / prtText.PaperWidth * 10
+'   Dim hExtents As PaintExtents
+'
+'   Paint.Font = fnt
+'
+'   hExtents = Paint.RichTextExtents(strHtml, Paint.Width - floMgin * 2)
+'   prtText.Count = Ceil(hExtents.Height / (Paint.Height - floMgin * 2))
+'
+' End
+
+' Public Sub prtText_Paginate()
+'
+' End
+
+' Public Sub prtText_Draw()
+'
+'   Dim floMgin As Float = Paint.Width / prtText.PaperWidth * 10
+'
+'   Debug "Printing page";; prtText.Page
+'
+'   Paint.Font = fnt
+'   Paint.Rectangle(floMgin / 2, floMgin / 2, Paint.Width - floMgin, Paint.Height - floMgin)
+'   Paint.LineWidth = Paint.Width / prtText.PaperWidth * 0.5
+'   'Paint.Stroke
+'   'Paint.Rectangle(floMgin, floMgin, Paint.Width - floMgin * 2, Paint.Height - floMgin * 2)
+'   Paint.Clip
+'   Paint.DrawRichText(strHtml, floMgin, floMgin - (prtText.Page - 1) * (Paint.Height - floMgin * 2), Paint.Width - floMgin * 2, Paint.Height * prtText.Count, Align.TopNormal)
+'
+'   Paint.ResetClip
+'
+' End
+'
+' Public Sub scrText_Arrange()
+'
+'   RefreshText
+'
+' End
+
+'Private Sub RefreshText()
+
+'  Dim hFont As Font = fnt
+'Dim sText As String = strHtml
+
+'scrText.ResizeContents(scrText.ClientW, hFont.RichTextHeight(strHtml, scrText.ClientW - 16) + 16)
+'scrText.Refresh
+
+'End
+
+Public Sub tobPrint_Click()
+
+  Dim strPDF As String
+  Dim prsRM As Process
+  Dim prsMd As Process
+
+  If Exist("/tmp/pdf") Then
+    prsRM = Shell "rm -r -f /tmp/pdf"
+    While
+      prsRM.State = prsRM.Running
+      Wait 0.1
+    Wend
+  Endif
+
+  prsMd = Shell "mkdir -p /tmp/pdf"
+  While
+    prsMd.State = prsMd.Running
+    Wait 0.1
+  Wend
+
+  File.Save("/tmp/pdf/help.html", strHtml)
+
+  Copy "logo.png" To "/tmp/pdf/logo.png"
+  Wait 0.5
+
+  strPDF = GEFBatch.HTMLPDF("/tmp/pdf/help.html", "pandoc")
+
+  If Exist(strPDF) Then
+    Desktop.Open(strPDF)
+  Endif
+
+End

@@ -2,7 +2,7 @@
 
 '
 ' Gambas extra functions
-' Compilation of utilities and functions developed by the gambas comunity.
+' Armazón para contruir pogramas.
 '
 ' Copyright (C) Martín Belmonte
 '
@@ -21,3 +21,26 @@
 ' Foundation, Inc., 51 Franklin St, Fifth Floor,
 ' Boston, MA  02110-1301  USA
 '
+Public Function ListHtml(strList As String, strSep As String) As String
+
+  Dim stx As New String[]
+  Dim str As String
+  Dim int As Integer
+
+  If InStr(strList, strSep) > 0 Then
+    stx = Split(strList, strSep)
+  Else
+    If strList <> "" Then
+      stx.Add(strList)
+    Endif
+  Endif
+
+  str = "<ul>"
+  For int = 0 To stx.Max
+    str &= "<li>" & stx[int] & "</li>"
+  Next
+  str &= "</ul>"
+
+  Return str
+
+End

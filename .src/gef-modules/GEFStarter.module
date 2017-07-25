@@ -1,0 +1,473 @@
+' Gambas module file
+
+'
+' Gambas extra functions
+' Coleccion de 93 funciones desarrolladas en la comunidad gambas.
+'
+' Copyright (C) Martín Belmonte y otros
+'
+' This program is free software; you can redistribute it and/or modify
+' it under the terms of the GNU General Public License as published by
+' the Free Software Foundation; either version 2 of the License, or
+' (at your option) any later version.
+'
+' This program is distributed in the hope that it will be useful,
+' but WITHOUT ANY WARRANTY; without even the implied warranty of
+' MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+' GNU General Public License for more details.
+'
+' You should have received a copy of the GNU General Public License
+' along with this program; if not, write to the Free Software
+' Foundation, Inc., 51 Franklin St, Fifth Floor,
+' Boston, MA  02110-1301  USA
+'
+
+'## variables de GEF ## Son las variables basicas del "framework" GEF
+
+Public stxProgKey As New String[] ''Clave de los parametros del programa
+Public stxProgVal As New String[] ''<ul><li>0 Database Engine</li><li>1 Database Host</li><li>2 Database Name</li><li>3 Database Port</li><li>4 Database user</li><li>5 Database password</li><li>6 Report 1</li><li>7 Report 2</li><li>8 Report 3</li><li>9 Report 4</li><li>10 Report 5</li><li>...</li><li>18 Mensajes centralizados]</li></ul>
+Public strAppPath As String
+Public strDBName As String
+Public stxDBEngines As New String[] ''Motores de bases de datos soportadas por gambas
+Public stxPackages As New String[]
+Public conProgram As New Connection ''Conexión a la base de datos
+Public strTemplate As String  ''Plantilla de la base de datos
+Public stxTables As New String[] ''Lista de tablas
+
+Public stxTableFields As New String[][] ''Lista de campos de las tablas
+
+Public stxViews As New String[] ''Lista de vistas
+Public stxViewsEx As New String[][] ' Lista de vistas mejorada
+Public stxViewFields As New String[][] ''Lista de campos de las vistas
+Public stxTitles As New String[][] ''Lista de títulos de los campos de las vistas y de las tablas
+Public stxHeaders As New String[] ''<ul><li>0 Acronimo de dos letras "es"</li><li>1 Acronimo de tres letras "spa"</li><li>2 Nombre en inglés "Spanish"</li><li>3 Nombre nativo "Español"</li><li>4 Grupo del idioma "Indo-European"</li><li>5 Alfabeto "Latn" (latino)</li><li>6 Traducir [True/False]</li></ul>
+Public stxFieldsTableCurrent As New String[] ''lista de campos para crear los botones de filtros
+Public stxFieldsViewCurrent As New String[] ''lista de campos para crear los botones de filtros
+Public resProgram As Result
+' Variables para el treeview de Datos
+Public strViewNameSqlCurrent As String
+Public strViewNameHumanCurrent As String
+Public strSQLCurrent As String
+
+'Public strInputLanguage As String
+
+'## variables del Programa ##
+'
+'
+'////////////////////////////
+
+Public Sub Main()
+
+  '  Dim stxPackages As New String[]
+  Dim strSQL As String
+  Dim resSQL As Result
+  Dim intTable As Integer
+  Dim intView As Integer
+  Dim strTableTmp As String
+  Dim strViewTmp As String
+  Dim stxTmp As New Variant[][]
+  Dim intTmp As Integer
+  Dim intP As Integer
+  Dim intKey As Integer
+
+  strAppPath = User.Home &/ "." & Application.Name
+  stxDBEngines = GEFUtility.FileLoad("engines.txt") ' Motores de bases de datos soportados por gambas
+
+  ' Existencia de directorio de la aplicacion en el directorio home. Esto se ejecutara una unica vez.
+  ' Aqui se pueden agregar mas comprobaciones de este tipo para copia de archivos de configuracion y demas cosas similares
+  If Exist(strAppPath) = False Then
+    Mkdir strAppPath
+  Endif
+  Wait 0.05
+  If Exist(strAppPath &/ "README.md") = False Then
+    Copy "README.md" To strAppPath &/ "README.md"
+  Endif
+  If Exist(strAppPath &/ "logo.png") = False Then
+    Copy "logo.png" To strAppPath &/ "logo.png"
+  Endif
+
+  ' Carga de los parametros del prgrama conjuntamente con gb.settings./////////////////////////
+  strDBName = Replace(Application.Name & ".db", "-", "")
+
+  If Initiator() = 1 Then
+    strTemplate = GEFDataEdit.DBTemplate(stxProgVal)
+    If strTemplate <> "" Then
+      Print strTemplate
+      File.Save(User.Home &/ stxProgVal[2] & ".template", strTemplate)
+    Endif
+    For intKey = 0 To stxProgKey.Max
+      stxProgVal[intKey] = Settings[stxProgKey[intKey], stxProgVal[intKey]]
+    Next
+  Endif
+
+  Select stxProgVal[7]
+    Case "T", "True"
+      Select Dependences() ' Estado de las dependencias.////////////////////////////////////////////////
+        Case 0
+          Message.Info("Algunas caracteristicas no funcionaran hasta que no instale las dependencias")
+        Case 1
+      End Select
+  End Select
+
+  ' Existencia de la base de datos.////////////////////////////////////////////////////
+  ' Se pasan los datos de la conexion y segun exista la base o no se procedera a crear y conectar o a conectar
+
+  conProgram.Type = stxProgVal[0]
+  conProgram.Host = stxProgVal[1]
+  conProgram.Name = stxProgVal[2]
+  conProgram.Port = stxProgVal[3]
+  conProgram.User = stxProgVal[4]
+  conProgram.Password = stxProgVal[5]
+
+  conProgram = GEFData.DBOpen(stxProgVal)
+
+  If LoadTitles() = 1 Then
+
+    stxTables.Clear
+    stxTables.Insert(GEFData.getTables(conProgram, "table")) ' Lista de TABLAS
+
+    stxTableFields.Clear
+    For intTable = 0 To stxTables.Max
+      strTableTmp = stxTables[intTable]
+      strSQL = "select * from " & strTableTmp
+      resSQL = conProgram.Exec(strSQL)
+
+      stxTmp.Clear
+      stxTmp.Insert(GEFData.getFields(conProgram, strTableTmp, "table", stxTitles))
+
+      For intTmp = 0 To stxTmp.Max
+        stxTableFields.Add(stxTmp[intTmp])
+      Next
+    Next
+    Print "###Tablas###"
+    For intP = 0 To stxTableFields.Max
+      Print stxTableFields[intP].Join(":")
+    Next
+
+    stxViews.Clear
+    stxViews.Insert(GEFData.getTables(conProgram, "view")) ' Lista de VISTAS
+
+    For intView = 0 To stxViews.Max
+      strViewTmp = stxViews[intView]
+      strSQL = "select * from " & strViewTmp
+      resSQL = conProgram.Exec(strSQL)
+      stxViewFields.Insert(GEFData.getFields(conProgram, strViewTmp, "view", stxTitles))
+    Next
+    Print "###Vistas ###"
+    For intP = 0 To stxViewFields.Max
+      Print stxViewFields[intP].Join(":")
+    Next
+
+    If conProgram.Opened Then
+      FMain.Show()
+    Else
+      Message.Warning(("No se pudo abrir la conexión a la base de datos") &
+        "\n" & ("Por favor verifique la configuración"))
+      FMain.Show()
+    Endif
+  Endif
+
+End
+
+Private Sub LoadViews()
+
+  stxViews.Clear
+  stxViews.Insert(GEFDataEdit.getTables(conProgram, "view")) ' Lista de VISTAS
+
+End
+
+Private Function LoadTitles() As String ''La carga de títulos de los campos de las tablas y de las vistas. De esta manera permite luego traducir la aplicacion mas facilmente. La funcion trabaja con tres parametros, el nombre de la tabla o vista el nombre del campo, y el título de este campo, que sera el que se traducira. Esta funcion permite controlar en un solo sitio todos los titulos.
+
+  ' // Carga de vistas // Modificar cuando se use otra estructura de BBDD
+  stxTitles.Add(["view_jobs", "jidx", ("Índice")])
+  stxTitles.Add(["view_jobs", "jname", ("Trabajo")])
+  stxTitles.Add(["view_jobs", "jdate", ("Fecha")])
+  stxTitles.Add(["view_jobs", "jowner", ("Cliente")])
+
+  stxTitles.Add(["boms", "midx", ("Índice")])
+  stxTitles.Add(["boms", "mjob", ("Trabajo")])
+  stxTitles.Add(["boms", "mcod", ("Código")])
+  stxTitles.Add(["boms", "mqty", ("Cantidad")])
+
+  stxTitles.Add(["view_boms", "midx", ("Índice")])
+  stxTitles.Add(["view_boms", "mjob", ("Trabajo")])
+  stxTitles.Add(["view_boms", "mcod", ("Código")])
+  stxTitles.Add(["view_boms", "mclass", ("Clase")])
+  stxTitles.Add(["view_boms", "mqty", ("Cantidad")])
+  stxTitles.Add(["view_boms", "mprice", ("Precio")])
+  stxTitles.Add(["view_boms", "muom", ("Unidad")])
+  stxTitles.Add(["view_boms", "msupplier", ("Suministrador")])
+
+  stxTitles.Add(["codcls", "sidx", ("Índice")])
+  stxTitles.Add(["codcls", "sname", ("Clase")])
+
+  stxTitles.Add(["codes", "cidx", ("Índice")])
+  stxTitles.Add(["codes", "cname", ("Insumo")])
+  stxTitles.Add(["codes", "cclass", ("Clase")])
+  stxTitles.Add(["codes", "cqty", ("Cantidad")])
+  stxTitles.Add(["codes", "cuom", ("Unidad")])
+  stxTitles.Add(["codes", "cprice", ("Precio")])
+
+  stxTitles.Add(["view_codes", "cidx", ("Índice")])
+  stxTitles.Add(["view_codes", "cname", ("Insumo")])
+  stxTitles.Add(["view_codes", "cclass", ("Clase")])
+  stxTitles.Add(["view_codes", "cqty", ("Cantidad")])
+  stxTitles.Add(["view_codes", "cuom", ("Unidad")])
+  stxTitles.Add(["view_codes", "cprice", ("Precio")])
+
+  stxTitles.Add(["composites", "aidx", ("Índice")])
+  stxTitles.Add(["composites", "aname", ("Compuesto")])
+  stxTitles.Add(["composites", "adesc", ("Descripción")])
+
+  stxTitles.Add(["deliverables", "didx", ("Índice")])
+  stxTitles.Add(["deliverables", "dname", ("Informe")])
+
+  stxTitles.Add(["jobs", "jidx", ("Índice")])
+  stxTitles.Add(["jobs", "jname", ("Trabajo")])
+  stxTitles.Add(["jobs", "jdate", ("Fecha")])
+  stxTitles.Add(["jobs", "jowner", ("Cliente")])
+  stxTitles.Add(["jobs", "jlogistic", ("Logística")])
+
+  stxTitles.Add(["logistics", "lidx", ("Índice")])
+  stxTitles.Add(["logistics", "lname", ("Logística")])
+
+  stxTitles.Add(["owners", "oidx", ("Índice")])
+  stxTitles.Add(["owners", "oname", ("Cliente")])
+
+  stxTitles.Add(["suppliers", "fidx", ("Índice")])
+  stxTitles.Add(["suppliers", "fname", ("Suministrador")])
+
+  stxTitles.Add(["uoms", "uidx", ("Índice")])
+  stxTitles.Add(["uoms", "uname", ("Simbolo")])
+  stxTitles.Add(["uoms", "udesc", ("Unidad")])
+
+  ' Nombres de tablas y vistas
+  stxViewsEx.Add(["view_jobs", ("Trabajos"), "icon:/16/add"])
+  stxViewsEx.Add(["view_boms", ("Materiales y tareas"), "icon:/16/add"])
+  stxViewsEx.Add(["view_codes", ("Códigos"), "icon:/16/add"])
+  stxViewsEx.Add(["view_composites", ("Compuestos"), "icon:/16/delete"])
+  stxViewsEx.Add(["view_deliverables", ("Informes"), "icon:/16/delete"])
+  stxViewsEx.Add(["view_logistic", ("Logística"), "icon:/16/delete"])
+  stxViewsEx.Add(["view_owners", ("Clientes"), "icon:/16/delete"])
+  stxViewsEx.Add(["view_suppliers", ("Suministradores"), "icon:/16/delete"])
+  stxViewsEx.Add(["view_uoms", ("Unidades de medida"), "icon:/16/delete"])
+
+  If stxViewsEx.Count > 0 Then
+    Return 1
+  Else
+    Return 0
+  Endif
+
+End
+
+Public Function Initiator() As Integer  ''Funcion que carga los parametros por defecto del programa. 1 ok, 0 Matrices iguales pero no se cargo todo -1 matrices distintas
+
+  stxProgKey = ["", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", ""]
+  stxProgVal = ["", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", ""]
+
+  stxProgKey[0] = "Program/Database-Engine"
+  stxProgVal[0] = Settings[stxProgKey[0], "sqlite3"]
+
+  stxProgKey[1] = "Program/Database-Host"
+  stxProgVal[1] = Settings[stxProgKey[1], strAppPath]
+
+  stxProgKey[2] = "Program/Database-Name"
+  stxProgVal[2] = Settings[stxProgKey[2], strDBName]
+
+  stxProgKey[3] = "Program/Database-Port"
+  stxProgVal[3] = Settings[stxProgKey[3], ""]
+
+  stxProgKey[4] = "Program/Database-User"
+  stxProgVal[4] = Settings[stxProgKey[4], User.Name]
+
+  stxProgKey[5] = "Program/Database-Password"
+  stxProgVal[5] = Settings[stxProgKey[5], ""]
+
+  stxProgKey[6] = "Program/File-Log"
+  stxProgVal[6] = Settings[stxProgKey[6], strAppPath &/ strDBName & ".log"]
+
+  stxProgKey[7] = "Program/Check-Dependences-on-startup"
+  Select Settings[stxProgKey[7], ""]
+    Case "T", "True"
+      stxProgVal[7] = "True"
+    Case Else
+      stxProgVal[7] = ""
+  End Select
+
+  stxProgKey[8] = "Program/Code-empty-lines"
+  Select Settings[stxProgKey[8], ""]
+    Case "T", "True"
+      stxProgVal[8] = "True"
+    Case Else
+      stxProgVal[8] = ""
+  End Select
+
+  ' Desde donde se esta ejecutando la aplicación
+  stxProgKey[9] = "Program/Running-From"
+  Select GEFUtility.WhereRun()
+    Case 0
+      stxProgVal[9] = "gambas"
+    Case 1
+      stxProgVal[9] = "ide"
+    Case Else
+      stxProgVal[9] = ""
+  End Select
+
+  stxProgKey[10] = "Program/Report-1"
+  stxProgVal[10] = Settings[stxProgKey[10], "pandoc"]
+  stxProgKey[11] = "Program/Report-2"
+  stxProgVal[11] = Settings[stxProgKey[11], "pandoc"]
+  stxProgKey[12] = "Program/Report-3"
+  stxProgVal[12] = Settings[stxProgKey[12], "pandoc"]
+  stxProgKey[13] = "Program/Report-4"
+  stxProgVal[13] = Settings[stxProgKey[13], "pandoc"]
+  stxProgKey[14] = "Program/Report-5"
+  stxProgVal[14] = Settings[stxProgKey[14], "pandoc"]
+  stxProgKey[15] = "Program/Editor-Theme"
+  stxProgVal[15] = Settings[stxProgKey[15], "gef"]
+  stxProgKey[16] = "Program/Show-GEF"
+  stxProgVal[16] = Settings[stxProgKey[16], ""]
+  stxProgKey[17] = "Program/Altern-App-Name"
+  stxProgVal[17] = Settings[stxProgKey[17], ""]
+  stxProgKey[18] = "Program/Key-18"
+  stxProgVal[18] = Settings[stxProgKey[18], ""]
+  stxProgKey[19] = "Program/Key-19"
+  stxProgVal[19] = Settings[stxProgKey[19], ""]
+
+  ' Terminal
+  stxProgKey[20] = "Terminal/Font-Name"
+  stxProgVal[20] = Settings[stxProgKey[20], "Monospace"]
+  stxProgKey[21] = "Terminal/Font-Size"
+  stxProgVal[21] = Settings[stxProgKey[21], "9"]
+  stxProgKey[22] = "Terminal/Background"
+  stxProgVal[22] = Settings[stxProgKey[22], "3028022"]
+  stxProgKey[23] = "Terminal/Foreground"
+  stxProgVal[23] = Settings[stxProgKey[23], "13883343"]
+  stxProgKey[24] = "Terminal/Orientation"
+  stxProgVal[24] = Settings[stxProgKey[24], "0"]
+  stxProgKey[25] = "Terminal/Theme"
+  stxProgVal[25] = Settings[stxProgKey[25], "0"]
+  stxProgKey[26] = "Terminal/Menu-Bar"
+  stxProgVal[26] = Settings[stxProgKey[26], "1"]
+  stxProgKey[27] = "Terminal/Opacity"
+  stxProgVal[27] = Settings[stxProgKey[27], "100"]
+  stxProgKey[28] = "Terminal/Transparency"
+  stxProgVal[28] = Settings[stxProgKey[28], "0"]
+  stxProgKey[29] = "Terminal/Window-New"
+  stxProgVal[29] = Settings[stxProgKey[29], ""]
+  stxProgKey[30] = "Terminal/Window-Close"
+  stxProgVal[30] = Settings[stxProgKey[30], ""]
+  stxProgKey[31] = "Terminal/Tab-New"
+  stxProgVal[31] = Settings[stxProgKey[31], ""]
+  stxProgKey[32] = "Terminal/Tab-Close"
+  stxProgVal[32] = Settings[stxProgKey[32], ""]
+  stxProgKey[33] = "Terminal/Copy"
+  stxProgVal[33] = Settings[stxProgKey[33], ""]
+  stxProgKey[34] = "Terminal/Paste"
+  stxProgVal[34] = Settings[stxProgKey[34], ""]
+
+  If stxProgKey.Max = stxProgVal.Max Then
+    If stxProgKey.Max = 18 Then
+      Return 1
+    Else
+      Return 0
+    Endif
+  Else
+    Return -1
+  Endif
+
+End
+
+Public Function Dependences() As Integer ''Analisis de dependencias, si hay paquetes que falta instalar se procede a instalarlos y la funcion retorna la cantidad remanente de paquetes, siendo cero si se instalaron todos.
+
+  Dim stxDep As New String[]
+  Dim stxInstall As New String[]
+  Dim str As String
+  Dim strCmm As String
+
+  str &= ("Debes instalar los siguientes paquetes") & ":\n"
+
+  Select GEFSys.DistroShort()
+
+    Case "debian", "ubuntu", "mint"
+      strCmm = "sudo apt-get install "
+      If Exist("deb.txt") = True Then
+        stxPackages = GEFUtility.FileLoad("deb.txt")
+      Endif
+    Case "manjaro", "arch"
+      strCmm = "sudo pacman -S "
+      If Exist("arc.txt") = True Then
+        stxPackages = GEFUtility.FileLoad("arc.txt")
+      Else
+        If Exist("deb.txt") = True Then
+          stxPackages = GEFUtility.FileLoad("deb.txt")
+        Endif
+      Endif
+    Case "fedora", "redhat"
+      strCmm = "sudo dnf install "
+      If Exist("rht.txt") = True Then
+        stxPackages = GEFUtility.FileLoad("rht.txt")
+      Else
+        If Exist("deb.txt") = True Then
+          stxPackages = GEFUtility.FileLoad("deb.txt")
+        Endif
+      Endif
+
+    Case "gentoo"
+      strCmm = "sudo emerge -a "
+      If Exist("gto.txt") = True Then
+        stxPackages = GEFUtility.FileLoad("gto.txt")
+      Else
+        If Exist("deb.txt") = True Then
+          stxPackages = GEFUtility.FileLoad("deb.txt")
+        Endif
+      Endif
+
+    Case "suse", "opensuse"
+      strCmm = "sudo zipper install "
+      If Exist("osu.txt") = True Then
+        stxPackages = GEFUtility.FileLoad("osu.txt")
+      Else
+        If Exist("deb.txt") = True Then
+          stxPackages = GEFUtility.FileLoad("deb.txt")
+        Endif
+      Endif
+
+  End Select
+
+  If stxPackages.Count > 0 Then
+    stxPackages = GEFSys.PkgDep(stxPackages)
+    If stxPackages.Count > 0 Then ' Existen paquete que no estan instalados
+
+      File.Save("/tmp/apt.txt", str & strCmm & stxPackages.Join(" "))
+      Wait 1
+      Desktop.Open("/tmp/apt.txt")
+
+      ' stxPackages = GEFSys.PkgInstall(stxPackages)
+      '
+      ' If stxPackages.Count > 0 Then
+      '   Message.Info("Algunos paquetes no se pudieron instalar.")
+      ' Else
+      '   GEFUtility.FileLog("Todos los paquetes fueron instalados.")
+      ' Endif
+
+    Endif
+  Endif
+  Return stxPackages.Count
+
+End
+
+Public Function Terminator() As Integer ''Funcion que guarda las configuraciones que se modificaron en el programa antes de cerrarlo.
+
+  Dim int As Integer
+
+  For int = 0 To stxProgKey.Max
+    Settings[stxProgKey[int]] = stxProgVal[int]
+    Print "Guardando: " & stxProgKey[int] & ": " & stxProgVal[int]
+  Next
+
+  Settings.Save
+
+  Return 1
+
+End

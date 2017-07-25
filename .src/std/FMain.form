@@ -1,0 +1,306 @@
+# Gambas Form File 3.0
+
+{ Form Form
+  MoveScaled(0,0,88,69)
+  Icon = Picture["logo.png"]
+  Arrangement = Arrange.Vertical
+  Padding = 2
+  { mnuActions Menu
+    #Translate = False
+    Text = "GEF"
+    { mnuConfig Menu
+      Text = ("Configuración")
+      Picture = Picture["icon:/22/properties"]
+    }
+    { mnuPrint Menu
+      Text = ("Imprimir")
+      Picture = Picture["icon:/22/print"]
+    }
+    { mnuTerm Menu
+      Text = ("Terminal")
+      Picture = Picture["icon:/22/terminal"]
+    }
+    { mnuExit Menu
+      Text = ("Salir")
+      Picture = Picture["icon:/22/quit"]
+    }
+  }
+  { mnuInfo Menu
+    Text = ("Información")
+    { mnuHelp Menu
+      Text = ("Manual de ayuda")
+      Picture = Picture["icon:/22/help"]
+    }
+    { mnuDevHelp Menu
+      Text = ("Mnual para el desarrollador")
+      Picture = Picture["icon:/22/development"]
+    }
+    { mnuAbout Menu
+      Text = ("Acerca de GEF")
+      Picture = Picture["icon:/22/info"]
+    }
+  }
+  { Panel1 Panel
+    MoveScaled(0,1,87,5)
+    Arrangement = Arrange.Horizontal
+    { tobConfig ToolButton
+      MoveScaled(1,0,5,5)
+      ToolTip = ("Preferencias")
+      Picture = Picture["icon:/22/properties"]
+    }
+    { tobReport ToolButton
+      MoveScaled(7,0,5,5)
+      ToolTip = ("Imprimir informe de archivos procesados")
+      Picture = Picture["icon:/22/print"]
+    }
+    { tobTerm2 ToolButton
+      MoveScaled(12,0,5,5)
+      ToolTip = ("Imprimir informe de archivos procesados")
+      Picture = Picture["icon:/22/refresh"]
+    }
+    { tobTerm3 ToolButton
+      MoveScaled(19,0,5,5)
+      ToolTip = ("Ver las utilidades en la practica.")
+      Picture = Picture["icon:/22/exec"]
+    }
+    { tobEmail ToolButton
+      MoveScaled(25,0,5,5)
+      ToolTip = ("Eviar un correo electrónico")
+      Picture = Picture["icon:/22/mail"]
+    }
+    { tobFunction ToolButton
+      MoveScaled(31,0,5,5)
+      ToolTip = ("Eviar un correo electrónico")
+      Picture = Picture["icon:/22/science"]
+    }
+    { tobImport ToolButton
+      MoveScaled(35,0,5,5)
+      ToolTip = ("Importar contactos")
+      Picture = Picture["icon:/22/unindent"]
+    }
+    { tobExport ToolButton
+      MoveScaled(40,0,5,5)
+      ToolTip = ("Exportar contactos")
+      Picture = Picture["icon:/22/indent"]
+    }
+    { btoSearch ButtonBox
+      MoveScaled(45,1,12,4)
+      Background = Color.Background
+    }
+    { Panel5 Panel
+      MoveScaled(59,0,7,5)
+      Expand = True
+    }
+    { tobHelp ToolButton
+      MoveScaled(70,0,5,5)
+      ToolTip = ("Documentacion para el usuario")
+      Picture = Picture["icon:/22/help"]
+    }
+    { tobDevHelp ToolButton
+      MoveScaled(77,0,5,5)
+      ToolTip = ("Documentacion para el desarrollador")
+      Picture = Picture["icon:/22/development"]
+    }
+    { tobAbout ToolButton
+      MoveScaled(82,0,5,5)
+      ToolTip = ("Acerca de")
+      Picture = Picture["icon:/22/info"]
+    }
+  }
+  { TabPanel1 TabStrip
+    MoveScaled(2,9,85,47)
+    #Translate = False
+    Background = Color.Background
+    Expand = True
+    Arrangement = Arrange.Vertical
+    Count = 3
+    Index = 0
+    Text = "GEF"
+    { HSplit2 HSplit
+      MoveScaled(1,1,81,36)
+      Background = Color.Background
+      Expand = True
+      Border = False
+      { Panel7 Panel
+        MoveScaled(1,1,18,33)
+        Expand = True
+        Arrangement = Arrange.Vertical
+        { pnlSearchCode2 ScrollView
+          MoveScaled(1,1,16,4)
+          Background = Color.Gray
+          Arrangement = Arrange.Fill
+          Padding = 1
+          Border = False
+          ScrollBar = Scroll.None
+          { btoSearchOnNames ButtonBox Search
+            Name = "btoSearchOnNames"
+            MoveScaled(1,0,12,3)
+            Tag = "method"
+            ToolTip = ("Buscar coincidencias en los nombres de los métodos.")
+            Picture = Picture["icon:/16/find"]
+          }
+        }
+        { trvMethods TreeView
+          MoveScaled(3,12,12,16)
+          Background = Color.Background
+          Expand = True
+          Border = False
+        }
+      }
+      { Panel8 Panel
+        MoveScaled(22,1,43,33)
+        Expand = True
+        Arrangement = Arrange.Vertical
+        { pnlSearchCode ScrollView
+          MoveScaled(1,1,41,4)
+          Background = Color.Gray
+          Arrangement = Arrange.Fill
+          Padding = 1
+          Border = False
+          ScrollBar = Scroll.None
+          { btoSearchOnCode ButtonBox Search
+            Name = "btoSearchOnCode"
+            MoveScaled(2,0,23,3)
+            Tag = "code"
+            ToolTip = ("Buscar coincidencias en todos los fragmentos de código.")
+            Picture = Picture["icon:/16/find"]
+          }
+        }
+        { pnlFunctions Panel
+          MoveScaled(0,13,41,14)
+          Expand = True
+          Arrangement = Arrange.Horizontal
+          { txeCode TextEditor
+            MoveScaled(2,-2,20,16)
+            #Translate = False
+            Font = Font["DejaVu Sans Mono"]
+            Foreground = Color.TextBackground
+            Expand = True
+            Highlight = "Gambas"
+            ReadOnly = True
+            ShowPosition = True
+            ShowLineNumber = True
+            ShowModified = True
+            ShowIcon = True
+            ShowIndent = True
+          }
+        }
+        { pnlDataControls2 Panel
+          MoveScaled(0,28,41,4)
+          Visible = False
+          Background = Color.Background
+          Arrangement = Arrange.Horizontal
+          { tobNewRecord2 ToolButton
+            MoveScaled(0,0,4,4)
+            ToolTip = ("Agregar")
+            Picture = Picture["icon:/16/new"]
+          }
+          { tobSaveRecord2 ToolButton
+            MoveScaled(4,0,4,4)
+            ToolTip = ("Guardar")
+            Picture = Picture["icon:/16/save"]
+          }
+          { tobDeleteRecord2 ToolButton
+            MoveScaled(9,0,4,4)
+            ToolTip = ("Borrar")
+            Picture = Picture["icon:/16/delete"]
+          }
+          { tobEditRecord2 ToolButton
+            MoveScaled(15,0,4,4)
+            ToolTip = ("Editar")
+            Picture = Picture["icon:/16/edit"]
+          }
+        }
+      }
+      { Panel9 Panel
+        MoveScaled(66,1,13,33)
+      }
+    }
+    Index = 1
+    Text = "Datos"
+    { HSplit1 HSplit
+      MoveScaled(2,2,72,36)
+      Background = Color.Background
+      Expand = True
+      Border = False
+      { Panel6 Panel
+        MoveScaled(4,4,21,27)
+        Expand = True
+        Arrangement = Arrange.Vertical
+        { trvData TreeView
+          MoveScaled(3,4,16,16)
+          Expand = True
+          Border = False
+        }
+      }
+      { Panel4 Panel
+        MoveScaled(28,2,43,33)
+        Expand = True
+        Arrangement = Arrange.Vertical
+        { pnlDataOrder ScrollView
+          MoveScaled(1,1,41,4)
+          Arrangement = Arrange.Horizontal
+          Padding = 1
+          Border = False
+          ScrollBar = Scroll.None
+        }
+        { pnlDataFilter ScrollView
+          MoveScaled(1,7,41,4)
+          Arrangement = Arrange.Horizontal
+          Border = False
+          ScrollBar = Scroll.None
+        }
+        { Panel3 Panel
+          MoveScaled(0,13,41,14)
+          Expand = True
+          Arrangement = Arrange.Fill
+          { grwData GridView
+            MoveScaled(1,1,38,12)
+            Background = Color.Background
+            Drop = True
+            Expand = True
+            Border = False
+            Mode = Select.Multiple
+          }
+        }
+        { pnlDataControls Panel
+          MoveScaled(0,28,41,4)
+          Background = Color.Background
+          Arrangement = Arrange.Horizontal
+          { tobNewRecord ToolButton
+            MoveScaled(0,0,4,4)
+            ToolTip = ("Agregar")
+            Picture = Picture["icon:/16/new"]
+          }
+          { tobSaveRecord ToolButton
+            MoveScaled(4,0,4,4)
+            ToolTip = ("Guardar")
+            Picture = Picture["icon:/16/save"]
+          }
+          { tobDeleteRecord ToolButton
+            MoveScaled(9,0,4,4)
+            ToolTip = ("Borrar")
+            Picture = Picture["icon:/16/delete"]
+          }
+          { tobEditRecord ToolButton
+            MoveScaled(15,0,4,4)
+            ToolTip = ("Editar")
+            Picture = Picture["icon:/16/edit"]
+          }
+        }
+      }
+    }
+    Index = 2
+    Text = ""
+    Index = 0
+  }
+  { Panel2 Panel
+    MoveScaled(1,57,86,5)
+    Arrangement = Arrange.Horizontal
+    Padding = 5
+    { lblInformation Label
+      MoveScaled(8,1,24,4)
+      Expand = True
+    }
+  }
+}

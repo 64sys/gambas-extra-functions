@@ -21,9 +21,7 @@
 ' Foundation, Inc., 51 Franklin St, Fifth Floor,
 ' Boston, MA  02110-1301  USA
 '
-' usamos el evento lostfocus para comprobar sólo cuando se pierde el foco del textbox
-
-Public Function VEmail(strAddress As String) As String '' Validación de una direccion de correo electrónico
+Public Function VEmail(strAddress As String) As String ''Validación de una direccion de correo electrónico
   'Propuesta por Jguardon y modificado por Tincho
   'https://www.gambas-es.org/viewtopic.php?f=1&t=359
 
@@ -63,7 +61,7 @@ Public Function ArrangeParagraph(strInText As String) As String
 
 End
 
-Public Function OnlyTextParenthesis(strInput As String) As String '' Validación de solo texto, espacio, punto y coma entre parentesis.
+Public Function OnlyTextParenthesis(strInput As String) As String ''Validación de solo texto, espacio, punto y coma entre parentesis.
 
   Dim regex As New RegExp
   Dim strPattern As String = "([A-Za-z. ]*)"
@@ -79,29 +77,22 @@ Public Function OnlyTextParenthesis(strInput As String) As String '' Validación
 
 End
 
-' Public Function DictFeeder(strWord As String[], strLang As String) As String '' Lista palabras en tres arcivos LANG_words.txt donde LANG es ES,EN etc.
-'
-' End
-
-Public Function OnlyLeters(strInput As String) As String '' Validación de palabras.
+Public Function OnlyLeters(strInput As String) As String ''Validación de palabras.
 
   Dim int As Integer
   Dim strSymbol As String
-
   Dim stxLeters As New String[]
   Dim intKey As Integer
   Dim stxOut As New String[]
   Dim strOut As String
-
   Dim btxLeters As New Byte[]
 
   btxLeters = Byte[].FromString(strInput)
-
   stxOut.Clear
   stxLeters.Clear
-
-  stxLeters = Split("a:b:c:d:e:f:g:h:i:j:k:l:m:n:o:p:q:r:s:t:u:v:w:x:y:z:A:B:C:D:E:F:G:H:I:J:K:L:M:N:O:P:Q:R:S:T:U:V:W:X:Y:Z:á:à:â:ã:é:è:ê:í:ï:ó:ô:õ:ö:ú:ç:ñ:Á:À:Â:Ã:É:È:Í:Ï:Ó:Ô:Õ:Ö:Ú:Ç:Ñ", ":")
-
+  stxLeters.Insert(Split("a:b:c:d:e:f:g:h:i:j:k:l:m:n:o:p:q:r:s:t:u:v:w:x:y:z", ":"))
+  stxLeters.Insert(Split("A:B:C:D:E:F:G:H:I:J:K:L:M:N:O:P:Q:R:S:T:U:V:W:X:Y:Z", ":"))
+  stxLeters.Insert(Split("á:à:â:ã:é:è:ê:í:ï:ó:ô:õ:ö:ú:ç:ñ:Á:À:Â:Ã:É:È:Í:Ï:Ó:Ô:Õ:Ö:Ú:Ç:Ñ", ":"))
   For int = 1 To String.Len(strInput)
     strSymbol = String.Mid(strInput, int, 1)
     intKey = stxLeters.Find(strSymbol)
@@ -109,14 +100,12 @@ Public Function OnlyLeters(strInput As String) As String '' Validación de palab
       stxOut.Add(strSymbol)
     End If
   Next
-
   strOut = stxOut.Join("")
-
   Return strOut
 
 End
 
-Public Function CaptionCheck(strInput As String) As String '' Validación del texto de un control en KDE el texto de los botones por ejemplo tiene un simbolo & delante del texto.
+Public Function CaptionCheck(strInput As String) As String ''Validación del texto de un control en KDE el texto de los botones por ejemplo tiene un simbolo & delante del texto.
 
   Dim strOut As String
 
@@ -127,7 +116,7 @@ Public Function CaptionCheck(strInput As String) As String '' Validación del te
 
 End
 
-Public Function NoSymbols(strInput As String) As String '' Solo letras y números, y las letras sin acentos.
+Public Function NoSymbols(strInput As String) As String ''Solo letras y números, y las letras sin acentos.
 
   Dim int As Integer
   Dim strSymbol As String
@@ -204,7 +193,7 @@ Public Function OnlyNumbers(strInput As String) As String ''Devuelve un texto so
 
 End
 
-Public Function OnlyCyrilic(strInput As String) As String '' Validación de palabras.
+Public Function OnlyCyrilic(strInput As String) As String ''Validación de palabras.
 
   Dim int As Integer
   Dim strSymbol As String
@@ -237,7 +226,7 @@ Public Function OnlyCyrilic(strInput As String) As String '' Validación de pala
 
 End
 
-Public Function OnlyText(strInput As String) As String '' Validación de solo texto, Numeros NO, Doble espacio NO, Espacio Al principio y/o al final NO.
+Public Function OnlyText(strInput As String) As String ''Validación de solo texto, Numeros NO, Doble espacio NO, Espacio Al principio y/o al final NO.
 
   Dim int As Integer
   Dim strSymbol As String
@@ -379,7 +368,7 @@ Public Function OnlyText(strInput As String) As String '' Validación de solo te
 
 End
 
-Public Function OnlyTextCyrilic(strInput As String) As String '' Validación de solo texto, Numeros NO, Doble espacio NO, Espacio Al principio y/o al final NO.
+Public Function OnlyTextCyrilic(strInput As String) As String ''Validación de solo texto, Numeros NO, Doble espacio NO, Espacio Al principio y/o al final NO.
 
   Dim int As Integer
   Dim strSymbol As String
@@ -521,7 +510,96 @@ Public Function OnlyTextCyrilic(strInput As String) As String '' Validación de 
 
 End
 
-Public Function VDNISpain(strDNI As String) As Boolean '' Validación de un dni español
+Public Function ConvertPath(strInput As String) As String ''Descodifica los caracteres hexadecimales en las URI's recorriendo la cadena dada Params: strInput la URintPos a descodificar Return: la URintPos descodificada
+  '----------------------------------------------------------------------
+  'http://www.gambas-es.org/viewtopic.php?f=1&t=2054&postdays=0&postorder=asc&start=10
+  '----------------------------------------------------------------------
+  '
+
+  Dim intLen As Integer
+  Dim intPos As Integer
+  Dim strChar As String
+  Dim strDigits As String
+  Dim strOutput As String
+
+  strOutput = ""
+  intLen = Len(strInput)
+  intPos = 1
+  Do While intPos <= intLen
+    ' Examinar el siguiente caracter
+    strChar = Mid$(strInput, intPos, 1)
+    If strChar = "+" Then
+      ' Convertir a espacio
+      ' strOutput = strOutput & " " ' Lo anule porque se carga los directorios con signo +
+      strOutput = strOutput & strChar
+    Else If strChar <> "%" Then
+      ' Normal, no cambiar
+      strOutput = strOutput & strChar
+    Else If intPos > intLen - 2 Then
+      strOutput = strOutput & strChar
+    Else
+      ' Obtener los siguientes caracteres hex.
+      strDigits = Mid$(strInput, intPos + 1, 2)
+      ' Debug strDigits
+      ' aquí convertimos el valor hexadecimal a entero y
+      ' se lo pasamos a Chr que devuelve el carácter correcto.
+      strOutput = strOutput & Chr$(CInt(Val("&" & strDigits)))
+      intPos = intPos + 2
+    Endif
+    intPos = intPos + 1
+  Loop
+
+  Return strOutput
+
+End
+
+Public Function StrColor(strHex As String) As Integer '' Convierte el color pasado en formato texto hexagesimal, como por ejemplo #000000 en un numero para poder ser usado en el código de gambas.
+
+  Dim int As Integer
+
+  If strHex <> "" Then
+    If InStr(strHex, "#") Then
+      strHex = Replace(strHex, "#", "&")
+      int = Val(strHex)
+      Return int
+    Else
+      If InStr(strHex, "&") Then
+        int = Val(strHex)
+        Return int
+      Endif
+    Endif
+
+  Endif
+
+End
+
+Public Function SplitText(strText As String, Optional strCut As String) As String[] ''Particiona un texto dado como parametro, si el segundo argumento, que es la palabra o letra de corte es nula, cada item de la matriz sera un caracter de la cadena de texto, si , por el contrario, se pasa un parametro de corte y este existe en la cadena, esta sera dividida por este parametro. Pero en el caso que se pase una frase de corte y esta no exista se devolvera la misma fras eoriginal sin alterar como item cero de la matriz.
+
+  Dim int As Integer
+  Dim stx As New String[]
+
+  stx.Clear
+
+  Select strCut
+    Case ""
+      For int = 1 To String.Len(strText)
+
+        stx.Add(String.Mid(strText, int, 1))
+      Next
+
+    Case Else
+      If InStr(strText, strCut) > 0 Then
+        stx = Split(strText, strCut)
+      Else
+        stx.Add(strText)
+      Endif
+  End Select
+
+  Return stx
+
+End
+
+Public Function VDNISpain(strDNI As String) As Boolean ''Validación de un dni español
   'Propuesta por Jguardon y modificado por Tincho
   'https://www.gambas-es.org/viewtopic.php?f=1&t=359
 
@@ -586,5 +664,39 @@ Public Function VRUTChile(strRutIn As String, strDigRut As String) As Boolean
   End If
 
   Return bolValid
+
+End
+
+Public Function OnlyChar(strInput As String) As String ''Devuelve un texto con sus caracteres.
+
+  Dim strOutput As String
+
+  If strInput <> "" Then
+
+    strOutput = String.UCase(String.Mid(strInput, 1, 1))
+    strOutput &= String.LCase(String.Mid(strInput, 2, String.len(strInput) - 1))
+
+  Else
+    strOutput = ""
+  Endif
+
+  Return strOutput
+
+End
+
+Public Function Capital(strInput As String) As String ''Devuelve un texto con la primera letra en mayusculas y todas las siguientes en minúsculas.
+
+  Dim strOutput As String
+
+  If strInput <> "" Then
+
+    strOutput = String.UCase(String.Mid(strInput, 1, 1))
+    strOutput &= String.LCase(String.Mid(strInput, 2, String.len(strInput) - 1))
+
+  Else
+    strOutput = ""
+  Endif
+
+  Return strOutput
 
 End

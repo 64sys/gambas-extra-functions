@@ -1,0 +1,121 @@
+# Gambas Database Template File 3.0
+{ Table
+  Name="bom"
+  PrimaryKey=["mtindx"]
+  { Field
+    Name="mtindx"
+    Type=db.Serial
+  }
+  { Field
+    Name="mtjob"
+    Type=db.String
+  }
+  { Field
+    Name="mtcode"
+    Type=db.Integer
+  }
+}
+{ Table
+  Name="codes"
+  PrimaryKey=["cdindx"]
+  { Field
+    Name="cdindx"
+    Type=db.Serial
+  }
+  { Field
+    Name="cdname"
+    Type=db.String
+  }
+  { Field
+    Name="cdclass"
+    Type=db.Integer
+  }
+  { Index
+    Name="cdclass"
+  }
+
+}
+{ Table
+  Name="codesclass"
+  PrimaryKey=["csindx"]
+  { Field
+    Name="csindx"
+    Type=db.Serial
+  }
+  { Field
+    Name="csname"
+    Type=db.String
+  }
+}
+{ Table
+  Name="jobs"
+  PrimaryKey=["jbindx"]
+  { Field
+    Name="jbindx"
+    Type=db.Serial
+  }
+  { Field
+    Name="jbname"
+    Type=db.String
+  }
+  { Field
+    Name="jbowner"
+    Type=db.Integer
+  }
+  { Field
+    Name="jbdate"
+    Type=db.String
+  }
+  { Field
+    Name="jblogistic"
+    Type=db.Integer
+  }
+}
+{ Table
+  Name="logistic"
+  PrimaryKey=["lgindx"]
+  { Field
+    Name="lgindx"
+    Type=db.Serial
+  }
+  { Field
+    Name="lgname"
+    Type=db.String
+  }
+}
+{ Table
+  Name="manufacturers"
+  PrimaryKey=["mnindx"]
+  { Field
+    Name="mnindx"
+    Type=db.Serial
+  }
+  { Field
+    Name="mnname"
+    Type=db.String
+  }
+}
+{ Table
+  Name="owner"
+  PrimaryKey=["owindx"]
+  { Field
+    Name="owindx"
+    Type=db.Serial
+  }
+  { Field
+    Name="owname"
+    Type=db.String
+  }
+}
+{ Table
+  Name="uoms"
+  PrimaryKey=["unindx"]
+  { Field
+    Name="unindx"
+    Type=db.Serial
+  }
+  { Field
+    Name="unname"
+    Type=db.String
+  }
+}

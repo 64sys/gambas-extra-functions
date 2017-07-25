@@ -1,18 +1,35 @@
 # Gambas Project File 3.0
-# Compiled with Gambas 3.9.1
+# Compiled with Gambas 3.9.2
 Title=Gambas extra functions
-Startup=FMain
-Icon=tech.png
-Version=0.0.2
+Startup=GEFStarter
+Icon=logo.png
+Version=0.1.3
 Component=gb.image
 Component=gb.gui.qt
 Component=gb.form
 Component=gb.db
+Component=gb.desktop.x11
+Component=gb.desktop
+Component=gb.eval
+Component=gb.eval.highlight
+Component=gb.form.editor
+Component=gb.settings
+Component=gb.form.mdi
+Component=gb.form.terminal
+Component=gb.gui.qt.webkit
+Component=gb.markdown
+Component=gb.pcre
+Component=gb.pdf
+Component=gb.report2
+Component=gb.sdl2.audio
 Component=gb.xml
-Description="Compilation of utilities and functions developed by the gambas comunity."
-Authors="Martín Belmonte."
+Description="Armazón para contruir pogramas."
+Authors="Martín Belmonte"
 TabSize=2
 Translate=1
 Language=es
-Vendor=belmotek
+Vendor=Belmotek
 Packager=1
+GambasVersion=3.9
+WebSite=www.belmotek.net
+CreateMenu=1

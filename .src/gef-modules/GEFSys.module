@@ -43,7 +43,17 @@ Public Function Resume() As String
 
 End
 
-Public Function Distro() As String 'devuelve la distribución instalada xmi
+Public Function DeFiBro() As String ''Devuelve el administrador de archivos por defecto.
+
+  Dim str As String
+
+  Shell "xdg-mime query default inode/directory" To str
+
+  Return str
+
+End
+
+Public Function Distro() As String ''Devuelve la distribución instalada xmi
 
   Dim sDis As String
 
@@ -103,13 +113,13 @@ Public Function DistroShort() As String
 
 End
 
-Public Function ArqSO() As String 'devuelve la Arquitecura del Sistema Operativo
+Public Function ArqSO() As String ''Devuelve la Arquitecura del Sistema Operativo
 
   Return System.Architecture
 
 End
 
-Public Function ArqMicro() As String 'devuelve la Arquitecura del Procesador
+Public Function ArqMicro() As String ''Devuelve la Arquitecura del Procesador
 
   Dim sArqPro As String
 
@@ -118,7 +128,7 @@ Public Function ArqMicro() As String 'devuelve la Arquitecura del Procesador
 
 End
 
-Public Function MicroType() As String 'devuelve el tipo de Procesador
+Public Function MicroType() As String ''Devuelve el tipo de Procesador
 
   Dim sPro As String
 
@@ -127,7 +137,7 @@ Public Function MicroType() As String 'devuelve el tipo de Procesador
 
 End
 
-Public Function Ram() As String 'devuelve cantidad de Ram en MB tambien con free -m
+Public Function Ram() As String ''Devuelve cantidad de Ram en MB tambien con free -m
 
   Dim sRam As String
 
@@ -149,13 +159,13 @@ Public Function Ram() As String 'devuelve cantidad de Ram en MB tambien con free
 
 End
 
-Public Function ComputerName() As String 'devuelve el nombre del pc
+Public Function ComputerName() As String ''Devuelve el nombre del pc
 
   Return System.Host
 
 End
 
-Public Function CurrentUser() As String[] 'devuelve el usuario activo
+Public Function CurrentUser() As String[] ''Devuelve el usuario activo
 
   Return System.User.Name
 
@@ -167,7 +177,7 @@ Public Function GetSystemUsers() As String[] ''Devuelve el una lista de usuarios
   Dim stxUsr As New String[]
   Dim strUser As String
 
-  stxTUsr = MUtility.FileLoad("/etc/passwd")
+  stxTUsr = GEFUtility.FileLoad("/etc/passwd")
 
   If stxTUsr.Count > 0 Then
 
@@ -184,7 +194,7 @@ Public Function GetSystemUsers() As String[] ''Devuelve el una lista de usuarios
 
 End
 
-Public Function AllUsers() As String 'Devuelve los usuarios que hemos creado
+Public Function AllUsers() As String ''Devuelve los usuarios que hemos creado
 
   Dim sUser As String
 
@@ -194,7 +204,7 @@ Public Function AllUsers() As String 'Devuelve los usuarios que hemos creado
 
 End
 
-' Public Function DskType() As String 'devuelve el entorno del escritorio
+' Public Function DskType() As String ''Devuelve el entorno del escritorio
 '
 '   Dim sEscritorio As String
 '   'Shell "env | grep DESKTOP_SESSION= | cut -d '=' -f 2" To sEscritorio
@@ -204,13 +214,13 @@ End
 '
 ' End
 
-Public Function WGroup() As String 'devuelve el Grupo de trabajo del pc
+Public Function WGroup() As String ''Devuelve el Grupo de trabajo del pc
 
   Return System.Domain
 
 End
 
-Public Function SysFile(ruta As String) As String 'devuelve el sistema de ficheros
+Public Function SysFile(ruta As String) As String ''Devuelve el sistema de ficheros
 
   Dim sSF As String
 
@@ -221,7 +231,7 @@ Public Function SysFile(ruta As String) As String 'devuelve el sistema de ficher
 
 End
 
-Public Function Vgambas() As String 'devuelve la versión de gambas intalada en el pc
+Public Function Vgambas() As String ''Devuelve la versión de gambas intalada en el pc
 
   Return System.FullVersion
 
@@ -310,7 +320,7 @@ Public Function ProjInfo(Optional strPath As String) As String[] ''Devuelve una 
 
 End
 
-Public Function Ls(Ruta As String) As String 'devuelve un listado del directorio pasado en ruta
+Public Function Ls(Ruta As String) As String ''Devuelve un listado del directorio pasado en ruta
 
   Dim sListado As String
 
@@ -322,16 +332,70 @@ Public Function Ls(Ruta As String) As String 'devuelve un listado del directorio
 
 End
 
-Public Function AddressIP() As String 'devuelve las Ips configuradas en el equipo
+Public Function AddressIP() As String ''Devuelve la IP del equipo, solo funciona bajo OS con Systemd, para ello usa shell y el comando "ip addr show".
 
-  Dim sIPs As String
+  Dim strAddr As String
+  Dim stxAddr As New String[]
+  Dim strPart As String
+  Dim strIP As String
 
-  Shell "ifconfig | grep inet: |cut -d ':' -f2|cut -d ' ' -f1" To sIPs
-  Return RTrim(Replace(sIPs, "\n", " "))
+  Shell "ip addr show" To strAddr
+  If Len(strAddr) > 0 Then
+    stxAddr = Split(strAddr, " ")
+    For Each strPart In stxAddr
+      If InStr(strPart, ".") > 0 Then
+        If InStr(strPart, "/24") > 0 Then
+          strIP = Split(strPart, "/")[0]
+          Print strPart
+        Endif
+      Endif
+    Next
+  Endif
+  Return strIP
 
 End
 
-Public Function LastNIP() As String 'devuelve el último digito de la Ip
+Public Function LANIP(Optional strBase As String) As String[] ''Devuelve las IP v4 de la red local, como parametro de entrada requiere la direccion IP base, por ejemplo "192.168.1" pero si no se le pasa el parametro entonces usa la ip de la computadora donde se este ejecutando el programa quitandole el último número. El formato de salida de cada item de la matriz es host-name[tab]8.8.8.8
+
+  Dim strAddr As String
+  Dim stxTmp As New String[]
+  Dim stxAddr As New String[]
+  Dim strPart As String
+
+  If InStr(strBase, ".") = 0 Then
+    strBase = Split(AddressIP(), ".")[0] & "."
+    strBase &= Split(AddressIP(), ".")[1] & "."
+    strBase &= Split(AddressIP(), ".")[2]
+  Endif
+
+  Shell "nmap -sP " & strBase & ".1-254" To strAddr
+
+  If Len(strAddr) > 0 Then
+    stxTmp = Split(strAddr, "\n")
+    For Each strPart In stxTmp
+      If InStr(strPart, "Nmap scan report for ") > 0 Then
+        strPart = Replace(strPart, "Nmap scan report for ", "")
+        strPart = Replace(strPart, " ", "\t")
+        strPart = Replace(strPart, "(", "")
+        strPart = Replace(strPart, ")", "")
+        stxAddr.Add(strPart)
+      Endif
+    Next
+  Endif
+  Return stxAddr
+
+End
+
+' Public Function AddressIP() As String ''Devuelve las Ips configuradas en el equipo
+'
+'   Dim sIPs As String
+'
+'   Shell "ifconfig | grep inet: |cut -d ':' -f2|cut -d ' ' -f1" To sIPs
+'   Return RTrim(Replace(sIPs, "\n", " "))
+'
+' End
+
+Public Function LastNIP() As String ''Devuelve el último digito de la Ip
 
   Dim sIPs As String
 
@@ -340,7 +404,7 @@ Public Function LastNIP() As String 'devuelve el último digito de la Ip
 
 End
 
-Public Function Hdserial() As String 'devuelve el número de serie del disco duro para utilizarlo como Pk en la BDD
+Public Function Hdserial() As String ''Devuelve el número de serie del disco duro para utilizarlo como Pk en la BDD
 
   Dim sNS As String
 
@@ -350,7 +414,7 @@ Public Function Hdserial() As String 'devuelve el número de serie del disco dur
 End
 
 Public Function UUIDswap() As String
-  'devuelve UUID de la swap para utilizarlo como PK de la BDD
+  ''Devuelve UUID de la swap para utilizarlo como PK de la BDD
   'Requiere permisos de Administrador
 
   Dim sUID As String
@@ -360,7 +424,7 @@ Public Function UUIDswap() As String
 
 End
 
-Public Function LastUpgrade() As String 'devuelve la Fecha de la ultima vez que se actualizo el sistema
+Public Function LastUpgrade() As String ''Devuelve la Fecha de la ultima vez que se actualizo el sistema
 
   'Dim Result As String
   Dim long_iso As String
@@ -407,9 +471,9 @@ Public Function PkgStat(strPkg As String) As Boolean ''Devuelve el estado respec
 
       Select strPkgStatus
         Case "local/" & strPkg
-          bolPkgStatus = True ' "yes"
+          bolPkgStatus = True
         Case Else
-          bolPkgStatus = False '"no"
+          bolPkgStatus = False
       End Select
 
     Case "debian", "ubuntu", "mint"
@@ -419,43 +483,10 @@ Public Function PkgStat(strPkg As String) As Boolean ''Devuelve el estado respec
       Shell strCommand & " 2>&1" To strPkgStatus
 
       If strPkgStatus = "install ok installed\n" Then
-        bolPkgStatus = True ' "yes"
+        bolPkgStatus = True
       Else
-        bolPkgStatus = False '"no"
+        bolPkgStatus = False
       Endif
-
-      ' Case "fedora"
-      '   strCommand = "rpm-qa | grep " & strPkg
-      '
-      '   Shell strCommand & " 2>&1" To strPkgStatus
-      '
-      '   If strPkgStatus = "#FALTA-CODIFICAR#" Then
-      '     strPkgStatus = "#FALTA-CODIFICAR#" '"yes"
-      '   Else
-      '     strPkgStatus = "#FALTA-CODIFICAR#" '"no"
-      '   Endif
-      '
-      ' Case "opensuse"
-      '   strCommand = "zypper se -i " & strPkg
-      '
-      '   Shell strCommand & " 2>&1" To strPkgStatus
-      '
-      '   If strPkgStatus = "#FALTA-CODIFICAR#" Then
-      '     strPkgStatus = "#FALTA-CODIFICAR#" '"yes"
-      '   Else
-      '     strPkgStatus = "#FALTA-CODIFICAR#" '"no"
-      '   Endif
-      '
-      ' Case "gentoo"
-      '   strCommand = "emerge -pv " & strPkg
-      '
-      '   Shell strCommand & " 2>&1" To strPkgStatus
-      '
-      '   If strPkgStatus = "#FALTA-CODIFICAR#" Then
-      '     strPkgStatus = "#FALTA-CODIFICAR#" '"yes"
-      '   Else
-      '     strPkgStatus = "#FALTA-CODIFICAR#" '"no"
-      '   Endif
 
   End Select
 
@@ -463,7 +494,7 @@ Public Function PkgStat(strPkg As String) As Boolean ''Devuelve el estado respec
 
 End
 
-Public Function XDGFolder() As String[] '' Devuelve una matriz de texto con las rutas de las carpetas de musica, imagenes, documentos etc. del directorio /home/user
+Public Function XDGFolder() As String[] ''Devuelve una matriz de texto con las rutas de las carpetas de musica, imagenes, documentos etc. del directorio /home/user
 
   Dim strHome As String
   Dim stxXDGTmp As New String[]
@@ -514,127 +545,26 @@ Public Function XDGFolder() As String[] '' Devuelve una matriz de texto con las 
 
 End
 
-Public Function PkgDep(stxPackages As String[]) As String[] '' Verifica si los paqutes que se le pasan como parametros en una matriz, estan instalados en el sistema, si alguno o todos estan pendientes de instalar este modulo propondra instalarlos y abrira la terminal de comandos para que ingreses la clave de administrador.
+Public Function PkgDep(stxPackages As String[]) As String[] ''Verifica si los paqutes que se le pasan como parametros en una matriz, estan instalados en el sistema, devuelve una matriz con los paquetes que no estan instalados, si todo lo estuviera la matriz devuelta estara vacia.
 
   Dim intPkg As Integer
-  Dim stxPackagesInstall As New String[]
-  Dim strMessage As String
-  Dim strCommand As String
+  Dim stxMissing As New String[] ' Lista de paquetes que falta instalar
 
   For intPkg = 0 To stxPackages.Max
-
     If PkgStat(stxPackages[intPkg]) = False Then
-
-      stxPackagesInstall.Add(stxPackages[intPkg])
-
+      stxMissing.Add(stxPackages[intPkg])
     Endif
   Next
 
-  If stxPackagesInstall.Count > 0 Then
-    Select stxPackagesInstall.Count
-      Case 1
-        strMessage = ("Falta instalar el paquete")
-
-      Case Else
-        strMessage = ("Faltan instalar los siguientes paquetes")
-    End Select
-
-    Select DistroShort()
-
-      Case "debian", "ubuntu", "mint"
-        strCommand = "sudo apt-get install " & stxPackagesInstall.Join(" ")
-
-      Case "manjaro", "arch"
-        strCommand = "sudo pacman -S " & stxPackagesInstall.Join(" ")
-      Case "fedora", "redhat"
-        strCommand = "sudo dnf install " & stxPackagesInstall.Join(" ")
-      Case "gentoo"
-        strCommand = "sudo emerge -a " & stxPackagesInstall.Join(" ")
-      Case "suse", "opensuse"
-        strCommand = "sudo zipper install " & stxPackagesInstall.Join(" ")
-    End Select
-    strCommand = Replace(strCommand, "-", Chr(45)) ' Esto es porque sendkeys tiene problermas con "-"
-
-    strCommand = Replace(strCommand, "/", Chr(45)) ' Esto es porque sendkeys tiene problermas con "-"
-
-    ' Select Message.Question(strMessage & ":" & gb.NewLine &
-    '       stxPackagesInstall.Join(gb.NewLine) & gb.NewLine &
-    '       ("Puede usar la siguiente orden") & ":" & gb.NewLine &
-    '       strCommand & gb.NewLine &
-    '       ("¿Quiere abrir la terminal para poceder?"), ("Sí"), ("No"))
-    '   Case 1
-    '     Desktop.OpenTerminal
-    '     Wait 0.25
-    '     Desktop.SendKeys(strCommand)
-    ' End Select
-  Endif
-  Return stxPackagesInstall
+  Return stxMissing
 
 End
 
-Public Function PkgInstall(stxPackagesInstall As String[]) As String[] '' Instala los paqutes que se le pasan como parametros en una matriz de texto.
+Public Sub Install_read()
 
-  '  Dim intPkg As Integer
-  Dim stxPackagesInstalled As New String[]
-  Dim strMessage As String
-  Dim strCommand As String
-  Dim prsInstall As Process
-  Dim intInst As Integer
+  Dim StrInput As String
 
-  If stxPackagesInstall.Count > 0 Then
-    Select stxPackagesInstall.Count
-      Case 1
-        strMessage = ("Falta instalar el paquete")
-
-      Case Else
-        strMessage = ("Faltan instalar los siguientes paquetes")
-    End Select
-
-    Select DistroShort()
-
-      Case "debian", "ubuntu", "mint"
-        strCommand = "sudo apt-get install " & stxPackagesInstall.Join(" ")
-
-      Case "manjaro", "arch"
-        strCommand = "sudo pacman -S " & stxPackagesInstall.Join(" ")
-      Case "fedora", "redhat"
-        strCommand = "sudo dnf install " & stxPackagesInstall.Join(" ")
-      Case "gentoo"
-        strCommand = "sudo emerge -a " & stxPackagesInstall.Join(" ")
-      Case "suse", "opensuse"
-        strCommand = "sudo zipper install " & stxPackagesInstall.Join(" ")
-    End Select
-
-    strCommand = Replace(strCommand, "-", Chr(45)) ' Esto es porque sendkeys tiene problermas con "-"
-
-    Select Message.Question(strMessage & ":" & gb.NewLine &
-          stxPackagesInstall.Join(gb.NewLine) & gb.NewLine &
-          ("Puede usar la siguiente orden") & ":" & gb.NewLine &
-          strCommand & gb.NewLine &
-          ("¿Quiere abrir la terminal para poceder?"), ("Sí"), ("No"))
-
-      Case 1
-        ' Desktop.OpenTerminal
-        ' Wait 0.25
-        ' Desktop.SendKeys(strCommand)
-
-        prsInstall = Shell strCommand
-
-        While prsInstall.State = prsInstall.Running
-          Wait 0.1
-        Wend
-
-    End Select
-
-  Endif
-
-  For intInst = 0 To stxPackagesInstall.Max
-    If PkgStat(stxPackagesInstall[intInst]) = True Then
-      stxPackagesInstalled.Add(stxPackagesInstall[intInst])
-    Endif
-
-  Next
-
-  Return stxPackagesInstalled
+  Read #Last, StrInput, -80
+  Print StrInput
 
 End

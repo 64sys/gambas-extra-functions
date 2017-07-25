@@ -1,12 +1,26 @@
-FMain
+GEFStarter
 Gambas extra functions
 0
 0
-0.0.2
+0.1.3
 
 gb.image
 gb.gui.qt
 gb.form
 gb.db
+gb.desktop.x11
+gb.desktop
+gb.eval
+gb.eval.highlight
+gb.form.editor
+gb.settings
+gb.form.mdi
+gb.form.terminal
+gb.gui.qt.webkit
+gb.markdown
+gb.pcre
+gb.pdf
+gb.report2
+gb.sdl2.audio
 gb.xml
 
