@@ -37,9 +37,9 @@ Public stxTables As New String[] ''Lista de tablas
 Public stxTableFields As New String[][] ''Lista de campos de las tablas
 
 Public stxViews As New String[] ''Lista de vistas
-Public stxViewsEx As New String[][] ' Lista de vistas mejorada
+Public stxVTitles As New String[][] ' Lista de vistas mejorada con titulos "humanos" e iconos
 Public stxViewFields As New String[][] ''Lista de campos de las vistas
-Public stxTitles As New String[][] ''Lista de títulos de los campos de las vistas y de las tablas
+Public stxFTitles As New String[][] ''Lista de títulos de los campos de las vistas y de las tablas
 Public stxHeaders As New String[] ''<ul><li>0 Acronimo de dos letras "es"</li><li>1 Acronimo de tres letras "spa"</li><li>2 Nombre en inglés "Spanish"</li><li>3 Nombre nativo "Español"</li><li>4 Grupo del idioma "Indo-European"</li><li>5 Alfabeto "Latn" (latino)</li><li>6 Traducir [True/False]</li></ul>
 Public stxFieldsTableCurrent As New String[] ''lista de campos para crear los botones de filtros
 Public stxFieldsViewCurrent As New String[] ''lista de campos para crear los botones de filtros
@@ -48,6 +48,10 @@ Public resProgram As Result
 Public strViewNameSqlCurrent As String
 Public strViewNameHumanCurrent As String
 Public strSQLCurrent As String
+' Public intDataTreeWidth As Integer
+' Public intDataTreeHeight As Integer
+' Public intDataGridWidth As Integer
+' Public intDataGridHeight As Integer
 
 'Public strInputLanguage As String
 
@@ -58,7 +62,6 @@ Public strSQLCurrent As String
 
 Public Sub Main()
 
-  '  Dim stxPackages As New String[]
   Dim strSQL As String
   Dim resSQL As Result
   Dim intTable As Integer
@@ -121,144 +124,150 @@ Public Sub Main()
 
   conProgram = GEFData.DBOpen(stxProgVal)
 
-  If LoadTitles() = 1 Then
+  stxVTitles = GEFData.DBViewsTitles()
+  stxFTitles = GEFData.DBFieldsTitles()
 
-    stxTables.Clear
-    stxTables.Insert(GEFData.getTables(conProgram, "table")) ' Lista de TABLAS
+  If stxVTitles.Count > 0 Then
+    'LoadTitles() = 1 Then
+    If stxFTitles.Count > 0 Then
 
-    stxTableFields.Clear
-    For intTable = 0 To stxTables.Max
-      strTableTmp = stxTables[intTable]
-      strSQL = "select * from " & strTableTmp
-      resSQL = conProgram.Exec(strSQL)
+      stxTables.Clear
+      stxTables.Insert(GEFData.getTables(conProgram, "table")) ' Lista de TABLAS
 
-      stxTmp.Clear
-      stxTmp.Insert(GEFData.getFields(conProgram, strTableTmp, "table", stxTitles))
+      stxTableFields.Clear
+      For intTable = 0 To stxTables.Max
+        strTableTmp = stxTables[intTable]
+        strSQL = "select * from " & strTableTmp
+        resSQL = conProgram.Exec(strSQL)
 
-      For intTmp = 0 To stxTmp.Max
-        stxTableFields.Add(stxTmp[intTmp])
+        stxTmp.Clear
+        stxTmp.Insert(GEFData.getFields(conProgram, strTableTmp, "table", stxFTitles))
+
+        For intTmp = 0 To stxTmp.Max
+          stxTableFields.Add(stxTmp[intTmp])
+        Next
       Next
-    Next
-    Print "###Tablas###"
-    For intP = 0 To stxTableFields.Max
-      Print stxTableFields[intP].Join(":")
-    Next
+      Print "###Tablas###"
+      For intP = 0 To stxTableFields.Max
+        Print stxTableFields[intP].Join(":")
+      Next
 
-    stxViews.Clear
-    stxViews.Insert(GEFData.getTables(conProgram, "view")) ' Lista de VISTAS
+      stxViews.Clear
+      stxViews.Insert(GEFData.getTables(conProgram, "view")) ' Lista de VISTAS
 
-    For intView = 0 To stxViews.Max
-      strViewTmp = stxViews[intView]
-      strSQL = "select * from " & strViewTmp
-      resSQL = conProgram.Exec(strSQL)
-      stxViewFields.Insert(GEFData.getFields(conProgram, strViewTmp, "view", stxTitles))
-    Next
-    Print "###Vistas ###"
-    For intP = 0 To stxViewFields.Max
-      Print stxViewFields[intP].Join(":")
-    Next
+      For intView = 0 To stxViews.Max
+        strViewTmp = stxViews[intView]
+        strSQL = "select * from " & strViewTmp
+        resSQL = conProgram.Exec(strSQL)
+        stxViewFields.Insert(GEFData.getFields(conProgram, strViewTmp, "view", stxFTitles))
+      Next
+      Print "###Vistas ###"
+      For intP = 0 To stxViewFields.Max
+        Print stxViewFields[intP].Join(":")
+      Next
 
-    If conProgram.Opened Then
-      FMain.Show()
-    Else
-      Message.Warning(("No se pudo abrir la conexión a la base de datos") &
-        "\n" & ("Por favor verifique la configuración"))
-      FMain.Show()
+      If conProgram.Opened Then
+        FMain.Show()
+      Else
+        Message.Warning(("No se pudo abrir la conexión a la base de datos") &
+          "\n" & ("Por favor verifique la configuración"))
+        FMain.Show()
+      Endif
     Endif
   Endif
 
 End
 
-Private Sub LoadViews()
+' Private Sub LoadViews()
+'
+'   stxViews.Clear
+'   stxViews.Insert(GEFDataEdit.getTables(conProgram, "view")) ' Lista de VISTAS
+'
+' End
 
-  stxViews.Clear
-  stxViews.Insert(GEFDataEdit.getTables(conProgram, "view")) ' Lista de VISTAS
-
-End
-
-Private Function LoadTitles() As String ''La carga de títulos de los campos de las tablas y de las vistas. De esta manera permite luego traducir la aplicacion mas facilmente. La funcion trabaja con tres parametros, el nombre de la tabla o vista el nombre del campo, y el título de este campo, que sera el que se traducira. Esta funcion permite controlar en un solo sitio todos los titulos.
-
-  ' // Carga de vistas // Modificar cuando se use otra estructura de BBDD
-  stxTitles.Add(["view_jobs", "jidx", ("Índice")])
-  stxTitles.Add(["view_jobs", "jname", ("Trabajo")])
-  stxTitles.Add(["view_jobs", "jdate", ("Fecha")])
-  stxTitles.Add(["view_jobs", "jowner", ("Cliente")])
-
-  stxTitles.Add(["boms", "midx", ("Índice")])
-  stxTitles.Add(["boms", "mjob", ("Trabajo")])
-  stxTitles.Add(["boms", "mcod", ("Código")])
-  stxTitles.Add(["boms", "mqty", ("Cantidad")])
-
-  stxTitles.Add(["view_boms", "midx", ("Índice")])
-  stxTitles.Add(["view_boms", "mjob", ("Trabajo")])
-  stxTitles.Add(["view_boms", "mcod", ("Código")])
-  stxTitles.Add(["view_boms", "mclass", ("Clase")])
-  stxTitles.Add(["view_boms", "mqty", ("Cantidad")])
-  stxTitles.Add(["view_boms", "mprice", ("Precio")])
-  stxTitles.Add(["view_boms", "muom", ("Unidad")])
-  stxTitles.Add(["view_boms", "msupplier", ("Suministrador")])
-
-  stxTitles.Add(["codcls", "sidx", ("Índice")])
-  stxTitles.Add(["codcls", "sname", ("Clase")])
-
-  stxTitles.Add(["codes", "cidx", ("Índice")])
-  stxTitles.Add(["codes", "cname", ("Insumo")])
-  stxTitles.Add(["codes", "cclass", ("Clase")])
-  stxTitles.Add(["codes", "cqty", ("Cantidad")])
-  stxTitles.Add(["codes", "cuom", ("Unidad")])
-  stxTitles.Add(["codes", "cprice", ("Precio")])
-
-  stxTitles.Add(["view_codes", "cidx", ("Índice")])
-  stxTitles.Add(["view_codes", "cname", ("Insumo")])
-  stxTitles.Add(["view_codes", "cclass", ("Clase")])
-  stxTitles.Add(["view_codes", "cqty", ("Cantidad")])
-  stxTitles.Add(["view_codes", "cuom", ("Unidad")])
-  stxTitles.Add(["view_codes", "cprice", ("Precio")])
-
-  stxTitles.Add(["composites", "aidx", ("Índice")])
-  stxTitles.Add(["composites", "aname", ("Compuesto")])
-  stxTitles.Add(["composites", "adesc", ("Descripción")])
-
-  stxTitles.Add(["deliverables", "didx", ("Índice")])
-  stxTitles.Add(["deliverables", "dname", ("Informe")])
-
-  stxTitles.Add(["jobs", "jidx", ("Índice")])
-  stxTitles.Add(["jobs", "jname", ("Trabajo")])
-  stxTitles.Add(["jobs", "jdate", ("Fecha")])
-  stxTitles.Add(["jobs", "jowner", ("Cliente")])
-  stxTitles.Add(["jobs", "jlogistic", ("Logística")])
-
-  stxTitles.Add(["logistics", "lidx", ("Índice")])
-  stxTitles.Add(["logistics", "lname", ("Logística")])
-
-  stxTitles.Add(["owners", "oidx", ("Índice")])
-  stxTitles.Add(["owners", "oname", ("Cliente")])
-
-  stxTitles.Add(["suppliers", "fidx", ("Índice")])
-  stxTitles.Add(["suppliers", "fname", ("Suministrador")])
-
-  stxTitles.Add(["uoms", "uidx", ("Índice")])
-  stxTitles.Add(["uoms", "uname", ("Simbolo")])
-  stxTitles.Add(["uoms", "udesc", ("Unidad")])
-
-  ' Nombres de tablas y vistas
-  stxViewsEx.Add(["view_jobs", ("Trabajos"), "icon:/16/add"])
-  stxViewsEx.Add(["view_boms", ("Materiales y tareas"), "icon:/16/add"])
-  stxViewsEx.Add(["view_codes", ("Códigos"), "icon:/16/add"])
-  stxViewsEx.Add(["view_composites", ("Compuestos"), "icon:/16/delete"])
-  stxViewsEx.Add(["view_deliverables", ("Informes"), "icon:/16/delete"])
-  stxViewsEx.Add(["view_logistic", ("Logística"), "icon:/16/delete"])
-  stxViewsEx.Add(["view_owners", ("Clientes"), "icon:/16/delete"])
-  stxViewsEx.Add(["view_suppliers", ("Suministradores"), "icon:/16/delete"])
-  stxViewsEx.Add(["view_uoms", ("Unidades de medida"), "icon:/16/delete"])
-
-  If stxViewsEx.Count > 0 Then
-    Return 1
-  Else
-    Return 0
-  Endif
-
-End
+' Private Function LoadTitles() As String ''La carga de títulos de los campos de las tablas y de las vistas. De esta manera permite luego traducir la aplicacion mas facilmente. La funcion trabaja con tres parametros, el nombre de la tabla o vista el nombre del campo, y el título de este campo, que sera el que se traducira. Esta funcion permite controlar en un solo sitio todos los titulos.
+'
+'   ' // Carga de vistas // Modificar cuando se use otra estructura de BBDD
+'   stxFTitles.Add(["view_jobs", "jidx", ("Índice")])
+'   stxFTitles.Add(["view_jobs", "jname", ("Trabajo")])
+'   stxFTitles.Add(["view_jobs", "jdate", ("Fecha")])
+'   stxFTitles.Add(["view_jobs", "jowner", ("Cliente")])
+'
+'   stxFTitles.Add(["boms", "midx", ("Índice")])
+'   stxFTitles.Add(["boms", "mjob", ("Trabajo")])
+'   stxFTitles.Add(["boms", "mcod", ("Código")])
+'   stxFTitles.Add(["boms", "mqty", ("Cantidad")])
+'
+'   stxFTitles.Add(["view_boms", "midx", ("Índice")])
+'   stxFTitles.Add(["view_boms", "mjob", ("Trabajo")])
+'   stxFTitles.Add(["view_boms", "mcod", ("Código")])
+'   stxFTitles.Add(["view_boms", "mclass", ("Clase")])
+'   stxFTitles.Add(["view_boms", "mqty", ("Cantidad")])
+'   stxFTitles.Add(["view_boms", "mprice", ("Precio")])
+'   stxFTitles.Add(["view_boms", "muom", ("Unidad")])
+'   stxFTitles.Add(["view_boms", "msupplier", ("Suministrador")])
+'
+'   stxFTitles.Add(["codcls", "sidx", ("Índice")])
+'   stxFTitles.Add(["codcls", "sname", ("Clase")])
+'
+'   stxFTitles.Add(["codes", "cidx", ("Índice")])
+'   stxFTitles.Add(["codes", "cname", ("Insumo")])
+'   stxFTitles.Add(["codes", "cclass", ("Clase")])
+'   stxFTitles.Add(["codes", "cqty", ("Cantidad")])
+'   stxFTitles.Add(["codes", "cuom", ("Unidad")])
+'   stxFTitles.Add(["codes", "cprice", ("Precio")])
+'
+'   stxFTitles.Add(["view_codes", "cidx", ("Índice")])
+'   stxFTitles.Add(["view_codes", "cname", ("Insumo")])
+'   stxFTitles.Add(["view_codes", "cclass", ("Clase")])
+'   stxFTitles.Add(["view_codes", "cqty", ("Cantidad")])
+'   stxFTitles.Add(["view_codes", "cuom", ("Unidad")])
+'   stxFTitles.Add(["view_codes", "cprice", ("Precio")])
+'
+'   stxFTitles.Add(["composites", "aidx", ("Índice")])
+'   stxFTitles.Add(["composites", "aname", ("Compuesto")])
+'   stxFTitles.Add(["composites", "adesc", ("Descripción")])
+'
+'   stxFTitles.Add(["deliverables", "didx", ("Índice")])
+'   stxFTitles.Add(["deliverables", "dname", ("Informe")])
+'
+'   stxFTitles.Add(["jobs", "jidx", ("Índice")])
+'   stxFTitles.Add(["jobs", "jname", ("Trabajo")])
+'   stxFTitles.Add(["jobs", "jdate", ("Fecha")])
+'   stxFTitles.Add(["jobs", "jowner", ("Cliente")])
+'   stxFTitles.Add(["jobs", "jlogistic", ("Logística")])
+'
+'   stxFTitles.Add(["logistics", "lidx", ("Índice")])
+'   stxFTitles.Add(["logistics", "lname", ("Logística")])
+'
+'   stxFTitles.Add(["owners", "oidx", ("Índice")])
+'   stxFTitles.Add(["owners", "oname", ("Cliente")])
+'
+'   stxFTitles.Add(["suppliers", "fidx", ("Índice")])
+'   stxFTitles.Add(["suppliers", "fname", ("Suministrador")])
+'
+'   stxFTitles.Add(["uoms", "uidx", ("Índice")])
+'   stxFTitles.Add(["uoms", "uname", ("Simbolo")])
+'   stxFTitles.Add(["uoms", "udesc", ("Unidad")])
+'
+'   ' Nombres de tablas y vistas
+'   stxVTitles.Add(["view_jobs", ("Trabajos"), "icon:/16/add"])
+'   stxVTitles.Add(["view_boms", ("Materiales y tareas"), "icon:/16/add"])
+'   stxVTitles.Add(["view_codes", ("Códigos"), "icon:/16/add"])
+'   stxVTitles.Add(["view_composites", ("Compuestos"), "icon:/16/delete"])
+'   stxVTitles.Add(["view_deliverables", ("Informes"), "icon:/16/delete"])
+'   stxVTitles.Add(["view_logistic", ("Logística"), "icon:/16/delete"])
+'   stxVTitles.Add(["view_owners", ("Clientes"), "icon:/16/delete"])
+'   stxVTitles.Add(["view_suppliers", ("Suministradores"), "icon:/16/delete"])
+'   stxVTitles.Add(["view_uoms", ("Unidades de medida"), "icon:/16/delete"])
+'
+'   If stxVTitles.Count > 0 Then
+'     Return 1
+'   Else
+'     Return 0
+'   Endif
+'
+' End
 
 Public Function Initiator() As Integer  ''Funcion que carga los parametros por defecto del programa. 1 ok, 0 Matrices iguales pero no se cargo todo -1 matrices distintas
 
@@ -334,36 +343,36 @@ Public Function Initiator() As Integer  ''Funcion que carga los parametros por d
   stxProgKey[19] = "Program/Key-19"
   stxProgVal[19] = Settings[stxProgKey[19], ""]
 
-  ' Terminal
-  stxProgKey[20] = "Terminal/Font-Name"
-  stxProgVal[20] = Settings[stxProgKey[20], "Monospace"]
-  stxProgKey[21] = "Terminal/Font-Size"
-  stxProgVal[21] = Settings[stxProgKey[21], "9"]
-  stxProgKey[22] = "Terminal/Background"
-  stxProgVal[22] = Settings[stxProgKey[22], "3028022"]
-  stxProgKey[23] = "Terminal/Foreground"
-  stxProgVal[23] = Settings[stxProgKey[23], "13883343"]
-  stxProgKey[24] = "Terminal/Orientation"
-  stxProgVal[24] = Settings[stxProgKey[24], "0"]
-  stxProgKey[25] = "Terminal/Theme"
-  stxProgVal[25] = Settings[stxProgKey[25], "0"]
-  stxProgKey[26] = "Terminal/Menu-Bar"
-  stxProgVal[26] = Settings[stxProgKey[26], "1"]
-  stxProgKey[27] = "Terminal/Opacity"
-  stxProgVal[27] = Settings[stxProgKey[27], "100"]
-  stxProgKey[28] = "Terminal/Transparency"
-  stxProgVal[28] = Settings[stxProgKey[28], "0"]
-  stxProgKey[29] = "Terminal/Window-New"
+  ' Ventana del formulario principal
+  stxProgKey[20] = "Program/Tree-Width"
+  stxProgVal[20] = Settings[stxProgKey[20], 150]
+  stxProgKey[21] = "Program/Tree-Height"
+  stxProgVal[21] = Settings[stxProgKey[21], 150]
+  stxProgKey[22] = "Program/Grid-Width"
+  stxProgVal[22] = Settings[stxProgKey[22], 300]
+  stxProgKey[23] = "Program/Grid-Height"
+  stxProgVal[23] = Settings[stxProgKey[23], 150]
+  stxProgKey[24] = "Program/Key-24"
+  stxProgVal[24] = Settings[stxProgKey[24], ""]
+  stxProgKey[25] = "Program/Key-25"
+  stxProgVal[25] = Settings[stxProgKey[25], ""]
+  stxProgKey[26] = "Program/Key-26"
+  stxProgVal[26] = Settings[stxProgKey[26], ""]
+  stxProgKey[27] = "Program/Key-27"
+  stxProgVal[27] = Settings[stxProgKey[27], ""]
+  stxProgKey[28] = "Program/Key-28"
+  stxProgVal[28] = Settings[stxProgKey[28], ""]
+  stxProgKey[29] = "Program/Key-29"
   stxProgVal[29] = Settings[stxProgKey[29], ""]
-  stxProgKey[30] = "Terminal/Window-Close"
+  stxProgKey[30] = "Program/Key-30"
   stxProgVal[30] = Settings[stxProgKey[30], ""]
-  stxProgKey[31] = "Terminal/Tab-New"
+  stxProgKey[31] = "Program/Key-31"
   stxProgVal[31] = Settings[stxProgKey[31], ""]
-  stxProgKey[32] = "Terminal/Tab-Close"
+  stxProgKey[32] = "Program/Key-32"
   stxProgVal[32] = Settings[stxProgKey[32], ""]
-  stxProgKey[33] = "Terminal/Copy"
+  stxProgKey[33] = "Program/Key-33"
   stxProgVal[33] = Settings[stxProgKey[33], ""]
-  stxProgKey[34] = "Terminal/Paste"
+  stxProgKey[34] = "Program/Key-34"
   stxProgVal[34] = Settings[stxProgKey[34], ""]
 
   If stxProgKey.Max = stxProgVal.Max Then
@@ -460,11 +469,33 @@ End
 Public Function Terminator() As Integer ''Funcion que guarda las configuraciones que se modificaron en el programa antes de cerrarlo.
 
   Dim int As Integer
-
+  ' Guardando los parametros del programa
   For int = 0 To stxProgKey.Max
     Settings[stxProgKey[int]] = stxProgVal[int]
     Print "Guardando: " & stxProgKey[int] & ": " & stxProgVal[int]
   Next
+
+  ' Guardando los parametros de la grilla
+  For int = 0 To stxViewFields.Max
+
+    Settings[stxViewFields[int][0] & "-Order" &/ stxViewFields[int][1]] = stxViewFields[int][3]
+    Settings[stxViewFields[int][0] & "-FilterType" &/ stxViewFields[int][1]] = stxViewFields[int][4]
+    Settings[stxViewFields[int][0] & "-FilterValue" &/ stxViewFields[int][1]] = stxViewFields[int][5]
+
+    Select stxViewFields[int][6]
+      Case "", "75"
+        Settings[stxViewFields[int][0] & "-Width" &/ stxViewFields[int][1]] = ""
+      Case Else
+        Settings[stxViewFields[int][0] & "-Width" &/ stxViewFields[int][1]] = stxViewFields[int][6]
+    End Select
+  Next
+  ' Guardando las proporciones y dimensiones del formulario
+
+  Settings["Program/Tree-Width"] = GEFStarter.stxProgVal[20] 'GEFStarter.intDataTreeWidth
+  Settings["Program/Tree-Height"] = GEFStarter.stxProgVal[21] 'GEFStarter.intDataTreeHeight
+
+  Settings["Program/Grid-Width"] = GEFStarter.stxProgVal[22] 'GEFStarter.intDataGridWidth
+  Settings["Program/Grid-Height"] = GEFStarter.stxProgVal[23] 'GEFStarter.intDataGridHeight
 
   Settings.Save
 

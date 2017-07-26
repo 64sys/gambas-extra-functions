@@ -38,6 +38,133 @@ Public Function DBTemplate(stxDB As String[]) As String ''Crea una plantilla de 
 
 End
 
+Public Function DBViewsTitles() As String[][] ''Esta funcion se debe modificar para cada plantilla de base de datos, o estructura de base de datos (no para cada motor). Es devuelta una matriz de texto de 3 dimensiones de la forma Tabla|Vista//Titulo-de-Tabla|Vista//Icono donde Titulo-de-Tabla|Vista es un texto que como se ve en el código esta entre parentesis ("") y ello permite que se puedan traducir con la aplicacion, prestando asi una versatilidad mayor y haciendo que el programa sea mas amigable.
+
+  Dim stxVTitles As New String[][]
+  ' // Carga de vistas y tablas, y se debe modificar cuando se use otra estructura de BBDD
+
+  stxVTitles.Add(["view_jobs", ("Trabajos"), "icon:/16/add"])
+  stxVTitles.Add(["view_boms", ("Materiales y tareas"), "icon:/16/add"])
+  stxVTitles.Add(["view_codes", ("Códigos"), "icon:/16/add"])
+  stxVTitles.Add(["view_composites", ("Compuestos"), "icon:/16/add"])
+  stxVTitles.Add(["view_deliverables", ("Informes"), "icon:/16/add"])
+  stxVTitles.Add(["view_logistics", ("Logística"), "icon:/16/add"])
+  stxVTitles.Add(["view_owners", ("Clientes"), "icon:/16/add"])
+  stxVTitles.Add(["view_suppliers", ("Suministradores"), "icon:/16/add"])
+  stxVTitles.Add(["view_uoms", ("Unidades de medida"), "icon:/16/add"])
+
+  Return stxVTitles
+
+End
+
+Public Function DBFieldsTitles() As String[][] ''Esta funcion se debe modificar para cada plantilla de base de datos, o estructura de base de datos (no para cada motor). Es devuelta una matriz de texto de 3 dimensiones de la forma Tabla|Vista//Nombre-de-campo//Titulo-de-campo donde Titulo-de-campo es un texto que como se ve en el código esta entre parentesis ("") y ello permite que los titulos de los campos se puedan traducir con la aplicacion, prestando asi una versatilidad mayor y haciendo que el programa sea mas amigable.
+
+  Dim stxFTitles As New String[][]
+  ' // Carga de vistas y tablas, y se debe modificar cuando se use otra estructura de BBDD
+
+  stxFTitles.Add(["boms", "midx", ("Índice")])
+  stxFTitles.Add(["boms", "mjob", ("Trabajo")])
+  stxFTitles.Add(["boms", "mcod", ("Código")])
+  stxFTitles.Add(["boms", "mqty", ("Cantidad")])
+
+  stxFTitles.Add(["view_boms", "midx", ("Índice")])
+  stxFTitles.Add(["view_boms", "mjob", ("Trabajo")])
+  stxFTitles.Add(["view_boms", "mcod", ("Código")])
+  stxFTitles.Add(["view_boms", "mclass", ("Clase")])
+  stxFTitles.Add(["view_boms", "mqty", ("Cantidad")])
+  stxFTitles.Add(["view_boms", "mprice", ("Precio")])
+  stxFTitles.Add(["view_boms", "muom", ("Unidad")])
+  stxFTitles.Add(["view_boms", "msupplier", ("Suministrador")])
+
+  stxFTitles.Add(["codcls", "sidx", ("Índice")])
+  stxFTitles.Add(["codcls", "sname", ("Clase")])
+
+  stxFTitles.Add(["codes", "cidx", ("Índice")])
+  stxFTitles.Add(["codes", "cname", ("Insumo")])
+  stxFTitles.Add(["codes", "cclass", ("Clase")])
+  stxFTitles.Add(["codes", "cqty", ("Cantidad")])
+  stxFTitles.Add(["codes", "cuom", ("Unidad")])
+  stxFTitles.Add(["codes", "cprice", ("Precio")])
+
+  stxFTitles.Add(["view_codes", "cidx", ("Índice")])
+  stxFTitles.Add(["view_codes", "cname", ("Insumo")])
+  stxFTitles.Add(["view_codes", "cclass", ("Clase")])
+  stxFTitles.Add(["view_codes", "cqty", ("Cantidad")])
+  stxFTitles.Add(["view_codes", "cuom", ("Unidad")])
+  stxFTitles.Add(["view_codes", "cprice", ("Precio")])
+
+  stxFTitles.Add(["composites", "aidx", ("Índice")])
+  stxFTitles.Add(["composites", "aname", ("Compuesto")])
+  stxFTitles.Add(["composites", "adesc", ("Descripción")])
+
+  stxFTitles.Add(["view_composites", "aidx", ("Índice")])
+  stxFTitles.Add(["view_composites", "aname", ("Compuesto")])
+  stxFTitles.Add(["view_composites", "adesc", ("Descripción")])
+
+  stxFTitles.Add(["deliverables", "didx", ("Índice")])
+  stxFTitles.Add(["deliverables", "dname", ("Informe")])
+
+  stxFTitles.Add(["view_deliverables", "didx", ("Índice")])
+  stxFTitles.Add(["view_deliverables", "dname", ("Informe")])
+
+  stxFTitles.Add(["jobs", "jidx", ("Índice")])
+  stxFTitles.Add(["jobs", "jname", ("Trabajo")])
+  stxFTitles.Add(["jobs", "jdate", ("Fecha")])
+  stxFTitles.Add(["jobs", "jowner", ("Cliente")])
+  stxFTitles.Add(["jobs", "jlogistic", ("Logística")])
+
+  stxFTitles.Add(["view_jobs", "jidx", ("Índice")])
+  stxFTitles.Add(["view_jobs", "jname", ("Trabajo")])
+  stxFTitles.Add(["view_jobs", "jdate", ("Fecha")])
+  stxFTitles.Add(["view_jobs", "jowner", ("Cliente")])
+  stxFTitles.Add(["view_jobs", "jlogistic", ("Logística")])
+
+  stxFTitles.Add(["logistics", "lidx", ("Índice")])
+  stxFTitles.Add(["logistics", "lname", ("Logística")])
+
+  stxFTitles.Add(["view_logistics", "lidx", ("Índice")])
+  stxFTitles.Add(["view_logistics", "lname", ("Logística")])
+
+  stxFTitles.Add(["owners", "oidx", ("Índice")])
+  stxFTitles.Add(["owners", "oname", ("Cliente")])
+  stxFTitles.Add(["owners", "ophone", ("Fijo")])
+  stxFTitles.Add(["owners", "omovile", ("Móvil")])
+  stxFTitles.Add(["owners", "oaddress", ("Dirección")])
+  stxFTitles.Add(["owners", "ocity", ("Ciudad")])
+
+  stxFTitles.Add(["view_owners", "oidx", ("Índice")])
+  stxFTitles.Add(["view_owners", "oname", ("Cliente")])
+  stxFTitles.Add(["view_owners", "ophone", ("Fijo")])
+  stxFTitles.Add(["view_owners", "omovile", ("Móvil")])
+  stxFTitles.Add(["view_owners", "oaddress", ("Dirección")])
+  stxFTitles.Add(["view_owners", "ocity", ("Ciudad")])
+
+  stxFTitles.Add(["suppliers", "fidx", ("Índice")])
+  stxFTitles.Add(["suppliers", "fname", ("Suministrador")])
+  stxFTitles.Add(["suppliers", "fphone", ("Fijo")])
+  stxFTitles.Add(["suppliers", "fmovile", ("Móvil")])
+  stxFTitles.Add(["suppliers", "faddress", ("Dirección")])
+  stxFTitles.Add(["suppliers", "fcity", ("Ciudad")])
+
+  stxFTitles.Add(["view_suppliers", "fidx", ("Índice")])
+  stxFTitles.Add(["view_suppliers", "fname", ("Suministrador")])
+  stxFTitles.Add(["view_suppliers", "fphone", ("Fijo")])
+  stxFTitles.Add(["view_suppliers", "fmovile", ("Móvil")])
+  stxFTitles.Add(["view_suppliers", "faddress", ("Dirección")])
+  stxFTitles.Add(["view_suppliers", "fcity", ("Ciudad")])
+
+  stxFTitles.Add(["uoms", "uidx", ("Índice")])
+  stxFTitles.Add(["uoms", "uname", ("Magnitud")])
+  stxFTitles.Add(["uoms", "usymbol", ("Simbolo")])
+
+  stxFTitles.Add(["view_uoms", "uidx", ("Índice")])
+  stxFTitles.Add(["view_uoms", "uname", ("Magnitud")])
+  stxFTitles.Add(["view_uoms", "usymbol", ("Simbolo")])
+
+  Return stxFTitles
+
+End
+
 Public Function DBOpen(stxDB As String[]) As Connection ''Inicia una base de datos y si no existe la crea.
 
   Dim con As New Connection
@@ -561,7 +688,7 @@ Public Function RecordNewRef(connDB As Connection, strTable As String, stxDBFiel
 
 End
 
-Public Function getFields(connDB As Connection, strTbl As String, strMod As String, Optional stxTitles As String[][]) As String[][] ''Extraccion de la lista de campos de la tabla que se pasa como parametro.
+Public Function getFields(connDB As Connection, strTbl As String, strMod As String, Optional stxFTitles As String[][]) As String[][] ''Extraccion de la lista de campos de la tabla que se pasa como parametro.
 
   Dim strSQL As String
   Dim resSQL As Result
@@ -593,11 +720,11 @@ Public Function getFields(connDB As Connection, strTbl As String, strMod As Stri
       strFld = fld.Name
       strTyp = String.LCase(GEFUtility.TypeVar(fld.Type))
 
-      If stxTitles Then
-        For intTl = 0 To stxTitles.Max
-          If stxTitles[intTl][0] = strTbl Then
-            If stxTitles[intTl][1] = strFld Then
-              strTle = stxTitles[intTl][2]
+      If stxFTitles Then
+        For intTl = 0 To stxFTitles.Max
+          If stxFTitles[intTl][0] = strTbl Then
+            If stxFTitles[intTl][1] = strFld Then
+              strTle = stxFTitles[intTl][2]
             Endif
           Endif
         Next

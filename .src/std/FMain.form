@@ -121,7 +121,7 @@
       Background = Color.Background
       Expand = True
       Border = False
-      { Panel7 Panel
+      { pnlGEFTree Panel
         MoveScaled(1,1,18,33)
         Expand = True
         Arrangement = Arrange.Vertical
@@ -147,7 +147,7 @@
           Border = False
         }
       }
-      { Panel8 Panel
+      { pnlGEFGrid Panel
         MoveScaled(22,1,43,33)
         Expand = True
         Arrangement = Arrange.Vertical
@@ -212,7 +212,7 @@
           }
         }
       }
-      { Panel9 Panel
+      { pnlGEFExtra Panel
         MoveScaled(66,1,13,33)
       }
     }
@@ -222,8 +222,7 @@
       MoveScaled(2,2,72,36)
       Background = Color.Background
       Expand = True
-      Border = False
-      { Panel6 Panel
+      { pnlDataTree Panel
         MoveScaled(4,4,21,27)
         Expand = True
         Arrangement = Arrange.Vertical
@@ -233,7 +232,7 @@
           Border = False
         }
       }
-      { Panel4 Panel
+      { pnlDataGrid Panel
         MoveScaled(28,2,43,33)
         Expand = True
         Arrangement = Arrange.Vertical

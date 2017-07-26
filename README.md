@@ -74,7 +74,7 @@ Funcion que retorna el nombre en ingés del boton del ratón que se ha presionad
 #### NamingCon
 Devuelve una lista de nombres de controles y su abreviación de tres caracteres.
 
-#### ScanFolder
+#### ScanDir
 Escanea una carpeta que se pasa como parametro en busca de archivos se puede filtrar con una lista de extensiones separadas por comas.
 
 #### Timestamp

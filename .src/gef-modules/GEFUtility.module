@@ -145,7 +145,7 @@ Public Function CodeTag(str As String) As String ''Analiza de una cadena de text
   strJob = Replace(strJob, " '", "'")
 
   Select strJob
-    Case ""
+    Case "", " ", "  ", "   "
       For int1 = 0 To stxStruc.Max
         If stxStruc[int1] = "##Blank Line" Then
           inxCoin.Add(1)
@@ -163,11 +163,17 @@ Public Function CodeTag(str As String) As String ''Analiza de una cadena de text
 
         For intCh = 0 To stxSplitText.Max
           If stxSplitText[intCh] = " " Then
-            If stxSplitText[intCh + 1] = "'" Then
-              ' La fraase es un comentario
-              strIsComment = "yes"
-              Break
-            Endif
+            Select intCh
+              Case stxSplitText.Max
+                'skip
+              Case Else
+                If stxSplitText[intCh + 1] = "'" Then
+                  ' La fraase es un comentario
+                  strIsComment = "yes"
+                  Break
+                Endif
+            End Select
+
           Endif
         Next
         Select strIsComment
@@ -335,7 +341,7 @@ Public Function CodeMthod(stxPart As String[]) As String[]
 
 End
 
-Public Function RelationProj(stxMet As String[], stxCod As String[]) As String[] ''Lee las matrices de métodos y codigo del proyecto para luego analizar las relaciones entre estos generando una matrix con estas relaciones.
+Public Function RelationProj(stxClass As String[], stxMet As String[], stxCod As String[]) As String[] ''Lee las matrices de métodos y codigo del proyecto para luego analizar las relaciones entre estos generando una matrix con estas relaciones.
 
   'Dim int As Integer
   Dim stxReltn As New String[] ' Lista de métodos
@@ -343,13 +349,34 @@ Public Function RelationProj(stxMet As String[], stxCod As String[]) As String[]
   Dim intMet As Integer
 
   For intCod = 0 To stxCod.Max
+    Print "// " & stxClass[intCod] & "." & stxMet[intCod]
+
     For intMet = 0 To stxMet.Max
-      If InStr(stxCod[intCod], stxMet[intMet]) > 0 Then
-        stxReltn.Add(stxMet[intCod] & "=" & stxMet[intMet])
-      Endif
+
+      Select stxClass[intMet] = stxClass[intCod]
+        Case True
+
+          If InStr(stxCod[intCod], stxMet[intMet] & "(") > 0 Then
+            stxReltn.Add(stxClass[intCod] & "." & stxMet[intCod] & "\t" & stxClass[intMet] & "." & stxMet[intMet])
+          Else
+            stxReltn.Add(stxClass[intMet] & "." & stxMet[intMet])
+          Endif
+        Case False
+
+          If InStr(stxCod[intCod], stxClass[intMet] & "." & stxMet[intMet] & "(") > 0 Then
+            stxReltn.Add(stxClass[intCod] & "." & stxMet[intCod] & "\t" & stxClass[intMet] & "." & stxMet[intMet])
+          Else
+            stxReltn.Add(stxClass[intMet] & "." & stxMet[intMet])
+          Endif
+      End Select
+
     Next
   Next
-
+  If stxReltn.Count > 0 Then
+    File.Save("/tmp" &/ "module-methode-relation.txt", stxReltn.Join("\n"))
+    Wait 1
+    Desktop.Open("/tmp" &/ "module-methode-relation.txt")
+  Endif
   Return stxReltn
 
 End
@@ -361,33 +388,23 @@ Public Function DokuProj(strPath As String) As String[] ''Lee todas las clases y
   Dim strFileExt As String
   Dim stxText As New String[]
   Dim int As Integer
+  Dim intEnd As Integer
   Dim strFileBase As String
-  'Dim strSentence As String
   Dim strType As String
-  'Dim strTxt As String
   Dim intPlus As Integer
-  'Dim stxMName As String
-  'Dim strMName As String
   Dim strMethod As String
   Dim strCode As String
   Dim stxCode As New String[]
   Dim stxVars As New String[]
-  'Dim strPart1 As String
   Dim stxPart As New String[]
-  'Dim strArgs As New String[]
-  'Dim stxFunc As New String[]
-  'Dim stxArgs As New String[]
-  'Dim stxExtr As New String[]
-  'Dim strFunc As String
-  'Dim strFast As String
-  'Dim strStatic As String
-  'Dim strName As Integer
-  'Dim strExtr As String
   Dim stxMethod As New String[]
   Dim stxProj As New String[]
   Dim strTypeCode As String
+  Dim intInit As Integer
 
-  stxFiles = ScanFolder(strPath)
+  ' strPath Es el direcotrio raíz que se le pasa a la funcion, y a partir de allí
+  ' esta buscara los archivos .project
+  stxFiles = ScanDir(strPath)
   stxFiles.Sort
 
   If stxFiles.Count > 0 Then
@@ -397,11 +414,12 @@ Public Function DokuProj(strPath As String) As String[] ''Lee todas las clases y
       Select strFileExt
         Case "module", "class"
           Print strFileBase
-          stxText = FileLoad(strFile)
+          stxText = FileLoadRaw(strFile)
+          ' FileLoasRaw devuelve la matriz contemplando las lineas en blanco.
           'stxText = Replace(stxText, "\t", " ")  ' Reemplazo de tabuladores por espacios
 
           For int = 0 To stxText.Max
-
+            intInit = int
             strMethod = CodeTag(Replace(stxText[int], "\t", " "))
             strType = Split(strMethod, "\t")[0]
 
@@ -412,28 +430,43 @@ Public Function DokuProj(strPath As String) As String[] ''Lee todas las clases y
 
               intPlus = 1
               stxCode.Clear
-              Repeat
 
-                strCode = CodeTag(Replace(stxText[int + intPlus], "\t", " "))
-                strTypeCode = Split(strCode, "\t")[0]
-                Select strTypeCode
-                  Case "Commentary 1", "Blank Line", "Method End"
-                    'skip
-                  Case "Variable Local"
-                    stxVars.Add(Split(strCode, "\t")[1])
-                    'skip
-                  Case Else
-                    stxCode.Add(Split(strCode, "\t")[1])
-                End Select
+              If int + intPlus <= stxText.Max Then
 
-                Inc IntPlus
-              Until strTypeCode = "Method End"
-              int = int + intPlus
+                Repeat
+
+                  strCode = CodeTag(Replace(stxText[int + intPlus], "\t", " "))
+                  strTypeCode = Split(strCode, "\t")[0]
+                  Select strTypeCode
+                    Case "Commentary 1", "Blank Line", "Method End"
+                      'skip
+                    Case "Variable Local"
+                      stxVars.Add(Split(strCode, "\t")[1])
+                      'skip
+                    Case Else
+                      stxCode.Add(Split(strCode, "\t")[1])
+                  End Select
+
+                  If (int + intPlus) < stxText.Max Then
+                    Inc IntPlus
+                  Endif
+                  If strTypeCode = "Method End" Then
+                    'int = int + intPlus
+                    intEnd = int + intPlus
+                    Break
+                  Else
+                    intEnd = int
+                  Endif
+
+                Until int + intPlus >= stxText.Max
+
+              Endif
+              'int = int + intPlus
               'Next
 
               ' Aca esta el método completo
 
-              stxProj.Add(strFileBase & "\t" & stxMethod.Join("\n") & "\t" & stxCode.Join("\n") & "\t" & stxVars.Join("\n"))
+              stxProj.Add(strFile & "\t" & strFileBase & "\t" & stxMethod.Join("\n") & "\t" & stxCode.Join("\n") & "\t" & stxVars.Join("\n") & "\t" & CStr(intInit) & "\t" & CStr(intEnd))
               'Print stxMethod.Join("\t") & strCode
 
             Endif
@@ -473,7 +506,7 @@ Public Function DokuHtml(strPath As String) As String ''Devuelve un html con las
 
   stxInfo = GEFSys.ProjInfo()
 
-  stxFiles = ScanFolder(strPath)
+  stxFiles = ScanDir(strPath)
   strKey = "Public Function "
   intPub = String.Len(strKey)
   ' Header
@@ -622,7 +655,7 @@ Public Function DokuHtm2() As String ''Devuelve un html con las funciones de un 
 
   stxInfo = GEFSys.ProjInfo()
 
-  'stxFiles = ScanFolder(strPath)
+  'stxFiles = ScanDir(strPath)
   'strKey = "Public Function "
   'intPub = String.Len(strKey)
   ' Header
@@ -707,7 +740,7 @@ Public Function Dokuwiki(strPath As String) As String ''Devuelve un wiki con las
   Dim i As Integer
   Dim intLine As Integer
 
-  stxFiles = ScanFolder(strPath)
+  stxFiles = ScanDir(strPath)
   strKey = "Public Function "
   intPub = String.Len(strKey)
 
@@ -798,7 +831,7 @@ Public Function FilesNew(strDirectory As String, Optional stxFilesOpt As String[
   Dim intFile As Integer
   Dim stxFilesNew As New String[] ' Archivos del directorio que existen en BBDD
 
-  stxFiles = GEFUtility.ScanFolder(strDirectory, strFilterOpt)
+  stxFiles = GEFUtility.ScanDir(strDirectory, strFilterOpt)
 
   'Para cada archivo verificar si este existe en la base de datos
   If stxFilesOpt.Count > 0 Then
@@ -821,7 +854,7 @@ Public Function FilesExist(strDirectory As String, Optional stxFilesOpt As Strin
   Dim intFile As Integer
   Dim stxFilesExist As New String[] ' Archivos del directorio que existen en BBDD
 
-  stxFiles = GEFUtility.ScanFolder(strDirectory, strFilterOpt)
+  stxFiles = GEFUtility.ScanDir(strDirectory, strFilterOpt)
 
   'Para cada archivo verificar si este existe en la base de datos
   If stxFilesOpt.Count > 0 Then
@@ -844,7 +877,7 @@ Public Function FilesNone(strDirectory As String, Optional stxFilesOpt As String
   Dim intFile As Integer
   Dim stxFilesNone As New String[] ' Archivos del directorio que existen en BBDD
 
-  stxFiles = GEFUtility.ScanFolder(strDirectory, strFilterOpt)
+  stxFiles = GEFUtility.ScanDir(strDirectory, strFilterOpt)
 
   'Para cada archivo verificar si este existe en la base de datos
   If stxFilesOpt.Count > 0 Then
@@ -965,7 +998,7 @@ Public Function FileVersion(strInputPath As String) As String ''Devuelve un text
 
 End
 
-Public Function FileLoad(strPath As String) As String[] ''Devuelve una matriz de texto con los valores listados en un archivo de texto desl cual se pasa su ruta como parametro.
+Public Function FileLoad(strPath As String) As String[] ''Devuelve una matriz de texto donde cada ítem es un renglón del archivo de texto. Si el renglón esta vacio en el archivo de texto, es decir se trata de unallinea vacia, esta no se pasa a la martiz, por lo tanto el resultado es un retorno sin lineaas en blanco.
 
   Dim strList As String
   Dim stxListTmp As New String[]
@@ -991,6 +1024,32 @@ Public Function FileLoad(strPath As String) As String[] ''Devuelve una matriz de
         stxList.Add(stxListTmp[intList])
       Endif
     Next
+  Endif
+
+  Return stxList
+
+End
+
+Public Function FileLoadRaw(strPath As String) As String[] ''Devuelve una matriz de texto donde cada ítem es un renglón del archivo de texto.
+
+  Dim strList As String
+  Dim stxListTmp As New String[]
+  Dim stxList As New String[]
+  Dim intList As Integer
+
+  stxList.Clear
+
+  If Exist(strPath) Then
+
+    strList = File.Load(strPath)
+
+    If InStr(strList, "\n") > -1 Then
+      stxList = Split(strList, "\n")
+    Else
+      If String.Len(strList) > 0 Then
+        stxList.Add(strList)
+      Endif
+    Endif
   Endif
 
   Return stxList
@@ -1593,7 +1652,61 @@ Public Function WhereRun() As Integer ''Indica si el programa se esta ejecutando
 
 End
 
-Public Function ScanFolder(strDir As String, Optional strExt As String) As String[] ''Escanea una carpeta que se pasa como parametro en busca de archivos se puede filtrar con una lista de extensiones separadas por dos puntos ":".
+Public Function RListDir(strPath As String) As String[] ''Devuelve una lista de directorios que se encuentran en la ruta que se pasa como parametro.
+
+  Dim stxTmp As New String[]
+  Dim stxDirs As New String[]
+  Dim strDir As String
+
+  Select Stat(strPath).Type
+    Case gb.File
+      stxTmp = RDir(File.Dir(strPath), "*", gb.Directory)
+    Case gb.Directory
+      stxTmp = RDir(strPath, "*", gb.Directory)
+  End Select
+  For Each strDir In stxTmp
+    stxDirs.Add(strPath &/ strDir)
+  Next
+
+  Return stxDirs
+
+End
+
+Public Function DirGambas(strPath As String) As Boolean ''Analiza si el directorio que se le pasa como paramentro de entrada es un direcotio de un proyecto gambas.
+
+  Dim strGambas As String
+
+  strGambas = ""
+
+  ' Hay que acertar en todo para dar el ok
+  If Exist(strPath &/ ".project") = True Then
+    strGambas = "g"
+    If Exist(strPath &/ ".settings") = True Then
+      strGambas &= "a"
+      If Exist(strPath &/ ".startup") = True Then
+        strGambas &= "m"
+        If Exist(strPath &/ ".src") = True Then
+          strGambas &= "b"
+          If Exist(strPath &/ ".hidden") = True Then
+            strGambas &= "a"
+            If Exist(strPath &/ ".gitignore") = True Then
+              strGambas &= "s"
+            Endif
+          Endif
+        Endif
+      Endif
+    Endif
+  Endif
+
+  If strGambas = "gambas" Then
+    Return True
+  Else
+    Return False
+  Endif
+
+End
+
+Public Function ScanDir(strDir As String, Optional strExt As String) As String[] ''Escanea un directorio que se pasa como parametro en busca de archivos se puede filtrar con una lista de extensiones separadas por dos puntos ":".
 
   Dim stxFiles As New String[]
   Dim stxExt As New String[]

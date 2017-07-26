@@ -1253,7 +1253,7 @@
       strSQL = "select * from " & strTableTmp
       resSQL = conProgram.Exec(strSQL)
       stxTmp.Clear
-      stxTmp.Insert(GEFData.getFields(conProgram, strTableTmp, "table", stxTitles))
+      stxTmp.Insert(GEFData.getFields(conProgram, strTableTmp, "table", stxFTitles))
       For intTmp = 0 To stxTmp.Max
         stxTableFields.Add(stxTmp[intTmp])
       Next
@@ -1268,7 +1268,7 @@
       strViewTmp = stxViews[intView]
       strSQL = "select * from " & strViewTmp
       resSQL = conProgram.Exec(strSQL)
-      stxViewFields.Insert(GEFData.getFields(conProgram, strViewTmp, "view", stxTitles))
+      stxViewFields.Insert(GEFData.getFields(conProgram, strViewTmp, "view", stxFTitles))
     Next
     Print "###Vistas ###"
     For intP = 0 To stxViewFields.Max
@@ -1281,65 +1281,65 @@
         "\n" & ("Por favor verifique la configuración"))
       FMain.Show()
     Endif
-  Endif</pre><h3>LoadTitles</h3><p>La carga de títulos de los campos de las tablas y de las vistas. De esta manera permite luego traducir la aplicacion mas facilmente. La funcion trabaja con tres parametros, el nombre de la tabla o vista el nombre del campo, y el título de este campo, que sera el que se traducira. Esta funcion permite controlar en un solo sitio todos los titulos.</p><p></p><pre>  stxTitles.Add(["view_jobs", "jidx", ("Índice")])
-  stxTitles.Add(["view_jobs", "jname", ("Trabajo")])
-  stxTitles.Add(["view_jobs", "jdate", ("Fecha")])
-  stxTitles.Add(["view_jobs", "jowner", ("Cliente")])
-  stxTitles.Add(["boms", "midx", ("Índice")])
-  stxTitles.Add(["boms", "mjob", ("Trabajo")])
-  stxTitles.Add(["boms", "mcod", ("Código")])
-  stxTitles.Add(["boms", "mqty", ("Cantidad")])
-  stxTitles.Add(["view_boms", "midx", ("Índice")])
-  stxTitles.Add(["view_boms", "mjob", ("Trabajo")])
-  stxTitles.Add(["view_boms", "mcod", ("Código")])
-  stxTitles.Add(["view_boms", "mclass", ("Clase")])
-  stxTitles.Add(["view_boms", "mqty", ("Cantidad")])
-  stxTitles.Add(["view_boms", "mprice", ("Precio")])
-  stxTitles.Add(["view_boms", "muom", ("Unidad")])
-  stxTitles.Add(["view_boms", "msupplier", ("Suministrador")])
-  stxTitles.Add(["codcls", "sidx", ("Índice")])
-  stxTitles.Add(["codcls", "sname", ("Clase")])
-  stxTitles.Add(["codes", "cidx", ("Índice")])
-  stxTitles.Add(["codes", "cname", ("Insumo")])
-  stxTitles.Add(["codes", "cclass", ("Clase")])
-  stxTitles.Add(["codes", "cqty", ("Cantidad")])
-  stxTitles.Add(["codes", "cuom", ("Unidad")])
-  stxTitles.Add(["codes", "cprice", ("Precio")])
-  stxTitles.Add(["view_codes", "cidx", ("Índice")])
-  stxTitles.Add(["view_codes", "cname", ("Insumo")])
-  stxTitles.Add(["view_codes", "cclass", ("Clase")])
-  stxTitles.Add(["view_codes", "cqty", ("Cantidad")])
-  stxTitles.Add(["view_codes", "cuom", ("Unidad")])
-  stxTitles.Add(["view_codes", "cprice", ("Precio")])
-  stxTitles.Add(["composites", "aidx", ("Índice")])
-  stxTitles.Add(["composites", "aname", ("Compuesto")])
-  stxTitles.Add(["composites", "adesc", ("Descripción")])
-  stxTitles.Add(["deliverables", "didx", ("Índice")])
-  stxTitles.Add(["deliverables", "dname", ("Informe")])
-  stxTitles.Add(["jobs", "jidx", ("Índice")])
-  stxTitles.Add(["jobs", "jname", ("Trabajo")])
-  stxTitles.Add(["jobs", "jdate", ("Fecha")])
-  stxTitles.Add(["jobs", "jowner", ("Cliente")])
-  stxTitles.Add(["jobs", "jlogistic", ("Logística")])
-  stxTitles.Add(["logistics", "lidx", ("Índice")])
-  stxTitles.Add(["logistics", "lname", ("Logística")])
-  stxTitles.Add(["owners", "oidx", ("Índice")])
-  stxTitles.Add(["owners", "oname", ("Cliente")])
-  stxTitles.Add(["suppliers", "fidx", ("Índice")])
-  stxTitles.Add(["suppliers", "fname", ("Suministrador")])
-  stxTitles.Add(["uoms", "uidx", ("Índice")])
-  stxTitles.Add(["uoms", "uname", ("Simbolo")])
-  stxTitles.Add(["uoms", "udesc", ("Unidad")])
-  stxViewsEx.Add(["view_jobs", ("Trabajos"), "icon:/16/add"])
-  stxViewsEx.Add(["view_boms", ("Materiales y tareas"), "icon:/16/add"])
-  stxViewsEx.Add(["view_codes", ("Códigos"), "icon:/16/add"])
-  stxViewsEx.Add(["view_composites", ("Compuestos"), "icon:/16/delete"])
-  stxViewsEx.Add(["view_deliverables", ("Informes"), "icon:/16/delete"])
-  stxViewsEx.Add(["view_logistic", ("Logística"), "icon:/16/delete"])
-  stxViewsEx.Add(["view_owners", ("Clientes"), "icon:/16/delete"])
-  stxViewsEx.Add(["view_suppliers", ("Suministradores"), "icon:/16/delete"])
-  stxViewsEx.Add(["view_uoms", ("Unidades de medida"), "icon:/16/delete"])
-  If stxViewsEx.Count > 0 Then
+  Endif</pre><h3>LoadTitles</h3><p>La carga de títulos de los campos de las tablas y de las vistas. De esta manera permite luego traducir la aplicacion mas facilmente. La funcion trabaja con tres parametros, el nombre de la tabla o vista el nombre del campo, y el título de este campo, que sera el que se traducira. Esta funcion permite controlar en un solo sitio todos los titulos.</p><p></p><pre>  stxFTitles.Add(["view_jobs", "jidx", ("Índice")])
+  stxFTitles.Add(["view_jobs", "jname", ("Trabajo")])
+  stxFTitles.Add(["view_jobs", "jdate", ("Fecha")])
+  stxFTitles.Add(["view_jobs", "jowner", ("Cliente")])
+  stxFTitles.Add(["boms", "midx", ("Índice")])
+  stxFTitles.Add(["boms", "mjob", ("Trabajo")])
+  stxFTitles.Add(["boms", "mcod", ("Código")])
+  stxFTitles.Add(["boms", "mqty", ("Cantidad")])
+  stxFTitles.Add(["view_boms", "midx", ("Índice")])
+  stxFTitles.Add(["view_boms", "mjob", ("Trabajo")])
+  stxFTitles.Add(["view_boms", "mcod", ("Código")])
+  stxFTitles.Add(["view_boms", "mclass", ("Clase")])
+  stxFTitles.Add(["view_boms", "mqty", ("Cantidad")])
+  stxFTitles.Add(["view_boms", "mprice", ("Precio")])
+  stxFTitles.Add(["view_boms", "muom", ("Unidad")])
+  stxFTitles.Add(["view_boms", "msupplier", ("Suministrador")])
+  stxFTitles.Add(["codcls", "sidx", ("Índice")])
+  stxFTitles.Add(["codcls", "sname", ("Clase")])
+  stxFTitles.Add(["codes", "cidx", ("Índice")])
+  stxFTitles.Add(["codes", "cname", ("Insumo")])
+  stxFTitles.Add(["codes", "cclass", ("Clase")])
+  stxFTitles.Add(["codes", "cqty", ("Cantidad")])
+  stxFTitles.Add(["codes", "cuom", ("Unidad")])
+  stxFTitles.Add(["codes", "cprice", ("Precio")])
+  stxFTitles.Add(["view_codes", "cidx", ("Índice")])
+  stxFTitles.Add(["view_codes", "cname", ("Insumo")])
+  stxFTitles.Add(["view_codes", "cclass", ("Clase")])
+  stxFTitles.Add(["view_codes", "cqty", ("Cantidad")])
+  stxFTitles.Add(["view_codes", "cuom", ("Unidad")])
+  stxFTitles.Add(["view_codes", "cprice", ("Precio")])
+  stxFTitles.Add(["composites", "aidx", ("Índice")])
+  stxFTitles.Add(["composites", "aname", ("Compuesto")])
+  stxFTitles.Add(["composites", "adesc", ("Descripción")])
+  stxFTitles.Add(["deliverables", "didx", ("Índice")])
+  stxFTitles.Add(["deliverables", "dname", ("Informe")])
+  stxFTitles.Add(["jobs", "jidx", ("Índice")])
+  stxFTitles.Add(["jobs", "jname", ("Trabajo")])
+  stxFTitles.Add(["jobs", "jdate", ("Fecha")])
+  stxFTitles.Add(["jobs", "jowner", ("Cliente")])
+  stxFTitles.Add(["jobs", "jlogistic", ("Logística")])
+  stxFTitles.Add(["logistics", "lidx", ("Índice")])
+  stxFTitles.Add(["logistics", "lname", ("Logística")])
+  stxFTitles.Add(["owners", "oidx", ("Índice")])
+  stxFTitles.Add(["owners", "oname", ("Cliente")])
+  stxFTitles.Add(["suppliers", "fidx", ("Índice")])
+  stxFTitles.Add(["suppliers", "fname", ("Suministrador")])
+  stxFTitles.Add(["uoms", "uidx", ("Índice")])
+  stxFTitles.Add(["uoms", "uname", ("Simbolo")])
+  stxFTitles.Add(["uoms", "udesc", ("Unidad")])
+  stxVTitles.Add(["view_jobs", ("Trabajos"), "icon:/16/add"])
+  stxVTitles.Add(["view_boms", ("Materiales y tareas"), "icon:/16/add"])
+  stxVTitles.Add(["view_codes", ("Códigos"), "icon:/16/add"])
+  stxVTitles.Add(["view_composites", ("Compuestos"), "icon:/16/delete"])
+  stxVTitles.Add(["view_deliverables", ("Informes"), "icon:/16/delete"])
+  stxVTitles.Add(["view_logistic", ("Logística"), "icon:/16/delete"])
+  stxVTitles.Add(["view_owners", ("Clientes"), "icon:/16/delete"])
+  stxVTitles.Add(["view_suppliers", ("Suministradores"), "icon:/16/delete"])
+  stxVTitles.Add(["view_uoms", ("Unidades de medida"), "icon:/16/delete"])
+  If stxVTitles.Count > 0 Then
     Return 1
   Else
     Return 0
@@ -1583,7 +1583,7 @@
   ' 'FMain.stxDesc
   ' 'FMain.stxCode
   ' 'FMain.stxVars
-  Return strHtml</pre><h3>FilesNew</h3><p>Devuelve una lista de archivos de un directorio que se pasa como parametro. Opcionalmente se puede pasar como parametro una lista de archivos existentes los cuales seran omitidos de la lista de salida si es que son encontrados y un filtro de extensiones de archivo de l estilo mp3:ods:txt</p><p>strDirectory As String/Optional stxFilesOpt As String[]/Optional strFilterOpt As String</p><pre>  stxFiles = GEFUtility.ScanFolder(strDirectory, strFilterOpt)
+  Return strHtml</pre><h3>FilesNew</h3><p>Devuelve una lista de archivos de un directorio que se pasa como parametro. Opcionalmente se puede pasar como parametro una lista de archivos existentes los cuales seran omitidos de la lista de salida si es que son encontrados y un filtro de extensiones de archivo de l estilo mp3:ods:txt</p><p>strDirectory As String/Optional stxFilesOpt As String[]/Optional strFilterOpt As String</p><pre>  stxFiles = GEFUtility.ScanDir(strDirectory, strFilterOpt)
   If stxFilesOpt.Count > 0 Then
     For intFile = 0 To stxFiles.Max
       If stxFilesOpt.Find(stxFiles[intFile]) = -1 Then
@@ -1593,7 +1593,7 @@
   Else ' Todos los archivos que se encuentren seran nuevos
     stxFilesNew = stxFiles
   Endif
-  Return stxFilesNew</pre><h3>FilesNone</h3><p>Devuelve una lista de archivos que no existen en el directorio, es necesario parar una lista de archivos para contrastar.</p><p>strDirectory As String/Optional stxFilesOpt As String[]/Optional strFilterOpt As String</p><pre>  stxFiles = GEFUtility.ScanFolder(strDirectory, strFilterOpt)
+  Return stxFilesNew</pre><h3>FilesNone</h3><p>Devuelve una lista de archivos que no existen en el directorio, es necesario parar una lista de archivos para contrastar.</p><p>strDirectory As String/Optional stxFilesOpt As String[]/Optional strFilterOpt As String</p><pre>  stxFiles = GEFUtility.ScanDir(strDirectory, strFilterOpt)
   If stxFilesOpt.Count > 0 Then
     For intFile = 0 To stxFilesOpt.Max
       If stxFiles.Find(stxFilesOpt[intFile]) = -1 Then
@@ -2121,10 +2121,10 @@
     strRootAlt = GEFStarter.stxProgVal[17] ' Nombre alternativo de la aplicación
     picTab = Picture["icon:/16/sun"]
     trvData.Add(strRoot, strRootAlt, Picture["icon:/16/sun"])
-    For intTree = 0 To GEFStarter.stxViewsEx.Max
-      strKey = GEFStarter.stxViewsEx[intTree][0]
-      strText = GEFStarter.stxViewsEx[intTree][1]
-      picTab = Picture[GEFStarter.stxViewsEx[intTree][2]]
+    For intTree = 0 To GEFStarter.stxVTitles.Max
+      strKey = GEFStarter.stxVTitles[intTree][0]
+      strText = GEFStarter.stxVTitles[intTree][1]
+      picTab = Picture[GEFStarter.stxVTitles[intTree][2]]
       trvData.Add(strKey, strText, picTab, strRoot)
     Next
   Endif</pre><h3>UpdateGrid</h3><p></p><p></p><pre>  grwData.Header = 1 ' Muestra solo el encabezado

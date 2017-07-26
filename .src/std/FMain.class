@@ -24,6 +24,7 @@
 
 '### Eventos básicos de la interfaz como, por ejemplo, ayuda, "acerca de..." etc. En general comúnes a todas los programas ###
 
+Public stxFile As New String[]
 Public stxClass As New String[]
 Public stxFast As New String[]
 Public stxMod As New String[]
@@ -57,7 +58,12 @@ Public strGridState As String
 
 Public Sub Form_Open()
 
-  HSplit2.Layout = [1, 4, 1]
+  'HSplit2.Layout = [1, 4, 1]
+  pnlDataGrid.Width = GEFStarter.stxProgVal[20]
+  pnlDataGrid.Height = GEFStarter.stxProgVal[21]
+
+  pnlDataTree.Width = GEFStarter.stxProgVal[22]
+  pnlDataTree.Height = GEFStarter.stxProgVal[23]
 
   txeCode.View.Highlight = "gambas"
 
@@ -254,10 +260,10 @@ Public Function LoadModel(strPath As String) As Integer ''Carga la lista de meto
   stx = GEFUtility.DokuProj(Application.Path)
 
   For int = 0 To stx.Max
-    stxClass.Add(Split(stx[int], "\t")[0])
-    stxMethod.Add(Split(stx[int], "\t")[1])
-    stxCode.Add(Split(stx[int], "\t")[2])
-    stxVars.Add(Split(stx[int], "\t")[3])
+    stxClass.Add(Split(stx[int], "\t")[1])
+    stxMethod.Add(Split(stx[int], "\t")[2])
+    stxCode.Add(Split(stx[int], "\t")[3])
+    stxVars.Add(Split(stx[int], "\t")[4])
   Next
 
   int = stx.Count
@@ -316,22 +322,31 @@ Public Sub TreeIndoLoad(int As Integer)
   'Dim stxMethod As New String[]
 
   strClass = stxClass[int]
+
   strFast = Split(stxMethod[int], "\n")[0]
   stxFast.Add(strFast)
+
   strMod = Split(stxMethod[int], "\n")[1]
   stxMod.add(strMod)
+
   strScope = Split(stxMethod[int], "\n")[2]
   stxScope.Add(strScope)
+
   strType = Split(stxMethod[int], "\n")[3]
   stxType.Add(strType)
+
   strName = Split(stxMethod[int], "\n")[4]
   stxName.Add(strName)
+
   strArgs = Split(stxMethod[int], "\n")[5]
   stxArgs.Add(strArgs)
+
   strRetn = Split(stxMethod[int], "\n")[6]
   stxRetn.Add(strRetn)
+
   strDesc = Split(stxMethod[int], "\n")[7]
   stxDesc.Add(strDesc)
+
   strCode = stxCode[int]
 
 End
@@ -476,7 +491,7 @@ Public Sub tobDevHelp_Click()
   strOutput = User.Home &/ "tmp.tex"
   strFilePdf = User.Home &/ "tmp.pdf"
 
-  stx = GEFUtility.RelationProj(stxName, stxCode)
+  stx = GEFUtility.RelationProj(stxClass, stxName, stxCode)
 
   stxColor.Add("blue!30")
   stxColor.Add("green!40")
@@ -581,10 +596,10 @@ Public Function ShowData() ''Muestra los datos de la base de datos, suas vistas 
     picTab = Picture["icon:/16/sun"]
 
     trvData.Add(strRoot, strRootAlt, Picture["icon:/16/sun"])
-    For intTree = 0 To GEFStarter.stxViewsEx.Max
-      strKey = GEFStarter.stxViewsEx[intTree][0]
-      strText = GEFStarter.stxViewsEx[intTree][1]
-      picTab = Picture[GEFStarter.stxViewsEx[intTree][2]]
+    For intTree = 0 To GEFStarter.stxVTitles.Max
+      strKey = GEFStarter.stxVTitles[intTree][0]
+      strText = GEFStarter.stxVTitles[intTree][1]
+      picTab = Picture[GEFStarter.stxVTitles[intTree][2]]
       trvData.Add(strKey, strText, picTab, strRoot)
     Next
   Endif
@@ -628,10 +643,10 @@ Public Sub trvData_Select()
         cmdArrangeButtonOrders(GEFStarter.stxFieldsViewCurrent)
         cmdArrangeButtonFilters()
 
-        For intx = 0 To GEFStarter.stxViewsEx.Max
-          If GEFStarter.stxViewsEx[intx][0] = GEFStarter.strViewNameSqlCurrent Then
-            'GEFStarter.stxProgVal[7] = GEFStarter.stxViewsEx[intx][1]
-            GEFStarter.strViewNameHumanCurrent = GEFStarter.stxViewsEx[intx][1]
+        For intx = 0 To GEFStarter.stxVTitles.Max
+          If GEFStarter.stxVTitles[intx][0] = GEFStarter.strViewNameSqlCurrent Then
+            'GEFStarter.stxProgVal[7] = GEFStarter.stxVTitles[intx][1]
+            GEFStarter.strViewNameHumanCurrent = GEFStarter.stxVTitles[intx][1]
 
           Endif
         Next
@@ -974,6 +989,23 @@ Public Sub cmdRecordDelete()
     UpdateGrid()
   Else
     Message.Info("Debe seleccionar registros de la lista")
+  Endif
+
+End
+
+Public Sub Form_Close()
+
+  GEFStarter.stxProgVal[20] = pnlDataTree.Width
+  GEFStarter.stxProgVal[21] = pnlDataTree.Height
+  GEFStarter.stxProgVal[22] = pnlDataGrid.Width
+  GEFStarter.stxProgVal[23] = pnlDataGrid.Height
+
+  Wait 0.01
+
+  If GEFStarter.Terminator() = 1 Then
+    Me.Close
+  Else
+    Message.Error("No se han podido guardar los parametros del programa")
   Endif
 
 End

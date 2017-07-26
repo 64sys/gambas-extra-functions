@@ -2,9 +2,12 @@ CREATE VIEW "view_jobs" AS select
 jidx,
 jname,
 jdate,
-oname as jowner
+oname as jowner,
+lname as jlogistic
+
 from jobs
 left join owners on jowner=oidx
+left join logistics on jlogistic=lidx
 order by jdate,jname asc
 
 CREATE VIEW "view_codes" AS select
@@ -37,3 +40,99 @@ left join jobs on mjob=jidx
 left join view_codes on mcod=cidx
 
 order by mjob,mcod asc
+
+CREATE VIEW "view_suppliers" AS select
+fidx,
+fname,
+fphone,
+fmovile,
+faddress,
+yname as fcity
+
+from suppliers
+left join cities on fcity=yidx
+
+order by fname asc
+
+CREATE VIEW "view_owners" AS select
+oidx,
+oname,
+oaddress,
+ophone,
+omovile,
+yname as ocity
+
+from owners
+left join cities on ocity=yidx
+
+order by oname asc
+
+CREATE VIEW "view_uoms" AS select
+uidx,
+uname,
+usymbol
+
+from uoms
+
+order by uname asc
+
+CREATE VIEW "view_composites" AS select
+aidx,
+aname,
+adesc
+
+from composites
+
+order by aname asc
+
+CREATE VIEW "view_deliverables" AS select
+didx,
+dname
+
+from deliberables
+
+order by dname asc
+
+CREATE VIEW "view_logistics" AS select
+lidx,
+lname
+
+from logistics
+
+order by lname asc
+
+CREATE VIEW "view_codcls" AS select
+sidx,
+sname
+
+from codcls
+
+order by sname asc
+
+CREATE VIEW "view_cities" AS select
+yidx,
+yname
+
+from cities
+
+order by yname asc
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+

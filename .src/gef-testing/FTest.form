@@ -1,0 +1,89 @@
+# Gambas Form File 3.0
+
+{ Form Form
+  MoveScaled(0,0,90,67)
+  Background = Color.Background
+  { Panel1 Panel
+    MoveScaled(2,1,85,61)
+    Background = Color.Background
+    { btnAddressIP Button
+      MoveScaled(3,3,16,4)
+      Text = ("AddresIP")
+    }
+    { btnLANIP Button
+      MoveScaled(3,8,16,4)
+      Text = ("LAN IP")
+    }
+    { Frame1 Frame
+      MoveScaled(2,13,82,39)
+      Arrangement = Arrange.Vertical
+      Text = ("DokuProj")
+      { hzsProjects HSplit
+        MoveScaled(2,8,79,22)
+        { pnlProjects Panel
+          MoveScaled(1,1,14,20)
+          Arrangement = Arrange.Vertical
+          { trvProjects TreeView
+            MoveScaled(2,7,10,11)
+            Background = Color.Background
+            Expand = True
+            Border = False
+          }
+        }
+        { pnlCode Panel
+          MoveScaled(16,1,47,20)
+          Arrangement = Arrange.Vertical
+          { txaProject TextLabel
+            MoveScaled(9,2,24,4)
+            Expand = True
+          }
+          { txeCode TextEditor
+            MoveScaled(8,7,20,10)
+            #Translate = False
+            Font = Font["DejaVu Sans Mono,-1"]
+            Foreground = Color.TextBackground
+            Expand = True
+            Highlight = "Gambas"
+            ReadOnly = True
+            ShowPosition = True
+            ShowLineNumber = True
+            ShowModified = True
+            ShowIcon = True
+            ShowIndent = True
+          }
+        }
+        { pnlVar Panel
+          MoveScaled(64,1,14,20)
+          Arrangement = Arrange.Vertical
+          { txeCode2 TextEditor
+            MoveScaled(1,2,11,10)
+            #Translate = False
+            Font = Font["DejaVu Sans Mono,-1"]
+            Foreground = Color.TextBackground
+            Expand = True
+            Highlight = "Gambas"
+            ReadOnly = True
+            ShowPosition = True
+            ShowLineNumber = True
+            ShowModified = True
+            ShowIcon = True
+            ShowIndent = True
+          }
+        }
+      }
+      { Panel2 Panel
+        MoveScaled(2,3,79,5)
+        Arrangement = Arrange.Horizontal
+        { ToolButton1 ToolButton
+          MoveScaled(1,0,5,5)
+          ToolTip = ("Refrescar")
+          Picture = Picture["icon:/22/refresh"]
+        }
+        { dioProjects DirBox
+          MoveScaled(26,0,53,5)
+          ToolTip = ("Seleccione un directorio con codigo fuente")
+        }
+      }
+    }
+  }
+}

@@ -56,22 +56,28 @@ Geometry=[974,39,339,859]
 Geometry=[974,39,339,859]
 
 [DebugWindow/GEFStarter.stxViewFields]
-Geometry=[960,25,224,280]
+Geometry=[1642,419,224,280]
 
 [DebugWindow/GEFStarter.stxViewFields[0]]
-Geometry=[831,245,224,280]
+Geometry=[1410,46,224,316]
 
 [DebugWindow/GEFStarter.stxViewFields[1]]
-Geometry=[818,590,224,280]
+Geometry=[1677,48,224,280]
 
 [DebugWindow/GEFStarter.stxViewFields[2]]
-Geometry=[1022,109,224,347]
+Geometry=[1658,419,224,280]
+
+[DebugWindow/GEFStarter.stxViewFields[3]]
+Geometry=[1430,707,224,280]
 
 [DebugWindow/GEFStarter.stxViews]
 Geometry=[960,25,224,280]
 
 [DebugWindow/GEFStarter.stxViewsEx]
 Geometry=[960,25,224,280]
+
+[DebugWindow/GEFUtility.RListDir(strPath)]
+Geometry=[27,47,224,280]
 
 [DebugWindow/MStarter.stxProgVal]
 Geometry=[848,381,224,280]
@@ -96,6 +102,9 @@ Geometry=[1180,684,315,325]
 
 [DebugWindow/Panel(txeCode.View.Children[1]).Children[0]]
 Geometry=[1196,574,315,325]
+
+[DebugWindow/RDir(strPath, "*", gb.Directory)]
+Geometry=[27,47,224,280]
 
 [DebugWindow/ScrollArea(Panel(txeCode.View.Children[0]).Children[0]).Children]
 Geometry=[1023,436,373,335]
@@ -164,7 +173,10 @@ Geometry=[688,69,256,320]
 Geometry=[1076,246,573,576]
 
 [DebugWindow/stxClass]
-Geometry=[1596,666,256,320]
+Geometry=[1332,259,256,320]
+
+[DebugWindow/stxCod]
+Geometry=[962,626,929,395]
 
 [DebugWindow/stxCode]
 Geometry=[1179,27,741,970]
@@ -174,6 +186,9 @@ Geometry=[1334,129,256,320]
 
 [DebugWindow/stxDesc]
 Geometry=[0,27,256,320]
+
+[DebugWindow/stxDirs]
+Geometry=[1129,99,618,834]
 
 [DebugWindow/stxFast]
 Geometry=[0,27,256,320]
@@ -190,17 +205,26 @@ Geometry=[974,39,224,280]
 [DebugWindow/stxFunc]
 Geometry=[1174,301,256,320]
 
+[DebugWindow/stxGDir]
+Geometry=[969,314,530,553]
+
 [DebugWindow/stxInfo]
 Geometry=[0,27,256,320]
 
 [DebugWindow/stxKey]
 Geometry=[1574,187,290,585]
 
+[DebugWindow/stxMet]
+Geometry=[846,201,726,346]
+
 [DebugWindow/stxMethd]
 Geometry=[779,480,1141,421]
 
 [DebugWindow/stxMethod]
 Geometry=[848,252,696,585]
+
+[DebugWindow/stxMod]
+Geometry=[0,25,224,280]
 
 [DebugWindow/stxName]
 Geometry=[759,194,256,320]
@@ -220,6 +244,9 @@ Geometry=[0,33,649,749]
 [DebugWindow/stxProj]
 Geometry=[802,285,552,568]
 
+[DebugWindow/stxReltn]
+Geometry=[0,25,582,781]
+
 [DebugWindow/stxSTmp]
 Geometry=[940,590,256,320]
 
@@ -237,6 +264,12 @@ Geometry=[960,25,224,280]
 
 [DebugWindow/stxTitles[0]]
 Geometry=[974,39,224,280]
+
+[DebugWindow/stxVTitles]
+Geometry=[18,150,224,280]
+
+[DebugWindow/stxVTitles[0]]
+Geometry=[32,164,224,280]
 
 [DebugWindow/stxVal]
 Geometry=[1390,311,343,631]
@@ -281,10 +314,10 @@ Path="gambas-extra-functions.gambas"
 Count=5
 Active=5
 File[1]=".src/std/FMain.form"
-File[2]=".src/std/FMain.class:53.657"
-File[3]=".src/gef-forms/GEFDataEdit.class:22.69"
-File[4]=".src/gef-modules/GEFData.module:0.1615"
-File[5]=".src/gef-modules/GEFStarter.module:66.250"
+File[2]=".src/std/FMain.class:22.314"
+File[3]=".src/gef-modules/GEFUtility.module:2.1060"
+File[4]=".src/gef-testing/FTest.form"
+File[5]=".src/gef-testing/FTest.class:0.90"
 
 [Watches]
 Count=2

@@ -3,7 +3,7 @@
 Title=Gambas extra functions
 Startup=GEFStarter
 Icon=logo.png
-Version=0.1.3
+Version=0.1.4
 Component=gb.image
 Component=gb.gui.qt
 Component=gb.form
@@ -15,7 +15,6 @@ Component=gb.eval.highlight
 Component=gb.form.editor
 Component=gb.settings
 Component=gb.form.mdi
-Component=gb.form.terminal
 Component=gb.gui.qt.webkit
 Component=gb.markdown
 Component=gb.pcre
