@@ -6,7 +6,7 @@ GEFDataEdit=[1330]
 
 [Breakpoints]
 Count=1
-Breakpoint[1]="GEFData.2620"
+Breakpoint[1]="GEFData.2608"
 
 [DebugWindow]
 Count=0
@@ -104,6 +104,9 @@ Geometry=[1656,433,224,280]
 [DebugWindow/GEFStarter.stxViewFields[80]]
 Geometry=[1430,47,450,666]
 
+[DebugWindow/GEFStarter.stxViewFields[int]]
+Geometry=[903,331,224,280]
+
 [DebugWindow/GEFStarter.stxViews]
 Geometry=[960,25,224,280]
 
@@ -170,6 +173,12 @@ Geometry=[1180,684,315,325]
 [DebugWindow/Panel(txeCode.View.Children[1]).Children[0]]
 Geometry=[1196,574,315,325]
 
+[DebugWindow/Picture["icon:|16|left"]]
+Geometry=[528,703,357,280]
+
+[DebugWindow/Picture["icon:|16|left"].Image]
+Geometry=[542,717,357,280]
+
 [DebugWindow/RDir(File.Dir(strPath), strFilter, gb.File)]
 Geometry=[-10,19,224,280]
 
@@ -223,6 +232,36 @@ Geometry=[950,19,494,699]
 
 [DebugWindow/connDB.Tables]
 Geometry=[376,27,256,320]
+
+[DebugWindow/grwHeader]
+Geometry=[0,38,224,280]
+
+[DebugWindow/grwHeader.Columns]
+Geometry=[972,240,224,304]
+
+[DebugWindow/grwHeader[0, grwHeader.Column].Picture]
+Geometry=[202,694,224,280]
+
+[DebugWindow/grwHeader[0, grwHeader.Column].Picture.Image]
+Geometry=[216,708,224,280]
+
+[DebugWindow/grwHeader[0, grwHeader.Column].Picture.Image.Picture]
+Geometry=[28,70,224,280]
+
+[DebugWindow/grwHeader[0, grwHeader.Column].Picture.Image.Picture.Image]
+Geometry=[42,84,224,280]
+
+[DebugWindow/grwHeader[0, grwHeader.Column].Picture.Image.Picture.Image.Picture]
+Geometry=[56,98,224,280]
+
+[DebugWindow/grwHeader[0, grwHeader.Column].Picture.Image.Picture.Image.Picture.Image]
+Geometry=[70,112,224,280]
+
+[DebugWindow/grwHeader[0, grwHeader.Column].Picture.Image.Picture.Image.Picture.Image.Pixels]
+Geometry=[84,126,224,280]
+
+[DebugWindow/grwHeader[0, intFld]]
+Geometry=[0,38,224,280]
 
 [DebugWindow/imgIcon]
 Geometry=[0,25,224,280]
@@ -336,7 +375,7 @@ Geometry=[-10,19,224,280]
 Geometry=[983,83,256,957]
 
 [DebugWindow/stx]
-Geometry=[0,38,1920,1013]
+Geometry=[277,386,1272,661]
 
 [DebugWindow/stx1]
 Geometry=[141,38,224,280]
@@ -861,9 +900,18 @@ Geometry=[704,320,305,563]
 Path="gambas-extra-functions.gambas"
 
 [OpenFile]
-Count=1
-Active=1
-File[1]=".src/gef-modules/GEFData.module:41.538"
+Count=10
+Active=2
+File[1]=".src/gef-modules/GEFData.module:65.1057"
+File[2]=".src/std/FMain.form"
+File[3]=".src/std/FMain.class:0.1462"
+File[4]=".src/gef-modules/GEFStarter.module:21.166"
+File[5]=".src/gef-forms/GEFDataEdit.class:75.667"
+File[6]=".src/gef-modules/GEFUtility.module:2.476"
+File[7]=".src/gef-modules/GEFValidator.module:27.542"
+File[8]=".src/gef-modules/GEFBatch.module:3.179"
+File[9]=".src/gef-testing/GEFFunctions.class:23.112"
+File[10]=".src/gef-testing/GEFFunctions.form"
 
 [Watches]
 Count=2
