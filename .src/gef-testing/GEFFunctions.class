@@ -1,0 +1,128 @@
+' Gambas class file
+
+Public Sub btnDistro_Click()
+
+  Dim str As String
+
+  str = GEFSys.Distro()
+
+  Message.Info(str)
+
+End
+
+Public Sub btnAddressIP_Click()
+
+  Dim strIP As String
+
+  strIP = GEFSys.AddressIP()
+  Message.Info(strIP)
+
+End
+
+Public Sub btnLANIP_Click()
+
+  Dim stxIP As New String[]
+
+  stxIP = GEFSys.LANIP()
+  Message.Info(stxIP.Join("\n"))
+
+End
+
+Public Sub Button1_Click()
+
+  Dim stxFiles As New String[]
+  Dim int As Integer
+
+  'GEFBatch.ImageBook(User.Home &/ "s003_1L.tif")
+  stxFiles = GEFUtility.ListFiles("/home/administrador/.gambas-extra-functions/orchard/varieties/", ["png"])
+
+  For int = 0 To stxFiles.Max
+
+    Print ("Procesando el arhivo") & " " & stxFiles[int]
+    GEFBatch.PNGReduced(stxFiles[int], " -resize 256x256 -quality 85% ")
+  Next
+  Print "Trabajo terminado"
+
+End
+
+Public Sub btnMakeDBProfile_Click()
+
+  Dim stxFiles As New String[]
+  Dim str As String
+  Dim strType As String
+  Dim stx As New String[]
+  Dim stxOut As New String[]
+  Dim stxView As New String[]
+  Dim strPath As String
+  Dim strPathViews As String
+  Dim strComm As String
+  Dim strTmp As String
+
+  stxFiles = GEFDesk.FileChooser(User.Home, "txt:sql:sqlite:db")
+  If stxFiles.count > 0 Then
+    str = stxFiles[0]
+  Endif
+
+  strType = String.LCase(File.Ext(str))
+
+  Select strType
+    Case "sql", "txt"
+      stx = GEFUtility.FileLoad(str)
+      stxOut = GEFData.MakeDBProfile(stx)
+      stxView = GEFData.MakeViews(stx)
+    Case "sqlite", "db"
+      strComm = "echo .schema | sqlite3 " & str
+      Shell strComm To strTmp
+      'stx = Split(strTmp, "\n")
+      stx = GEFData.FileSqlLoad(strTmp)
+
+      stxOut = GEFData.MakeDBProfile(stx)
+      stxView = GEFData.MakeViews(stx)
+  End Select
+
+  strPath = User.Home &/ File.BaseName(str) & "-profile.txt"
+  strPathViews = User.Home &/ File.BaseName(str) & "-views.txt"
+
+  File.Save(strPath, stxOut.Join("\n"))
+  Wait 0.01
+  Desktop.Open(strPath)
+
+  File.Save(strPathViews, stxView.Join("\n"))
+  Wait 0.01
+  Desktop.Open(strPathViews)
+
+End
+
+Public Sub DateChooser1_Change()
+
+  Dim flx As Float[]
+  Dim pio As Picture
+
+  flx = GEFMoon.monPhase(DateChooser1.Value)
+
+  lblPhase.Text = ("Fase")
+  lblAge.Text = ("Avance")
+  lblDist.Text = ("Distancia")
+  lblAng.Text = ("Ángulo")
+  lblSud.Text = ("Distancia del Sol")
+  lblSua.Text = ("Ángulo del sol")
+
+  vxoPhase.Value = flx[0]
+  vxoAge.Value = flx[1]
+  vxoDist.Value = flx[2]
+  vxoAng.Value = flx[3]
+  vxoSud.Value = flx[4]
+  vxoSua.Value = flx[5]
+
+  Select Round(flx[1], 0)
+    Case 0, 29
+      pio = Image.Load("./orchard/moon/29.png").Stretch(32, 32).Picture
+    Case Else
+      pio = Image.Load("./orchard/moon/" & Format(Round(flx[1], 0), "00") & ".png").Stretch(32, 32).Picture
+  End Select
+
+  pioMoon.Picture = pio
+
+  Print Round(flx[1], 0)
+
+End

@@ -1,0 +1,449 @@
+' Gambas module file
+
+Private $age As Float
+Private $phase As Float
+Private $distance As Integer
+Private $subtends As Float
+Private $sudist As Float
+Private $suangdia As Float
+Private $phases As Float[]
+Private $dateLocal As Date
+Private $dateUTC As Date
+Private $dateJulian As Float
+
+'------------------------------------------------------------------
+'Astronomical constants
+Private Const epoch As Float = 2444238.5      ' 1980 January 0.0
+
+'-----------------------------------------------------------------
+'Constants defining the Sun's apparent orbit
+Private Const elonge As Float = 278.83354     ' Ecliptic longitude of the Sun at epoch 1980.0
+Private Const elongp As Float = 282.596403    ' Ecliptic longitude of the Sun at perigee
+Private Const eccent As Float = 0.016718      ' Eccentricity of Earth's orbit
+Private Const sunsmax As Float = 149598500    ' Semi-major axis of Earth's orbit, km
+Private Const sunangsiz As Float = 0.533128   ' Sun's angular size, degrees, at semi-major axis distance
+
+'-----------------------------------------------------------------
+'Elements of the Moon's orbit, epoch 1980.0
+Private Const mmlong As Float = 64.975464      ' Moon's mean longitude at the epoch
+Private Const mmlongp As Float = 349.383063    ' Mean longitude of the perigee at the epoch
+Private Const mlnode As Float = 151.950429     ' Mean longitude of the node at the epoch
+Private Const minc As Float = 5.145396         ' Inclination of the Moon's orbit
+Private Const mecc As Float = 0.0549           ' Eccentricity of the Moon's orbit
+Private Const mangsiz As Float = 0.5181        ' Moon's angular size at distance a from Earth
+Private Const msmax As Float = 384401          ' Semi-major axis of Moon's orbit in km
+Private Const mparallax As Float = 0.9507      ' Parallax at distance a from Earth
+Private Const synmonth As Float = 29.53058868  ' Synodic month (new Moon to new Moon)
+Private Const lunatbase As Float = 2423436     ' Base date for E. W. Brown's numbered series of lunations (1923 January 16)
+
+'-----------------------------------------------------------------
+' Properties of the Earth
+Private Const earthrad As Float = 6378.16      ' Radius of Earth in kilometres
+
+'Private Const PI As Float = 3.1415926535897931 '
+Private Const EPSILON As Float = 0.000001      '
+
+'Public Function fPhase(pdate As Float) As Float
+Public Function monPhase(datDate As Date) As Float[]
+
+  Dim pdate As Float
+
+  Dim Day As Float
+  Dim N As Float
+  Dim M As Float
+  Dim Ec As Float
+  Dim Lambdasun As Float
+  Dim ml As Float
+  Dim MM As Float
+  Dim MN As Float
+  Dim Ev As Float
+  Dim Ae As Float
+  Dim A3 As Float
+  Dim MmP As Float
+  Dim mEc As Float
+  Dim A4 As Float
+  Dim lP As Float
+  Dim V As Float
+  Dim lPP As Float
+  Dim NP As Float
+  Dim y As Float
+  Dim x As Float
+  Dim Lambdamoon As Float
+  Dim BetaM As Float
+  Dim MoonAge As Float
+  Dim MoonPhase As Float
+  Dim MoonDist As Float
+  Dim MoonDFrac As Float
+  Dim MoonAng As Float
+  Dim MoonPar As Float
+  Dim F As Float
+  Dim SunDist As Float
+  Dim SunAng As Float
+
+  Dim pphase As Float
+  Dim mage As Float
+  Dim dist As Float
+  Dim angdia As Float
+  Dim sudist As Float
+  Dim suangdia As Float
+
+  Dim flxMoon As New Float[]
+
+  ' Calculation of the Sun's position
+
+  pdate = DatetoJulian(datDate)
+
+  Day = pdate - epoch                    ' Date within epoch  Fecha en la época
+  N = Fixangle((360 / 365.2422) * Day)   ' Mean anomaly of the Sun  Anomalía media del Sol
+  M = Fixangle(N + elonge - elongp)      ' Convert from perigee co-ordinates to epoch 1980.0
+  Ec = Kepler(M, eccent)                 ' Solve equation of Kepler  Resolver la ecuación de Kepler
+  Ec = Sqr((1 + eccent) / (1 - eccent)) * Tan(Ec / 2)
+  Ec = 2 * Todeg(ATan(Ec))               ' True anomaly
+  Lambdasun = Fixangle(Ec + elongp)      ' Sun's geocentric ecliptic longitude
+  F = ((1 + eccent * Cos(Torad(Ec))) / (1 - eccent * eccent))
+  SunDist = sunsmax / F                  ' Distance to Sun in km
+  SunAng = F * sunangsiz                 ' Sun's angular size in degrees
+
+  ' Calculation of the Moon's position
+  ml = Fixangle(13.1763966 * Day + mmlong)            ' Moon's mean longitude
+  MM = Fixangle(ml - 0.1114041 * Day - mmlongp)       ' Moon's mean anomaly
+  MN = Fixangle(mlnode - 0.0529539 * Day)             ' Moon's ascending node mean longitude
+  Ev = 1.2739 * Sin(Torad(2 * (ml - Lambdasun) - MM)) ' Evection
+  Ae = 0.1858 * Sin(Torad(M))                         ' Annual equation
+  A3 = 0.37 * Sin(Torad(M))                           ' Correction term
+  MmP = MM + Ev - Ae - A3                             ' Corrected anomaly
+  mEc = 6.2886 * Sin(Torad(MmP))                      ' Correction for the equation of the centre
+  A4 = 0.214 * Sin(Torad(2 * MmP))                    ' Another correction term
+  lP = ml + Ev + mEc - Ae + A4                        ' Corrected longitude
+  V = 0.6583 * Sin(Torad(2 * (lP - Lambdasun)))       ' Variation
+  lPP = lP + V                                        ' True longitude
+  NP = MN - 0.16 * Sin(Torad(M))                      ' Corrected longitude of the node
+  y = Sin(Torad(lPP - NP)) * Cos(Torad(minc))         ' Y inclination coordinate
+  x = Cos(Torad(lPP - NP))                            ' X inclination coordinate
+  Lambdamoon = Todeg(ATan2(y, x))                     ' Ecliptic longitude
+  Lambdamoon += NP
+  BetaM = Todeg(ASin(Sin(Torad(lPP - NP)) * Sin(Torad(minc)))) ' Ecliptic latitude
+
+  ' Calculation of the phase of the Moon
+  MoonAge = lPP - Lambdasun                           ' Age of the Moon in degrees
+  MoonPhase = (1 - Cos(Torad(MoonAge))) / 2           ' Phase of the Moon
+  MoonDist = (msmax * (1 - mecc * mecc)) / (1 + mecc * Cos(Torad(MmP + mEc))) ' Calculate distance of moon from the centre of the Earth
+  MoonDFrac = MoonDist / msmax                        ' Calculate Moon's angular diameter
+  MoonAng = mangsiz / MoonDFrac
+  MoonPar = mparallax / MoonDFrac                     ' Calculate Moon's parallax
+
+  pphase = MoonPhase
+  mage = synmonth * (Fixangle(MoonAge) / 360.0)
+  dist = MoonDist
+  angdia = MoonAng
+  sudist = SunDist
+  suangdia = SunAng
+
+  flxMoon.Add(pphase)
+  flxMoon.Add(mage)
+  flxMoon.Add(dist)
+  flxMoon.Add(angdia)
+  flxMoon.Add(sudist)
+  flxMoon.Add(suangdia)
+
+  $dateLocal = UTCtoLocal($dateUTC)
+  $age = mage
+  $phase = pphase
+  $distance = dist
+  $subtends = angdia
+
+  $sudist = sudist
+  $suangdia = suangdia
+
+  'Return MoonPhase
+  Return flxMoon
+
+End
+
+'-----------------------------------------------------------------
+' Funciones matematicas
+'-----------------------------------------------------------------
+Private Function Fixangle(a As Float) As Float
+
+  Return (a - 360.0 * (Floor(a / 360.0)))
+
+End Function
+
+Private Function Torad(d As Float) As Float
+
+  Return (d * (Pi / 180.0))  '
+
+End Function
+
+Private Function Todeg(d As Float) As Float
+
+  Return (d * (180.0 / Pi))
+
+End Function
+
+Private Function Dsin(x As Float) As Float
+
+  Return (Sin(Torad(x)))
+
+End Function
+
+Private Function Dcos(x As Float) As Float
+
+  Return (Cos(Torad(x)))
+
+End Function
+
+'--------------------------------------------------------------------------------------
+' Julian and civil date functions
+
+Public Function LocaltoUTC(datex As Date) As Date
+  ' https://sourceforge.net/p/gambas/mailman/message/33090987/
+
+  Return DateAdd(datex, gb.Second, System.TimeZone)
+
+End
+
+Public Function UTCtoLocal(datex As Date) As Date
+
+  Return DateAdd(datex, gb.Second, - System.TimeZone)
+
+End
+
+'--------------------------------------------------------------------------------------
+'  JuliantoDate -- Convert Julian date to civil date
+Public Function JuliantoDate(td As Float) As Date
+  'http://hojamat.es/sindecimales/congruencias/herramientas/calendarios/hoja/juliana.ods
+
+  Dim f1 As Float
+  Dim f2 As Float
+  Dim f3 As Float
+  Dim m As Float
+  Dim n As Float
+  Dim p As Float
+  Dim q As Float
+  Dim r As Float
+  Dim s As Float
+  Dim t As Float
+
+  Dim dd As Integer
+  Dim mm As Integer
+  Dim yy As Integer
+
+  Dim hh As Integer
+  Dim mi As Integer
+  Dim ss As Integer
+
+  f1 = td + 0.5
+  f2 = Floor((f1 - 1867216.25) / 36524.25)
+  f3 = f2 / 4
+  m = f1 + 1 + f2 - f3
+  n = m + 1524
+  p = Floor((n - 122.1) / 365.25)
+  q = Floor(p * 365.25)
+  r = Floor((n - q) / 30.6001)
+  s = Floor(30.6001 * r)
+
+  dd = CInt(n - q - s)
+  If r <= 13 Then mm = CInt(r - 1) Else mm = CInt(r - 13)
+  If mm < 3 Then yy = CInt(p - 4715) Else yy = CInt(p - 4716)
+
+  t = Frac(n - q - s)
+  hh = Floor(t * 24)
+  mi = Floor(Frac(t * 24) * 60)
+  ss = Floor(Frac(t * 24 * 60) * 60)
+
+  Return Date(yy, mm, dd, hh, mi, ss)
+
+End Function
+
+Public Function DatetoJulian(datex As Date) As Float
+  'http://hojamat.es/sindecimales/congruencias/herramientas/calendarios/hoja/juliana.ods
+
+  Dim dayx As Integer
+  Dim monthx As Integer
+  Dim yearx As Integer
+  'Dim hourx As Integer
+  'Dim minutex As Integer
+  'Dim secondx As Integer
+
+  Dim a1 As Integer
+  Dim a2 As Integer
+  Dim a3 As Integer
+  Dim a4 As Integer
+  Dim a5 As Integer
+
+  Dim fracx As Float
+
+  Dim julian_date As Float
+
+  dayx = Day(datex)
+
+  If Month(datex) > 2 Then
+    monthx = Month(datex)
+    yearx = Year(datex)
+  Else
+    monthx = Month(datex) + 12
+    yearx = Year(datex) - 1
+  Endif
+
+  a1 = yearx / 100
+  a2 = a1 / 4
+  a3 = 2 - a1 + a2
+  a4 = 365.25 * (yearx + 4716)
+  a5 = 30.6001 * (monthx + 1)
+
+  fracx = Hour(datex) / 24 + Minute(datex) / 60 / 24 + Second(datex) / 60 / 60 / 24
+
+  julian_date = dayx + a3 + a4 + a5 - 1524.5 + fracx
+
+  Return julian_date
+
+End Function
+
+'  MEANPHASE  --  Calculates  time  of  the mean new Moon for a given
+'                 base date.  This argument K to this function is the
+'                 precomputed synodic month index, given by:
+'                         K = (year - 1900) * 12.3685
+'                 where year is expressed as a year and fractional year.
+Private Function MeanPhase(sdate As Float, k As Float) As Float
+
+  Dim t As Float
+  Dim t2 As Float
+  Dim t3 As Float
+
+  ' Time in Julian centuries from 1900 January 0.5
+  t = (sdate - 2415020.0) / 36525
+  t2 = t * t
+  ' Square for frequent use
+  t3 = t2 * t
+  ' Cube for frequent use
+
+  Return (2415020.75933 + synmonth * k) + (0.0001178 * t2) - (0.000000155 * t3) + (0.00033 * Dsin(166.56 + 132.87 * t - 0.009173 * t2))
+
+End Function
+
+'  TRUEPHASE  --  Given a K value used to determine the mean phase of
+'                   the new moon, and a phase selector (0.0, 0.25, 0.5,
+'                   0.75), obtain the true, corrected phase time.
+Private Function TruePhase(k As Float, phase As Float) As Float
+
+  Dim t As Float
+  Dim t2 As Float
+  Dim t3 As Float
+  Dim pt As Float
+  Dim m As Float
+  Dim mprime As Float
+  Dim f As Float
+
+  k += phase      ' Add phase to new moon time
+  t = k / 1236.85 ' Time in Julian centuries from 1900 January 0.5
+  t2 = t * t      ' Square for frequent use
+  t3 = t2 * t     ' Cube for frequent use
+
+  ' Mean time of phase
+  pt = 2415020.75933 + synmonth * k + 0.0001178 * t2 - 0.000000155 * t3 + 0.00033 * Dsin(166.56 + 132.87 * t - 0.009173 * t2)
+
+  ' Sun's mean anomaly
+  m = 359.2242 + 29.10535608 * k - 0.0000333 * t2 - 0.00000347 * t3
+
+  ' Moon's mean anomaly
+  mprime = 306.0253 + 385.81691806 * k + 0.0107306 * t2 + 0.00001236 * t3
+
+  ' Moon's argument of latitude
+  f = 21.2964 + 390.67050646 * k - 0.0016528 * t2 - 0.00000239 * t3
+  If (phase < 0.01) Or (Abs(phase - 0.5) < 0.01) Then
+    ' Corrections for New and Full Moon
+    pt = pt + ((0.1734 - 0.000393 * t) * Dsin(m) + 0.0021 * Dsin(2 * m) - 0.4068 * Dsin(mprime) + 0.0161 * Dsin(2 * mprime) - 0.0004 * Dsin(3 * mprime) + 0.0104 * Dsin(2 * f) - 0.0051 * Dsin(m + mprime) - 0.0074 * Dsin(m - mprime) + 0.0004 * Dsin(2 * f + m) - 0.0004 * Dsin(2 * f - m) - 0.0006 * Dsin(2 * f + mprime) + 0.001 * Dsin(2 * f - mprime) + 0.0005 * Dsin(m + 2 * mprime))
+  Else If (Abs(phase - 0.25) < 0.01 Or (Abs(phase - 0.75) < 0.01)) Then
+    pt = pt + ((0.1721 - 0.0004 * t) * Dsin(m) + 0.0021 * Dsin(2 * m) - 0.628 * Dsin(mprime) + 0.0089 * Dsin(2 * mprime) - 0.0004 * Dsin(3 * mprime) + 0.0079 * Dsin(2 * f) - 0.0119 * Dsin(m + mprime) - 0.0047 * Dsin(m - mprime) + 0.0003 * Dsin(2 * f + m) - 0.0004 * Dsin(2 * f - m) - 0.0006 * Dsin(2 * f + mprime) + 0.0021 * Dsin(2 * f - mprime) + 0.0003 * Dsin(m + 2 * mprime) + 0.0004 * Dsin(m - 2 * mprime) - 0.0003 * Dsin(2 * m + mprime))
+    If phase < 0.5 Then
+      ' First quarter correction
+      pt = pt + (0.0028 - 0.0004 * Dcos(m) + 0.0003 * Dcos(mprime))
+    Else
+      ' Last quarter correction
+      pt = pt + (-0.0028 + 0.0004 * Dcos(m) - 0.0003 * Dcos(mprime))
+    End If
+  End If
+
+  Return pt
+
+End Function
+
+''
+'' Find time of phases of the moon which surround the
+'' current date. Five phases are found, starting and
+'' ending with the new moons which bound the current
+'' lunation.
+''      - Last new moon
+''      - First quarter
+''      - Full moon
+''      - Last quarter
+''      - Next new moon
+Private Function PhaseHunt(sdate As Float) As Float[]
+
+  Dim phasesx As New Float[5]
+
+  Dim adate As Float
+  Dim k1 As Float
+  Dim k2 As Float
+  Dim nt1 As Float
+  Dim nt2 As Float
+  Dim yy As Integer
+  Dim mm As Integer
+  Dim dd As Integer
+  Dim sdate_temp As Date
+
+  adate = sdate - 45
+  sdate_temp = JuliantoDate(adate)
+  yy = Year(sdate_temp)
+  mm = Month(sdate_temp)
+  dd = Day(sdate_temp)
+
+  k1 = Floor((yy + ((mm - 1) * (1.0 / 12.0)) - 1900) * 12.3685)
+  nt1 = MeanPhase(adate, k1)
+  adate = nt1
+
+  While True
+    adate += synmonth
+    k2 = k1 + 1
+    nt2 = MeanPhase(adate, k2)
+    If nt1 <= sdate And nt2 > sdate Then
+      Break
+    End If
+    nt1 = nt2
+    k1 = k2
+  Wend
+
+  phasesx[0] = TruePhase(k1, 0)      ' Last new moon
+  phasesx[1] = TruePhase(k1, 0.25)   ' First quarter
+  phasesx[2] = TruePhase(k1, 0.5)    ' Full moon
+  phasesx[3] = TruePhase(k1, 0.75)   ' Last quarter
+  phasesx[4] = TruePhase(k2, 0)      ' Next new moon
+
+  Return phasesx
+
+End Function
+
+'  KEPLER  --   Solve the equation of Kepler.
+Private Function Kepler(m As Float, ecc As Float) As Float
+
+  Dim e As Float
+  Dim delta As Float
+
+  m = Torad(m)
+  e = m
+
+  Do
+    delta = e - ecc * Sin(e) - m
+    e = e - (delta / (1 - ecc * Cos(e)))
+  Loop While Abs(delta) > EPSILON
+
+  Return e
+
+End Function
+
+Private Function numoflunation(datex As Float) As Integer
+
+  Return CInt(((datex + 7 - lunatbase) / synmonth) + 1)
+
+End

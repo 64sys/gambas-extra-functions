@@ -26,6 +26,7 @@ Public Function FileChooser(Optional strInputPath As String, Optional strFilter 
   Dim strExtension As String
   Dim strFilterA As String
   Dim strFilterB As String
+  Dim stxFilter As New String[]
 
   Dim stxExtensions As New String[]
   Dim stxFilepaths As New String[] ' Para el caso de seleccion de multiples archivos
@@ -38,25 +39,17 @@ Public Function FileChooser(Optional strInputPath As String, Optional strFilter 
 
   If strFilter <> "" Then
     stxExtensions = Split(strFilter, ":")
-
-    strFilterB &= ("Filtro por") & ":"
     For Each strExtension In stxExtensions
 
-      strFilterA &= "*." & String.LCase(strExtension) & ";"
-      strFilterA &= "*." & String.UCase(strExtension)
-
-      strFilterB &= " *." & String.LCase(strExtension)
-
+      stxFilter.Add("*." & String.LCase(strExtension) & ";" & "*." & String.UCase(strExtension))
     Next
-
+    strFilterA = stxFilter.Join(";")
+    strFilterB = ("Filtro") & ": " & stxExtensions.Join(",")
     Dialog.Filter = [strFilterA, strFilterB]
-
   Endif
-
   If Not Dialog.OpenFile(True) Then
     stxFilepaths = Dialog.Paths
   Endif
-
   Return stxFilepaths
 
 End

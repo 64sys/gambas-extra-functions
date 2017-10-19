@@ -34,7 +34,6 @@ Public Function Resume() As String
   strResume &= " <b>Nombre.PC: </b>" & ComputerName()
   strResume &= " <b>Usuario: </b>" & CurrentUser()
   strResume &= " <b>Usuarios: </b>" & AllUsers()
-  'strResume &= " <b>Escritorio: </b>" & DskType()
   strResume &= " <b>Grupo: </b>" & WGroup()
   strResume &= " <b>Gambas: </b>" & Vgambas()
   strResume &= " <b>Actualizado: </b>" & LastUpgrade()
@@ -53,18 +52,17 @@ Public Function DeFiBro() As String ''Devuelve el administrador de archivos por 
 
 End
 
-Public Function Distro() As String ''Devuelve la distribución instalada xmi
+Public Function DistroNoshell() As String ''Devuelve la distribución instalada xmi
 
-  Dim sDis As String
+  Dim str As String
 
-  Shell "lsb_release -d | cut -d':' -f2" To sDis
-  Replace(sDis, gb.Tab, "")
-  sDis = Trim(sDis)
-  Return sDis
+  str = File.Load("/etc/issue.net")
+
+  Return str
 
 End
 
-Public Function DistroShort() As String
+Public Function Distro() As String
 
   Dim strDistro As String
   Dim strDistroShort As String
@@ -72,7 +70,7 @@ Public Function DistroShort() As String
   Dim stxDistro As New String[]
   Dim intN As Integer
 
-  Shell "lsb_release -d | cut -d':' -f2" To strDistro
+  strDistro = File.Load("/etc/issue.net")
   Replace(strDistro, gb.Tab, "")
   strDistro = Trim(strDistro)
 
@@ -95,6 +93,7 @@ Public Function DistroShort() As String
   stxDistros.Add("mint")
   stxDistros.Add("opensuse")
   stxDistros.Add("ubuntu")
+  stxDistros.Add("peppermint")
 
   stxDistro = Split(strDistro, " ")
 
@@ -171,6 +170,153 @@ Public Function CurrentUser() As String[] ''Devuelve el usuario activo
 
 End
 
+Public Function GetProjectInfo(strPath As String) As String[] ''Devuelve una matriz con los datos de un projecto de gambas, como parametro de entrada requieres el direcotrio raíz del proyecto.
+
+  Dim strFile As String
+  Dim stxStd As New String[]
+  Dim stxPro As New String[]
+  Dim stxOut As New String[]
+  Dim int As Integer
+  Dim strTag As String
+  Dim intkey As Integer
+  Dim strVal As String
+
+  ' Informacion esándar de un proyecto
+  stxStd.Clear
+  stxStd.Add("Directory" & "\t" & strPath)
+  stxStd.Add("Title")
+  stxStd.Add("Description")
+  stxStd.Add("Authors")
+  stxStd.Add("Component")
+  stxStd.Add("CreateMenu")
+  stxStd.Add("GambasVersion")
+  stxStd.Add("Icon")
+  stxStd.Add("Language")
+  stxStd.Add("Packager")
+  stxStd.Add("Startup")
+  stxStd.Add("TabSize")
+  stxStd.Add("Translate")
+  stxStd.Add("Vendor")
+  stxStd.Add("Version")
+  stxStd.Add("WebSite")
+  stxStd.Add("Address")
+  stxStd.Add("Categories")
+  stxStd.Add("CreateEachDirectory")
+  stxStd.Add("ExtraDependencies")
+  stxStd.Add("Groups")
+  stxStd.Add("License")
+  stxStd.Add("Maintainer")
+  stxStd.Add("Menus")
+  stxStd.Add("MimeTypes")
+  stxStd.Add("PackageName")
+  stxStd.Add("SourcePath")
+  stxStd.Add("Systems")
+  stxStd.Add("Tags")
+  stxStd.Add("Type")
+  stxStd.Add("Url")
+  stxStd.Add("UseHttpServer")
+  stxStd.Add("VendorPrefix")
+  stxStd.Add("GambasProjectFile")
+  stxStd.Add("CompiledWithGambas")
+  stxStd.Add("CreateShortcut")
+  stxStd.Add("KeepDebugInfo")
+  stxStd.Add("CreateShortcut")
+  stxStd.Add("PackageSignature")
+  stxStd.Add("SameFiles")
+  stxStd.Add("ExtraFiles")
+  stxStd.Add("ControlPublic")
+  stxStd.Add("ModulePublic")
+  stxStd.Add("SameDependencies")
+  stxStd.Add("SameFiles")
+  stxStd.Add("Prefix")
+  stxStd.Add("PackageVersion")
+  stxStd.Add("ControlPublic")
+  stxStd.Add("SameDependencies")
+  stxStd.Add("SameFiles")
+  stxStd.Add("ControlPublic")
+  stxStd.Add("ModulePublic")
+  stxStd.Add("SameDependencies")
+  stxStd.Add("SameFiles")
+  stxStd.Add("RedirectStderr")
+  stxStd.Add("ControlPublic")
+  stxStd.Add("SameDependencies")
+  stxStd.Add("SameFiles")
+  stxStd.Add("ControlPublic")
+  stxStd.Add("SameDependencies")
+  stxStd.Add("SameFiles")
+  stxStd.Add("RedirectStderr")
+  stxStd.Add("UseTerminal")
+  stxStd.Add("RedirectStderr")
+  stxStd.Add("Profiling")
+  stxStd.Add("ControlPublic")
+  stxStd.Add("ModulePublic")
+  stxStd.Add("Warnings")
+  stxStd.Add("CreateShortcut")
+  stxStd.Add("ControlPublic")
+  stxStd.Add("ModulePublic")
+  stxStd.Add("ControlPublic")
+  stxStd.Add("ModulePublic")
+  stxStd.Add("ExtraDesktop")
+
+  strFile = strPath &/ ".project"
+
+  If Stat(strFile).Type = gb.File Then
+    ' Carga del archivo .proyect
+    stxPro = GEFUtility.FileLoad(strFile)
+
+    For int = 0 To stxPro.Max
+      Select InStr(stxPro[int], "=")
+        Case 0
+          Select String.Mid(stxPro[int], 1, 16)
+            Case "# Gambas Project"
+              strTag = "GambasProjectFile"
+              strVal = Replace(stxPro[int], "# Gambas Project File ", "")
+              stxStd[stxStd.Find(strTag)] = stxStd[stxStd.Find(strTag)] & "\t" & strVal
+            Case "# Compiled with "
+              strTag = "CompiledWithGambas"
+              strVal = Replace(stxPro[int], "# Compiled with Gambas ", "")
+              stxStd[stxStd.Find(strTag)] = stxStd[stxStd.Find(strTag)] & "\t" & strVal
+          End Select
+
+        Case Else
+
+          strTag = Split(stxPro[int], "=")[0]
+          If stxStd.Find(strTag) = -1 Then
+            Print "Tag missing" & "\t" & strTag
+            stxStd.Add(strTag)
+            Print
+          Endif
+
+      End Select
+
+    Next
+  Endif
+
+  stxOut.Clear
+  stxOut.Insert(stxStd)
+
+  For int = 0 To stxPro.Max
+    If InStr(stxPro[int], "=") > 0 Then
+      intkey = stxStd.Find(Split(stxPro[int], "=")[0])
+      strVal = Split(stxPro[int], "=")[1]
+      If intkey > -1 Then
+        stxOut[intkey] = stxOut[intkey] & "\t" & strVal
+      Else
+
+      Endif
+    Endif
+  Next
+
+  For int = 0 To stxOut.Max
+    If InStr(stxOut[int], "\t") = 0 Then
+      stxOut[int] = stxOut[int] & "\t"
+    Endif
+  Next
+
+  Return stxOut
+
+End
+
 Public Function GetSystemUsers() As String[] ''Devuelve el una lista de usuarios del sistema Linux.
 
   Dim stxTUsr As New String[]
@@ -203,16 +349,6 @@ Public Function AllUsers() As String ''Devuelve los usuarios que hemos creado
   Return Replace(sUser, "\n", "")
 
 End
-
-' Public Function DskType() As String ''Devuelve el entorno del escritorio
-'
-'   Dim sEscritorio As String
-'   'Shell "env | grep DESKTOP_SESSION= | cut -d '=' -f 2" To sEscritorio
-'   sEscritorio = Desktop.Type
-'
-'   Return Replace(sEscritorio, "\n", "")
-'
-' End
 
 Public Function WGroup() As String ''Devuelve el Grupo de trabajo del pc
 
@@ -386,15 +522,6 @@ Public Function LANIP(Optional strBase As String) As String[] ''Devuelve las IP 
 
 End
 
-' Public Function AddressIP() As String ''Devuelve las Ips configuradas en el equipo
-'
-'   Dim sIPs As String
-'
-'   Shell "ifconfig | grep inet: |cut -d ':' -f2|cut -d ' ' -f1" To sIPs
-'   Return RTrim(Replace(sIPs, "\n", " "))
-'
-' End
-
 Public Function LastNIP() As String ''Devuelve el último digito de la Ip
 
   Dim sIPs As String
@@ -426,14 +553,13 @@ End
 
 Public Function LastUpgrade() As String ''Devuelve la Fecha de la ultima vez que se actualizo el sistema
 
-  'Dim Result As String
   Dim long_iso As String
   Dim strDistroShort As String
   Dim strLastUpgrade As String
 
   long_iso = "long-iso"
 
-  strDistroShort = DistroShort()
+  strDistroShort = Distro()
 
   Select strDistroShort
     Case "debian"
@@ -455,7 +581,7 @@ Public Function PkgStat(strPkg As String) As Boolean ''Devuelve el estado respec
   Dim strPkgStatus As String
   Dim bolPkgStatus As Boolean
 
-  strDistroShort = DistroShort()
+  strDistroShort = Distro()
 
   ' Obtencion de resultados
   Select strDistroShort
@@ -476,7 +602,7 @@ Public Function PkgStat(strPkg As String) As Boolean ''Devuelve el estado respec
           bolPkgStatus = False
       End Select
 
-    Case "debian", "ubuntu", "mint"
+    Case "debian", "ubuntu", "mint", "peppermint"
 
       strCommand = "dpkg-query -W -f='${Status}\n' " & strPkg
 

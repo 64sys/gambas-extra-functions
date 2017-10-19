@@ -3,7 +3,7 @@
 Title=Gambas extra functions
 Startup=GEFStarter
 Icon=logo.png
-Version=0.1.4
+Version=0.1.27
 Component=gb.image
 Component=gb.gui.qt
 Component=gb.form
@@ -21,6 +21,7 @@ Component=gb.pcre
 Component=gb.pdf
 Component=gb.report2
 Component=gb.sdl2.audio
+Component=gb.vb
 Component=gb.xml
 Description="Armazón para contruir pogramas."
 Authors="Martín Belmonte"

@@ -1,0 +1,178 @@
+Dim intR As Integer
+  Dim strLabel As String
+  Dim intCount As Integer
+  Dim strFldKey As String ' Campo de la clave primaria
+  Dim strSqlEdit As String ' Consulta SQL para generar el "result" de edición
+  Dim resEdit As Result ' "result" de edición
+  Dim fld As ResultField
+  Dim intK As Integer
+  Dim strField As String
+  Dim strSqlRef As String ' Consulta SQL para generar el "result" de referencia
+  Dim resRef As Result ' "result" de edición
+  Dim intKey As Integer
+  Dim vrtVal As Variant
+  Dim inxKey As New Integer[]
+  Dim vrxVal As New Variant[]
+  Dim strControl As String
+  Dim strFldTmp As String
+  Dim vrtProf As Variant
+  Dim strRefTable As String
+  Dim strRefField As String
+  Dim strSqlAux As String
+  Dim resAux As Result
+
+  conData = con
+  strTab = strTable
+  For intK = 0 To GEFStarter.stxTableFields.Max
+    strRefTable = GEFStarter.stxTableFields[intK][7]
+    strRefField = GEFStarter.stxTableFields[intK][8]
+    strFldTmp = GEFStarter.stxTableFields[intK][1]
+
+    If GEFStarter.stxTableFields[intK][0] = strTable Then
+      If GEFStarter.stxTableFields[intK][5] = "YK" Then
+        strFldKey = GEFStarter.stxTableFields[intK][1]
+      Endif
+      If GEFStarter.stxTableFields[intK][6] = "YA" Then ' Significa Yes Autoincrement
+        vrtProf = Settings[strTable &/ strFldTmp, Null]
+      Else
+        If GEFStarter.stxTableFields[intK][7] <> "" Then ' Significa que esta referenciado con FK
+          If GEFStarter.stxTableFields[intK][4] = "YN" Then ' Significa Yes Null
+            vrtVal = vrtProf
+          Else
+            vrtProf = Settings[strTable &/ strFldTmp, Null]
+            strSqlAux = "select " & strRefField
+            strSqlAux &= " from " & strRefTable
+            strSqlAux &= " order by " & strRefField & " asc"
+            resAux = con.Exec(strSqlAux)
+            If resAux.Available Then
+              resAux.MoveFirst
+              vrtVal = resAux[strRefField]
+            Else
+              vrtProf = Settings[strTable &/ strFldTmp, Null]
+            Endif
+          Endif
+        Else
+          If GEFStarter.stxTableFields[intK][4] = "YN" Then ' Significa Yes Null
+            vrtVal = Settings[strTable &/ strFldTmp, Null]
+          Else
+            ' no puede ser nulo, por lo tanto
+            If GEFStarter.stxTableFields[intK][3] = "YU" Then ' Significa Yes Unique
+              vrtVal = Settings[strTable &/ strFldTmp, Format(Now(), "yyyy-mm-dd#hh:nn:ss.uuu")]
+            Else ' o sea que no es unico
+              vrtVal = Settings[strTable &/ strFldTmp, "~"]
+            Endif
+          Endif
+        Endif
+      Endif
+      stxField.Add(strFldTmp)
+      vrxInit.Add(vrtVal)
+      vrxProc.Add(vrtVal)
+    Endif
+  Next
+
+  ' Carga de los parametros necesarios para crear los controles de edicion de un registro
+  ' Se necesitan una lista de campos, una de valores, una lista auxiliard de valores modificados
+  intKey = intKx
+
+  vrxParameter.Clear
+
+  Select intKey
+
+    Case 0, Null, -1
+
+    Case Else
+      stxField.Clear
+      vrxInit.Clear
+      vrxProc.Clear
+
+      ' Se extraen los datos de una consulta a la base de datos.
+      ' Aquí tambien, los valores de los combobox se sacan de una consulta SQL auxiliar.
+      strSqlEdit = "select * from " & strTab & " where " & strFldKey & "='" & intKey & "'"
+      resEdit = con.Exec(strSqlEdit)
+      If resEdit.Available Then
+
+        For Each fld In resEdit.Fields
+          stxField.Add(fld.Name)
+          vrxInit.Add(resEdit[fld.Name]) ' Valores iniciales de los campos
+          vrxProc.Add(resEdit[fld.Name]) ' Valores modificados
+        Next
+
+      Endif
+  End Select
+
+  intCount = 0
+
+  For intR = 0 To GEFStarter.stxTableFields.Max
+
+    inxKey.Clear
+    vrxVal.Clear
+    vrxParameter.Clear
+
+    ' Como la lista tiene todos los campos acoto con un IF para la tabla actual
+    If GEFStarter.stxTableFields[intR][0] = strTable Then
+
+      '0 Contenedor donde crear el conjunto de controles pnl,lbl,txo|cmo|vao
+      vrxParameter.Add(pnlData) '0
+      '1 Tipo de control a crear (txo|cmo|vao)
+      'GEFStarter.stxFTitles
+      Select GEFStarter.stxTableFields[intR][2] ' Tipo de campo
+
+        Case "serial", "real", "integer", "int4"
+          vrtVal = vrxInit[stxField.Find(GEFStarter.stxTableFields[intR][1])]
+          If GEFStarter.stxTableFields[intR][7] = "" Then
+            strControl = "ValueBox"
+          Else
+            ' Es un campo númerico con clave foránea
+            strControl = "ComboBox"
+            ' Hay que hacer una consulta a la BD para extraer la informacion de referencia
+            ' [7] es la tabla de refeencia
+            strSqlRef = "select * from " & GEFStarter.stxTableFields[intR][7]
+            resRef = con.Exec(strSqlRef)
+            While resRef.Available
+              inxKey.Add(resRef[GEFStarter.stxTableFields[intR][8]])
+              vrxVal.Add(resRef[GEFStarter.stxTableFields[intR][9]])
+              resRef.MoveNext
+            Wend
+            'Else
+            vrtVal = vrxInit[stxField.Find(GEFStarter.stxTableFields[intR][1])]
+
+          Endif
+
+        Case Else
+          strControl = "TextBox"
+          vrtVal = vrxInit[stxField.Find(GEFStarter.stxTableFields[intR][1])]
+      End Select
+      vrxParameter.Add(strControl) '1: Tipo de control a crear
+      If inxKey.Count > 0 Then
+        vrxParameter.Add(vrxVal[inxKey.Find(vrtVal)]) '2: Valor
+        vrxParameter.Add(vrtVal) '3: Clave
+      Else
+        vrxParameter.Add(vrtVal) '2: Valor
+        vrxParameter.Add("") '3: Clave, que en este caso es nuula porque no existe referencia
+      Endif
+      vrxParameter.Add(GEFStarter.stxTableFields[intR][1]) '4: Campo
+      vrxParameter.Add(GEFStarter.stxTableFields[intR][10]) '5: Label
+      vrxParameter.Add(GEFStarter.stxTableFields[intR][10]) '6: ToolTip
+      vrxParameter.Add(intCount) '7: Numero correlativo
+      vrxParameter.Add("") '8: Cálculo o proceso Ej: V=A+B. V es el avatar del campo en la formula, A y B son los avatares de otros campos de la misma tabla.
+      vrxParameter.Add(inxKey) '9: Matriz indices de la tabla foránea
+      vrxParameter.Add(vrxVal) '10: Matriz Valores de la tabla foránea
+      Inc intCount
+      cmdMakeControlx(vrxParameter)
+    Endif
+  Next
+
+  ' --------------------------- codigo anterior
+  ' If IsNull(intKx) = False Then
+  '   intKey = intKx
+  '   If MakeControls(strTable, intKx) = 1 Then
+  '     Me.Tag = intKx
+  '     Me.Height = 28 * 6
+  '     Me.ShowModal()
+  '   Endif
+  ' Else
+  '   intKey = Null
+  ' Endif
+  ' ---------------------------
+
+

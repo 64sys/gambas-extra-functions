@@ -21,6 +21,9 @@
 ' Foundation, Inc., 51 Franklin St, Fifth Floor,
 ' Boston, MA  02110-1301  USA
 '
+'Public stxConf As New String[]
+Public stxKey As New String[]
+Public stxVal As New String[]
 
 Public Sub Form_Open()
 
@@ -84,23 +87,145 @@ Public Sub Form_Open()
     TabPanel1.Index = 0
   Endif
   '-------------------------------------
-  MakeConfigControls()
+
+  'stxKey.Clear
+  'stxVal.Clear
+
+  If LoadConf() = 1 Then
+    MkControls()
+  Endif
+
+  Me.Width = FMain.Width
+  Me.Height = FMain.Height
 
 End
 
 Public Sub tobSave_Click()
 
-  cmdSaveConf()
+  SaveConf()
 
 End
 
-Public Sub cmdSaveConf()
+Public Function LoadConf() As Integer ''Carga la matriz de configuración del programa.
 
-  'Dim int As Integer
+  stxKey = ["", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", ""]
+  stxVal = ["", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", ""]
+
+  stxKey[0] = "Program/Database-Engine"
+  stxVal[0] = Settings[stxKey[0], "sqlite3"]
+
+  stxKey[1] = "Program/Database-Host"
+  stxVal[1] = Settings[stxKey[1], GEFStarter.strAppPath]
+
+  stxKey[2] = "Program/Database-Name"
+  stxVal[2] = Settings[stxKey[2], GEFStarter.strDBName]
+
+  stxKey[3] = "Program/Database-Port"
+  stxVal[3] = Settings[stxKey[3], ""]
+
+  stxKey[4] = "Program/Database-User"
+  stxVal[4] = Settings[stxKey[4], User.Name]
+
+  stxKey[5] = "Program/Database-Password"
+  stxVal[5] = Settings[stxKey[5], ""]
+
+  stxKey[6] = "Program/File-Log"
+  stxVal[6] = Settings[stxKey[6], GEFStarter.strAppPath &/ GEFStarter.strDBName & ".log"]
+
+  stxKey[7] = "Program/Check-Dependences-on-startup"
+  Select Settings[stxKey[7], ""]
+    Case "T", "True"
+      stxVal[7] = "True"
+    Case Else
+      stxVal[7] = ""
+  End Select
+
+  stxKey[8] = "Program/Code-empty-lines"
+  Select Settings[stxKey[8], ""]
+    Case "T", "True"
+      stxVal[8] = "True"
+    Case Else
+      stxVal[8] = ""
+  End Select
+
+  ' Desde donde se esta ejecutando la aplicación
+  stxKey[9] = "Program/Running-From"
+  Select GEFUtility.WhereRun()
+    Case 0
+      stxVal[9] = "gambas"
+    Case 1
+      stxVal[9] = "ide"
+    Case Else
+      stxVal[9] = ""
+  End Select
+
+  stxKey[10] = "Program/Report-1"
+  stxVal[10] = Settings[stxKey[10], "pandoc"]
+  stxKey[11] = "Program/Report-2"
+  stxVal[11] = Settings[stxKey[11], "pandoc"]
+  stxKey[12] = "Program/Report-3"
+  stxVal[12] = Settings[stxKey[12], "pandoc"]
+  stxKey[13] = "Program/Report-4"
+  stxVal[13] = Settings[stxKey[13], "pandoc"]
+  stxKey[14] = "Program/Report-5"
+  stxVal[14] = Settings[stxKey[14], "pandoc"]
+  stxKey[15] = "Program/Editor-Theme"
+  stxVal[15] = Settings[stxKey[15], "gef"]
+  stxKey[16] = "Program/Show-GEF"
+  stxVal[16] = Settings[stxKey[16], ""]
+  stxKey[17] = "Program/Altern-App-Name"
+  stxVal[17] = Settings[stxKey[17], ""]
+  stxKey[18] = "Program/Key-18"
+  stxVal[18] = Settings[stxKey[18], ""]
+  stxKey[19] = "Program/Key-19"
+  stxVal[19] = Settings[stxKey[19], ""]
+
+  ' Ventana del formulario principal
+  stxKey[20] = "Program/Tree-Width"
+  stxVal[20] = Settings[stxKey[20], 150]
+  stxKey[21] = "Program/Tree-Height"
+  stxVal[21] = Settings[stxKey[21], 150]
+  stxKey[22] = "Program/Grid-Width"
+  stxVal[22] = Settings[stxKey[22], 300]
+  stxKey[23] = "Program/Grid-Height"
+  stxVal[23] = Settings[stxKey[23], 150]
+  stxKey[24] = "Program/Key-24"
+  stxVal[24] = Settings[stxKey[24], ""]
+  stxKey[25] = "Program/Key-25"
+  stxVal[25] = Settings[stxKey[25], ""]
+  stxKey[26] = "Program/Key-26"
+  stxVal[26] = Settings[stxKey[26], ""]
+  stxKey[27] = "Program/Key-27"
+  stxVal[27] = Settings[stxKey[27], ""]
+  stxKey[28] = "Program/Key-28"
+  stxVal[28] = Settings[stxKey[28], ""]
+  stxKey[29] = "Program/Key-29"
+  stxVal[29] = Settings[stxKey[29], ""]
+  stxKey[30] = "Program/Key-30"
+  stxVal[30] = Settings[stxKey[30], ""]
+  stxKey[31] = "Program/Key-31"
+  stxVal[31] = Settings[stxKey[31], ""]
+  stxKey[32] = "Program/Key-32"
+  stxVal[32] = Settings[stxKey[32], ""]
+  stxKey[33] = "Program/Key-33"
+  stxVal[33] = Settings[stxKey[33], ""]
+  stxKey[34] = "Program/Key-34"
+  stxVal[34] = Settings[stxKey[34], ""]
+
+  If stxKey.Count > 0 Then
+    If stxKey.Max = stxVal.Max Then
+      Return 1
+    Else
+      Return 0
+    Endif
+    Return -1
+  Endif
+
+End
+
+Public Sub SaveConf()
+
   Dim obj As Object
-  'Dim objScroll As Object
-  'Dim objCheck As Object
-  'Dim intLx As Integer
 
   For Each obj In scwConfig.Children
     If Object.Type(obj) = "Panel" Then
@@ -156,70 +281,84 @@ End
 
 '----------------------------------------------------------------------------------
 
-Public Function MakeConfigControls() As Integer ''Esta funcion crea los controles para editar la configuración del programa
+Public Function MkControls() As Integer ''Crea los controles para editar la configuración del programa
 
   Dim intState As Integer
   Dim pnl As Panel
   Dim txo As TextBox
-  '  Dim txow As TextBox 'Password
-  '  Dim txor As TextBox 'Solo lectura
   Dim swb As SwitchButton
   Dim cob As ColorButton
   Dim lbl As Label
   Dim cmo As ComboBox
   Dim sio As SpinBox
   Dim vao As ValueBox
+  Dim bto As ButtonBox
   Dim intCfg As Integer
   Dim intWidt As Integer
   Dim stxParam As New String[][]
   Dim stxTmp As New String[]
   Dim intM As Integer
+  Dim strEng As String
+  Dim strPre As String
 
   intState = 0
 
   scwConfig.Children.Clear
+  ' Creacion de la lista de motores de base de datos
+  If GEFStarter.stxDBEngines.Count > 0 Then
+    If GEFStarter.stxDBEngines.Find("sqlite3") > -1 Then
+      strEng = GEFStarter.stxDBEngines.Join(":")
+    Else
+      strEng = "sqlite3:"
+      strEng &= GEFStarter.stxDBEngines.Join(":")
+    Endif
+  Endif
+  ' Creacion de la lista de base de datos de ejemplo disponibles
+  If GEFStarter.stxDBPreloaded.Count > 0 Then
+    strPre = GEFStarter.stxDBPreloaded.Join(":")
+  Endif
 
-  stxParam.Add(["0", ("Motor de bases de datos"), "cmo", "postgresql:mysql:sqlite3:odbc", GEFStarter.stxProgVal[0]])
-  stxParam.Add(["1", ("Ruta"), "txo", "", GEFStarter.stxProgVal[1]])
-  stxParam.Add(["2", ("Nombre"), "txo", "", GEFStarter.stxProgVal[2]])
-  stxParam.Add(["3", ("Puerto"), "txo", "", GEFStarter.stxProgVal[3]])
-  stxParam.Add(["4", ("Usuario"), "txo", "", GEFStarter.stxProgVal[4]])
-  stxParam.Add(["5", ("Contraseña"), "txow", "", GEFStarter.stxProgVal[5]])
+  stxParam.Add(["0", ("Motor de bases de datos"), "cmo", strEng, stxVal[0]])
+  stxParam.Add(["1", ("Ruta"), "bto", "", stxVal[1]])
+  stxParam.Add(["2", ("Bases de datos"), "cmo", strPre, stxVal[2]])
+  stxParam.Add(["3", ("Puerto"), "txo", "", stxVal[3]])
+  stxParam.Add(["4", ("Usuario"), "txo", "", stxVal[4]])
+  stxParam.Add(["5", ("Contraseña"), "txow", "", stxVal[5]])
 
   'Informes del prgrama
-  stxParam.Add(["6", ("Archivo de bitácora") & " 1", "cmo", "pandoc:wkhtmltopdf", GEFStarter.stxProgVal[6]])
-  stxParam.Add(["7", ("Verificar dependencias al inicio"), "swb", "", GEFStarter.stxProgVal[7]])
-  stxParam.Add(["8", ("Líneas vacías"), "swb", "", GEFStarter.stxProgVal[8]])
-  stxParam.Add(["9", ("Entorno de ejecucion") & " 9", "txor", "", GEFStarter.stxProgVal[9]])
+  stxParam.Add(["6", ("Archivo de bitácora") & " 1", "txo", "", stxVal[6]])
+  stxParam.Add(["7", ("Verificar dependencias al inicio"), "swb", "", stxVal[7]])
+  stxParam.Add(["8", ("Líneas vacías"), "swb", "", stxVal[8]])
+  stxParam.Add(["9", ("Entorno de ejecucion"), "txor", "", stxVal[9]])
 
-  stxParam.Add(["10", ("Método del informe") & " 1", "cmo", "pandoc:wkhtmltopdf", GEFStarter.stxProgVal[10]])
-  stxParam.Add(["11", ("Método del informe") & " 2", "cmo", "pandoc:wkhtmltopdf", GEFStarter.stxProgVal[11]])
-  stxParam.Add(["12", ("Método del informe") & " 3", "cmo", "pandoc:wkhtmltopdf", GEFStarter.stxProgVal[12]])
-  stxParam.Add(["13", ("Método del informe") & " 4", "cmo", "pandoc:wkhtmltopdf", GEFStarter.stxProgVal[13]])
-  stxParam.Add(["14", ("Método del informe") & " 5", "cmo", "pandoc:wkhtmltopdf", GEFStarter.stxProgVal[14]])
+  stxParam.Add(["10", ("Método del informe") & " 1", "cmo", "pandoc:wkhtmltopdf", stxVal[10]])
+  stxParam.Add(["11", ("Método del informe") & " 2", "cmo", "pandoc:wkhtmltopdf", stxVal[11]])
+  stxParam.Add(["12", ("Método del informe") & " 3", "cmo", "pandoc:wkhtmltopdf", stxVal[12]])
+  stxParam.Add(["13", ("Método del informe") & " 4", "cmo", "pandoc:wkhtmltopdf", stxVal[13]])
+  stxParam.Add(["14", ("Método del informe") & " 5", "cmo", "pandoc:wkhtmltopdf", stxVal[14]])
 
-  stxParam.Add(["15", ("Tema del editor"), "cmo", "gef:amber:blues:gambas:obsidian:quest:ruby:visual:amethyst:emerald:pastel:quick:sapphire:zen", GEFStarter.stxProgVal[15]])
-  stxParam.Add(["16", ("Mostrar") & " GEF" & " 16", "swb", "", GEFStarter.stxProgVal[16]])
-  stxParam.Add(["17", ("Nombre alternativo"), "txo", "", GEFStarter.stxProgVal[17]])
-  stxParam.Add(["18", ("Libre") & " 18", "txo", "", GEFStarter.stxProgVal[18]])
-  stxParam.Add(["19", ("Libre") & " 18", "txo", "", GEFStarter.stxProgVal[18]])
+  stxParam.Add(["15", ("Tema del editor"), "cmo", "gef:amber:blues:gambas:obsidian:quest:ruby:visual:amethyst:emerald:pastel:quick:sapphire:zen", stxVal[15]])
+  stxParam.Add(["16", ("Mostrar") & " GEF" & " 16", "swb", "", stxVal[16]])
+  stxParam.Add(["17", ("Nombre alternativo"), "txo", "", stxVal[17]])
+  stxParam.Add(["18", ("Libre") & " 18", "txo", "", stxVal[18]])
+  stxParam.Add(["19", ("Libre") & " 18", "txo", "", stxVal[18]])
 
-  stxParam.Add(["20", "TreeView " & ("ancho"), "txor", "", GEFStarter.stxProgVal[20]])
-  stxParam.Add(["21", "TreeView " & ("alto"), "txor", "", GEFStarter.stxProgVal[21]])
-  stxParam.Add(["22", "GridView " & ("ancho"), "txor", "", GEFStarter.stxProgVal[22]])
-  stxParam.Add(["23", "GridView " & ("alto"), "txor", "", GEFStarter.stxProgVal[23]])
+  stxParam.Add(["20", "TreeView " & ("ancho"), "txor", "", stxVal[20]])
+  stxParam.Add(["21", "TreeView " & ("alto"), "txor", "", stxVal[21]])
+  stxParam.Add(["22", "GridView " & ("ancho"), "txor", "", stxVal[22]])
+  stxParam.Add(["23", "GridView " & ("alto"), "txor", "", stxVal[23]])
 
-  stxParam.Add(["24", ("Libre"), "txo", "", GEFStarter.stxProgVal[24]])
-  stxParam.Add(["25", ("Libre"), "txo", "", GEFStarter.stxProgVal[25]])
-  stxParam.Add(["26", ("Libre"), "txo", "", GEFStarter.stxProgVal[26]])
-  stxParam.Add(["27", ("Libre"), "txo", "", GEFStarter.stxProgVal[27]])
-  stxParam.Add(["28", ("Libre"), "txo", "", GEFStarter.stxProgVal[28]])
-  stxParam.Add(["29", ("Libre"), "txo", "", GEFStarter.stxProgVal[29]])
-  stxParam.Add(["30", ("Libre"), "txo", "", GEFStarter.stxProgVal[30]])
-  stxParam.Add(["31", ("Libre"), "txo", "", GEFStarter.stxProgVal[31]])
-  stxParam.Add(["32", ("Libre"), "txo", "", GEFStarter.stxProgVal[32]])
-  stxParam.Add(["33", ("Libre"), "txo", "", GEFStarter.stxProgVal[33]])
-  stxParam.Add(["34", ("Libre"), "txo", "", GEFStarter.stxProgVal[34]])
+  stxParam.Add(["24", ("Libre"), "txo", "", stxVal[24]])
+  stxParam.Add(["25", ("Libre"), "txo", "", stxVal[25]])
+  stxParam.Add(["26", ("Libre"), "txo", "", stxVal[26]])
+  stxParam.Add(["27", ("Libre"), "txo", "", stxVal[27]])
+  stxParam.Add(["28", ("Libre"), "txo", "", stxVal[28]])
+  stxParam.Add(["29", ("Libre"), "txo", "", stxVal[29]])
+  stxParam.Add(["30", ("Libre"), "txo", "", stxVal[30]])
+  stxParam.Add(["31", ("Libre"), "txo", "", stxVal[31]])
+  stxParam.Add(["32", ("Libre"), "txo", "", stxVal[32]])
+  stxParam.Add(["33", ("Libre"), "txo", "", stxVal[33]])
+  stxParam.Add(["34", ("Libre"), "txo", "", stxVal[34]])
 
   For intCfg = 0 To stxParam.Max
 
@@ -256,10 +395,20 @@ Public Function MakeConfigControls() As Integer ''Esta funcion crea los controle
         txo.Height = 28
         txo.Expand = True
 
+      Case "bto"
+        bto = New ButtonBox(pnl) As "Box"
+        bto.Name = "bto-" & CStr(intCfg)
+        bto.Tag = intCfg
+        bto.Text = stxParam[intCfg][4]
+        bto.Picture = Picture["icon:/16/directory"]
+        bto.Width = intWidt
+        bto.Height = 28
+        bto.Expand = True
+
       Case "cmo"
         cmo = New ComboBox(pnl) As "Box"
         cmo.Name = "cmo-" & CStr(intCfg)
-        cmo.Text = stxParam[intCfg][4]
+        'cmo.Text = stxParam[intCfg][4]
         cmo.Tag = intCfg
         cmo.Width = intWidt + 14
         cmo.Height = 28
@@ -333,7 +482,7 @@ Public Sub Box_Change()
   obj = Last
 
   Select Object.Type(obj)
-    Case "TextBox", "ComboBox", "ValueBox"
+    Case "TextBox", "ComboBox", "ValueBox", "ButtonBox"
       intW = String.Len(obj.Text) * 6 + 7
       If obj.parent.Width < intW Then
         obj.parent.Width = String.Len(obj.Text) * 6 + 7
@@ -341,35 +490,244 @@ Public Sub Box_Change()
     Case ""
 
   End Select
-  'intW = String.Len(obj.Text) * 6 + 7
 
 End
 
-Public Function WriteConfig() As Integer
+Public Sub Box_Click()
 
-  Dim objp As Object
-  Dim objx As Object
-  Dim stxFields As New String[]
-  Dim stxValues As New String[]
-  Dim intState As Integer
+  Dim obj As Object
+  'Dim intW As Integer
+  Dim str As String
 
-  stxFields.Clear
+  obj = Last
 
-  For Each objp In scwConfig.Children
-    If Object.Type(objp) = "Panel" Then
-      For Each objx In objp.Children
-        Select Object.Type(objx)
-          Case "TextBox", "ComboBox"
-            stxValues.Add(objx.Tag & ":" & objx.Text)
-        End Select
+  Select Object.Type(obj)
+    Case "ButtonBox"
 
-      Next
-    Endif
-  Next
+      'intW = String.Len(obj.Text) * 6 + 7
+      str = GEFDesk.DirChooser(obj.Text)
 
-  Return intState
+      If Exist(str) = True Then
+        If Stat(str).Type = gb.Directory Then
+          obj.Text = str
+        Endif
+      Endif
+
+  End Select
 
 End
+
+' Public Function MakeConfigControls() As Integer ''Esta funcion crea los controles para editar la configuración del programa
+'
+'   Dim intState As Integer
+'   Dim pnl As Panel
+'   Dim txo As TextBox
+'   Dim swb As SwitchButton
+'   Dim cob As ColorButton
+'   Dim lbl As Label
+'   Dim cmo As ComboBox
+'   Dim sio As SpinBox
+'   Dim vao As ValueBox
+'   Dim intCfg As Integer
+'   Dim intWidt As Integer
+'   Dim stxParam As New String[][]
+'   Dim stxTmp As New String[]
+'   Dim intM As Integer
+'
+'   intState = 0
+'
+'   scwConfig.Children.Clear
+'
+'   stxParam.Add(["0", ("Motor de bases de datos"), "cmo", "postgresql:mysql:sqlite3:odbc", GEFStarter.stxProgVal[0]])
+'   stxParam.Add(["1", ("Ruta"), "txo", "", GEFStarter.stxProgVal[1]])
+'   stxParam.Add(["2", ("Nombre"), "txo", "", GEFStarter.stxProgVal[2]])
+'   stxParam.Add(["3", ("Puerto"), "txo", "", GEFStarter.stxProgVal[3]])
+'   stxParam.Add(["4", ("Usuario"), "txo", "", GEFStarter.stxProgVal[4]])
+'   stxParam.Add(["5", ("Contraseña"), "txow", "", GEFStarter.stxProgVal[5]])
+'
+'   'Informes del prgrama
+'   stxParam.Add(["6", ("Archivo de bitácora") & " 1", "cmo", "pandoc:wkhtmltopdf", GEFStarter.stxProgVal[6]])
+'   stxParam.Add(["7", ("Verificar dependencias al inicio"), "swb", "", GEFStarter.stxProgVal[7]])
+'   stxParam.Add(["8", ("Líneas vacías"), "swb", "", GEFStarter.stxProgVal[8]])
+'   stxParam.Add(["9", ("Entorno de ejecucion") & " 9", "txor", "", GEFStarter.stxProgVal[9]])
+'
+'   stxParam.Add(["10", ("Método del informe") & " 1", "cmo", "pandoc:wkhtmltopdf", GEFStarter.stxProgVal[10]])
+'   stxParam.Add(["11", ("Método del informe") & " 2", "cmo", "pandoc:wkhtmltopdf", GEFStarter.stxProgVal[11]])
+'   stxParam.Add(["12", ("Método del informe") & " 3", "cmo", "pandoc:wkhtmltopdf", GEFStarter.stxProgVal[12]])
+'   stxParam.Add(["13", ("Método del informe") & " 4", "cmo", "pandoc:wkhtmltopdf", GEFStarter.stxProgVal[13]])
+'   stxParam.Add(["14", ("Método del informe") & " 5", "cmo", "pandoc:wkhtmltopdf", GEFStarter.stxProgVal[14]])
+'
+'   stxParam.Add(["15", ("Tema del editor"), "cmo", "gef:amber:blues:gambas:obsidian:quest:ruby:visual:amethyst:emerald:pastel:quick:sapphire:zen", GEFStarter.stxProgVal[15]])
+'   stxParam.Add(["16", ("Mostrar") & " GEF" & " 16", "swb", "", GEFStarter.stxProgVal[16]])
+'   stxParam.Add(["17", ("Nombre alternativo"), "txo", "", GEFStarter.stxProgVal[17]])
+'   stxParam.Add(["18", ("Libre") & " 18", "txo", "", GEFStarter.stxProgVal[18]])
+'   stxParam.Add(["19", ("Libre") & " 18", "txo", "", GEFStarter.stxProgVal[18]])
+'
+'   stxParam.Add(["20", "TreeView " & ("ancho"), "txor", "", GEFStarter.stxProgVal[20]])
+'   stxParam.Add(["21", "TreeView " & ("alto"), "txor", "", GEFStarter.stxProgVal[21]])
+'   stxParam.Add(["22", "GridView " & ("ancho"), "txor", "", GEFStarter.stxProgVal[22]])
+'   stxParam.Add(["23", "GridView " & ("alto"), "txor", "", GEFStarter.stxProgVal[23]])
+'
+'   stxParam.Add(["24", ("Libre"), "txo", "", GEFStarter.stxProgVal[24]])
+'   stxParam.Add(["25", ("Libre"), "txo", "", GEFStarter.stxProgVal[25]])
+'   stxParam.Add(["26", ("Libre"), "txo", "", GEFStarter.stxProgVal[26]])
+'   stxParam.Add(["27", ("Libre"), "txo", "", GEFStarter.stxProgVal[27]])
+'   stxParam.Add(["28", ("Libre"), "txo", "", GEFStarter.stxProgVal[28]])
+'   stxParam.Add(["29", ("Libre"), "txo", "", GEFStarter.stxProgVal[29]])
+'   stxParam.Add(["30", ("Libre"), "txo", "", GEFStarter.stxProgVal[30]])
+'   stxParam.Add(["31", ("Libre"), "txo", "", GEFStarter.stxProgVal[31]])
+'   stxParam.Add(["32", ("Libre"), "txo", "", GEFStarter.stxProgVal[32]])
+'   stxParam.Add(["33", ("Libre"), "txo", "", GEFStarter.stxProgVal[33]])
+'   stxParam.Add(["34", ("Libre"), "txo", "", GEFStarter.stxProgVal[34]])
+'
+'   For intCfg = 0 To stxParam.Max
+'
+'     intWidt = 6 * String.Len(stxParam[intCfg][1]) + 21
+'
+'     pnl = New Panel(scwConfig)
+'     pnl.Name = "pnl-" & CStr(intCfg)
+'     pnl.Width = intWidt
+'     pnl.Height = 49
+'     pnl.Arrangement = Arrange.Vertical
+'     pnl.Border = Border.Plain
+'
+'     lbl = New Label(pnl)
+'     lbl.Name = "lbl-" & CStr(intCfg)
+'     lbl.Text = " " & stxParam[intCfg][1]
+'     lbl.Width = intWidt
+'     lbl.Height = 21
+'     lbl.Expand = True
+'
+'     Select stxParam[intCfg][2]
+'       Case "txo", "txow", "txor"
+'         txo = New TextBox(pnl) As "Box"
+'         txo.Name = "txo-" & CStr(intCfg)
+'         txo.Tag = intCfg
+'         txo.Text = stxParam[intCfg][4]
+'         Select stxParam[intCfg][2]
+'           Case "txow"
+'             txo.Password = True
+'           Case "txor"
+'             txo.ReadOnly = True
+'         End Select
+'
+'         txo.Width = intWidt
+'         txo.Height = 28
+'         txo.Expand = True
+'
+'       Case "cmo"
+'         cmo = New ComboBox(pnl) As "Box"
+'         cmo.Name = "cmo-" & CStr(intCfg)
+'         cmo.Text = stxParam[intCfg][4]
+'         cmo.Tag = intCfg
+'         cmo.Width = intWidt + 14
+'         cmo.Height = 28
+'         cmo.ReadOnly = True
+'         cmo.Expand = True
+'
+'         stxTmp = Split(stxParam[intCfg][3], ":")
+'         For intM = 0 To stxTmp.Max
+'
+'           cmo.Add(stxTmp[intM])
+'         Next
+'
+'         If stxTmp.Find(stxParam[intCfg][4]) > -1 Then
+'           cmo.Text = stxParam[intCfg][4]
+'
+'         Endif
+'
+'       Case "sio"
+'         sio = New SpinBox(pnl) As "Box"
+'         sio.Name = "sio-" & CStr(intCfg)
+'         sio.Tag = intCfg
+'         sio.Value = CInt(stxParam[intCfg][4])
+'         sio.MaxValue = 300
+'         sio.MinValue = 60
+'         sio.Width = intWidt
+'         sio.Height = 28
+'         sio.Expand = True
+'
+'       Case "swb"
+'         swb = New SwitchButton(pnl) As "Box"
+'         swb.Name = "swb-" & CStr(intCfg)
+'         swb.Tag = intCfg
+'         swb.Value = stxParam[intCfg][4]
+'         swb.Width = intWidt
+'         swb.Height = 28
+'         swb.Expand = True
+'
+'       Case "cob" ' ColorButton
+'         cob = New ColorButton(pnl) As "Box"
+'         cob.Name = "cob-" & CStr(intCfg)
+'         cob.Tag = intCfg
+'         cob.Value = CInt(stxParam[intCfg][4])
+'         cob.Width = intWidt
+'         cob.Height = 28
+'         cob.Expand = True
+'
+'       Case "vao"
+'         vao = New ValueBox(pnl) As "Box"
+'         vao.Name = "vao-" & CStr(intCfg)
+'         vao.Tag = intCfg
+'         vao.Value = CInt(stxParam[intCfg][4])
+'
+'         vao.Width = intWidt
+'         vao.Height = 28
+'         vao.Expand = True
+'     End Select
+'
+'   Next
+'
+'   intState = 1
+'
+'   Return intState
+'
+' End
+'
+' Public Sub Box_Change()
+'
+'   Dim obj As Object
+'   Dim intW As Integer
+'
+'   obj = Last
+'
+'   Select Object.Type(obj)
+'     Case "TextBox", "ComboBox", "ValueBox"
+'       intW = String.Len(obj.Text) * 6 + 7
+'       If obj.parent.Width < intW Then
+'         obj.parent.Width = String.Len(obj.Text) * 6 + 7
+'       Endif
+'     Case ""
+'
+'   End Select
+'
+' End
+
+' Public Function WriteConfig() As Integer
+'
+'   Dim objp As Object
+'   Dim objx As Object
+'   Dim stxFields As New String[]
+'   Dim stxValues As New String[]
+'   Dim intState As Integer
+'
+'   stxFields.Clear
+'
+'   For Each objp In scwConfig.Children
+'     If Object.Type(objp) = "Panel" Then
+'       For Each objx In objp.Children
+'         Select Object.Type(objx)
+'           Case "TextBox", "ComboBox"
+'             stxValues.Add(objx.Tag & ":" & objx.Text)
+'         End Select
+'
+'       Next
+'     Endif
+'   Next
+'
+'   Return intState
+'
+' End
 
 Public Sub Form_KeyPress()
 
@@ -377,7 +735,7 @@ Public Sub Form_KeyPress()
     Case Key.Esc
       Me.Close
     Case Key.Return
-      cmdSaveConf()
+      SaveConf()
   End Select
 
 End

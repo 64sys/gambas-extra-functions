@@ -21,7 +21,7 @@
 ' Foundation, Inc., 51 Franklin St, Fifth Floor,
 ' Boston, MA  02110-1301  USA
 '
-Public Function ListHtml(strList As String, strSep As String) As String
+Public Function ListHtml(strList As String, strSep As String) As String ''Devuelve una lista HTML y se le pasa una cadena de texto y un separador, generalmente "\n"
 
   Dim stx As New String[]
   Dim str As String
@@ -42,5 +42,186 @@ Public Function ListHtml(strList As String, strSep As String) As String
   str &= "</ul>"
 
   Return str
+
+End
+
+Public Function ReadLyric(strArtist As String, strTitle As String) As String
+
+  Dim strBoxBeg As String
+  Dim intBoxBeg As Integer
+  Dim intBoxEnd As Integer
+  Dim strHtmlTmp As String
+  Dim intMessage As Integer
+  Dim strHtml As String
+
+  Select GEFSys.PkgStat("elinks")
+
+    Case True
+
+      If InStr(strArtist, " ") <> 0 Then
+        strArtist = Replace(strArtist, " ", "_")
+        strArtist = String.UCaseFirst(strArtist)
+      Endif
+
+      If InStr(strTitle, " ") <> 0 Then
+        strTitle = Replace(strTitle, " ", "_")
+        strTitle = String.UCaseFirst(strTitle)
+      Endif
+
+      Shell "elinks http://lyrics.wikia.com/" & strArtist & ":" & strTitle & " 2>&1" To strHtmlTmp
+
+      strBoxBeg = "licensing agreement with music Gracenote."
+      intBoxBeg = InStr(strHtmlTmp, strBoxBeg) + String.Len(strBoxBeg)
+      intBoxEnd = InStr(strHtmlTmp, "   External links", intBoxBeg)
+
+      strHtml = Mid(strHtmlTmp, intBoxBeg, intBoxEnd - intBoxBeg)
+      strHtml = Replace(strHtml, "\n\n", "\n")
+
+    Case False
+      intMessage = Message.Question(("Tiene que instalar el progrma") & "elinks", ("Aceptar"), ("Instalar"))
+
+      Select intMessage
+        Case 1
+          '
+        Case 2
+          Desktop.OpenTerminal
+        Case 3
+          Settings["Preferences/alarm"] = False
+
+          FMain.bolPkgAlarm = False
+
+      End Select
+
+  End Select
+
+  Return strHtml
+
+End
+
+Public Function LyricWeb(strArtist As String, strTitle As String, Optional strSite As String) As String
+
+  Dim strHtml As String
+
+  If InStr(strArtist, " ") <> 0 Then
+    strArtist = Replace(strArtist, " ", "_")
+    strArtist = String.UCaseFirst(strArtist)
+  Endif
+
+  If InStr(strTitle, " ") <> 0 Then
+    strTitle = Replace(strTitle, " ", "_")
+    strTitle = String.UCaseFirst(strTitle)
+  Endif
+
+  Select strSite
+    Case "", "wikia"
+      strHtml = "http://lyrics.wikia.com/" & strArtist & ":" & strTitle
+    Case Else
+      strHtml = strSite & strArtist
+  End Select
+
+  Return strHtml
+
+End
+
+Public Function ArtistWeb(strArtist As String, Optional strSite As String) As String
+
+  Dim stxArtist As New String[]
+  Dim intArt As Integer
+  Dim strHtml As String
+
+  If InStr(strArtist, " ") <> 0 Then
+    stxArtist = Split(strArtist, " ")
+    For intArt = 0 To stxArtist.Max
+      Select intArt
+        Case 0
+          strArtist = String.UCaseFirst(stxArtist[intArt])
+        Case Else
+          strArtist &= "_" & String.UCaseFirst(stxArtist[intArt])
+      End Select
+
+    Next
+
+  Endif
+
+  Select strSite
+    Case "", "wikipedia"
+      Desktop.Open("http://wikipedia.org/wiki/" & strArtist)
+    Case Else
+      strHtml = strSite & strArtist
+  End Select
+
+  Return strHtml
+
+End
+
+Public Function SpecieWeb(strSpecie As String, strLang As String) As String ''Devuelve una url del stio web de la especie que se pasa como parametro.
+
+  Dim stxWords As New String[]
+  Dim intSpe As Integer
+  Dim strHtml As String
+
+  If InStr(strSpecie, " ") <> 0 Then
+    stxWords = Split(strSpecie, " ")
+    For intSpe = 0 To stxWords.Max
+      Select intSpe
+        Case 0
+          strSpecie = String.UCaseFirst(stxWords[intSpe])
+        Case Else
+          strSpecie = String.UCaseFirst(stxWords.Join("_"))
+      End Select
+
+    Next
+
+  Endif
+
+  Select strLang
+    Case "spa", "es"
+      strHtml = "https://es.wikipedia.org/wiki/" & strSpecie
+    Case "eng", "en"
+      strHtml = "https://en.wikipedia.org/wiki/" & strSpecie
+    Case Else
+      strHtml = "https://es.wikipedia.org/wiki/" & strSpecie
+  End Select
+
+  Return strHtml
+
+End
+
+Public Function ImageSearchWeb(strWords As String, strLang As String, strEngine As String) As String ''Devuelve una url del stio web de la especie que se pasa como parametro.
+
+  Dim stxWords As New String[]
+  'Dim int As Integer
+  Dim strHtml As String
+
+  If InStr(strWords, " ") > 0 Then
+    stxWords = Split(strWords, " ")
+    If stxWords.Count > 1 Then
+      strWords = String.UCaseFirst(stxWords.Join("+"))
+    Endif
+  Else
+    strWords = String.UCaseFirst(strWords)
+  Endif
+
+  Select strEngine
+    Case "google"
+      Select strLang
+        Case "spa", "es"
+          'strHtml = "https://www.google.es/search?as_st=y&tbm=isch&hl=es&as_q=" & strWords & "&as_epq=&as_oq=&as_eq=&cr=&as_sitesearch=&safe=images&tbs=isz:m,itp:photo,iar:s,ift:png"
+          strHtml = "https://www.google.es/search?q=" & strWords & "&as_st=y&hl=es&tbs=isz:m,itp:photo,iar:s,ift:png,ic:trans&tbm=isch&source=lnt&sa=X&ved=0ahUKEwiAxqLg_5jWAhWPJhoKHURJA5cQpwUIHA&biw=805&bih=960&dpr=1"
+          'strHtml = "https://es.wikipedia.org/wiki/" & strWords
+        Case "eng", "en"
+          '    strHtml = "https://www.google.en/search?as_st=y&tbm=isch&hl=es&as_q=" & strWords & "&as_epq=&as_oq=&as_eq=&cr=&as_sitesearch=&safe=images&tbs=isz:m,itp:photo,iar:s,ift:png"
+          strHtml = "https://www.google.en/search?q=" & strWords & "&as_st=y&hl=es&tbs=isz:m,itp:photo,iar:s,ift:png,ic:trans&tbm=isch&source=lnt&sa=X&ved=0ahUKEwiAxqLg_5jWAhWPJhoKHURJA5cQpwUIHA&biw=805&bih=960&dpr=1"
+        Case Else
+          strHtml = "https://www.google.es/search?as_st=y&tbm=isch&hl=es&as_q=" & strWords & "&as_epq=&as_oq=&as_eq=&cr=&as_sitesearch=&safe=images&tbs=isz:m,itp:photo,iar:s,ift:png"
+      End Select
+    Case "duck"
+      strHtml = "https://duckduckgo.com/?t=lm&q=" & strWords & "+png" & "&t=h_&iar=images&iax=1&ia=images&iaf=type%3Aphoto-photo%2Clayout%3Aaspect-square%2Ccolor%3Acolor2-color%2Csize%3Aimagesize-medium"
+    Case Else
+      strHtml = "https://duckduckgo.com/?t=lm&q=" & strWords & "+png" & "&t=h_&iar=images&iax=1&ia=images&iaf=type%3Aphoto-photo%2Clayout%3Aaspect-square%2Ccolor%3Acolor2-color%2Csize%3Aimagesize-medium"
+
+  End Select
+
+  Return strHtml
 
 End

@@ -1,0 +1,142 @@
+# Gambas Form File 3.0
+
+{ Form Form
+  MoveScaled(0,0,139,87)
+  Icon = Picture["logo.png"]
+  { IconPanel1 IconPanel
+    MoveScaled(2,4,134,80)
+    Arrangement = Arrange.Vertical
+    Count = 2
+    Index = 0
+    Text = ("GEFSys")
+    { Panel4 Panel
+      MoveScaled(3,3,81,65)
+      Expand = True
+      Arrangement = Arrange.Row
+      { btnAddressIP Button
+        MoveScaled(0,0,16,4)
+        Text = ("AddresIP")
+      }
+      { btnLANIP Button
+        MoveScaled(0,5,16,4)
+        Text = ("LAN IP")
+      }
+      { btnDistro Button
+        MoveScaled(20,5,16,4)
+        Text = ("Distro")
+      }
+      { btnMakeDBProfile ButtonBox
+        MoveScaled(1,10,24,4)
+        ToolTip = ("MakeDBProfile")
+        Picture = Picture["icon:/16/file"]
+      }
+      { Button1 Button
+        MoveScaled(1,16,16,4)
+        Text = ("PNGReduced")
+      }
+    }
+    Index = 1
+    Text = ("GEFMoon")
+    { Panel1 Panel
+      MoveScaled(1,0,111,80)
+      Arrangement = Arrange.Column
+      { DateChooser1 DateChooser
+        MoveScaled(1,2,40,28)
+      }
+      { Panel2 Panel
+        MoveScaled(1,31,40,48)
+        Arrangement = Arrange.Vertical
+        Margin = True
+        { Panel3 Panel
+          MoveScaled(1,1,30,8)
+          Expand = True
+          Arrangement = Arrange.Horizontal
+          { Panel12 Panel
+            MoveScaled(1,1,17,6)
+            Expand = True
+            Arrangement = Arrange.Horizontal
+            { txaInfo TextLabel
+              MoveScaled(0,0,16,4)
+              Expand = True
+            }
+          }
+          { Panel11 Panel
+            MoveScaled(19,0,10.2857,8)
+            Arrangement = Arrange.Fill
+            { pioMoon PictureBox
+              MoveScaled(1,1,7,6)
+              Expand = True
+            }
+          }
+        }
+        { Panel5 Panel
+          MoveScaled(1,10,30,4)
+          Arrangement = Arrange.Horizontal
+          { lblPhase Label
+            MoveScaled(0,0,15,4)
+          }
+          { vxoPhase ValueBox
+            MoveScaled(13,0,16,4)
+            Expand = True
+          }
+        }
+        { Panel6 Panel
+          MoveScaled(1,15,30,4)
+          Arrangement = Arrange.Horizontal
+          { lblAge Label
+            MoveScaled(0,0,15,4)
+          }
+          { vxoAge ValueBox
+            MoveScaled(13,0,16,4)
+            Expand = True
+          }
+        }
+        { Panel7 Panel
+          MoveScaled(1,20,30,4)
+          Arrangement = Arrange.Horizontal
+          { lblDist Label
+            MoveScaled(0,0,15,4)
+          }
+          { vxoDist ValueBox
+            MoveScaled(13,0,16,4)
+            Expand = True
+          }
+        }
+        { Panel8 Panel
+          MoveScaled(1,25,30,4)
+          Arrangement = Arrange.Horizontal
+          { lblAng Label
+            MoveScaled(0,0,15,4)
+          }
+          { vxoAng ValueBox
+            MoveScaled(13,0,16,4)
+            Expand = True
+          }
+        }
+        { Panel9 Panel
+          MoveScaled(1,30,30,4)
+          Arrangement = Arrange.Horizontal
+          { lblSud Label
+            MoveScaled(0,0,15,4)
+          }
+          { vxoSud ValueBox
+            MoveScaled(13,0,16,4)
+            Expand = True
+          }
+        }
+        { Panel10 Panel
+          MoveScaled(1,35,30,4)
+          Arrangement = Arrange.Horizontal
+          { lblSua Label
+            MoveScaled(0,0,15,4)
+          }
+          { vxoSua ValueBox
+            MoveScaled(13,0,16,4)
+            Expand = True
+          }
+        }
+      }
+    }
+    Index = 0
+  }
+}

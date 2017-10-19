@@ -1,0 +1,137 @@
+# Gambas Form File 3.0
+
+{ Form Form
+  MoveScaled(0,0,134,83)
+  Background = Color.Background
+  Arrangement = Arrange.Vertical
+  { Panel1 Panel
+    MoveScaled(2,1,118,71)
+    Background = Color.Background
+    Expand = True
+    Arrangement = Arrange.Vertical
+    { Frame1 Panel
+      MoveScaled(2,13,113,56)
+      Expand = True
+      Arrangement = Arrange.Vertical
+      { Panel2 Panel
+        MoveScaled(2,3,79,5)
+        Arrangement = Arrange.Horizontal
+        { mubRefresh MenuButton
+          MoveScaled(0,0,7,5)
+          ToolTip = ("Refrescar")
+          Picture = Picture["icon:/22/refresh"]
+          Border = False
+        }
+        { tboOpen ToolButton
+          MoveScaled(11,0,5,5)
+          ToolTip = ("Abrir el proyecto con el editor")
+          Picture = Picture["icon:/22/open"]
+        }
+        { Panel3 Panel
+          MoveScaled(18,1,5,3)
+          Expand = True
+        }
+        { dioProjects DirBox
+          MoveScaled(26,0,53,5)
+          Visible = False
+          ToolTip = ("Seleccione un directorio con codigo fuente")
+          Expand = True
+        }
+      }
+      { hzsProjects HSplit
+        MoveScaled(1,13,110,41)
+        Expand = True
+        { pnlProjects Panel
+          MoveScaled(1,1,14,38)
+          Expand = True
+          Arrangement = Arrange.Vertical
+          { pnlSearchCode2 ScrollView
+            MoveScaled(0,1,14,4)
+            Arrangement = Arrange.Fill
+            Padding = 1
+            Border = False
+            ScrollBar = Scroll.None
+            { btoSearchOnNames ButtonBox Search
+              Name = "btoSearchOnNames"
+              MoveScaled(1,0,12,4)
+              Tag = "method"
+              ToolTip = ("Buscar coincidencias en los nombres de los métodos.")
+              Picture = Picture["icon:/16/clear"]
+            }
+          }
+          { trvProjects TreeView
+            MoveScaled(2,7,10,11)
+            Background = Color.Background
+            Expand = True
+            Border = False
+          }
+        }
+        { pnlCode Panel
+          MoveScaled(16,2,77,38)
+          Expand = True
+          Arrangement = Arrange.Vertical
+          { pnlSearchCode ScrollView
+            MoveScaled(1,1,69,4)
+            Arrangement = Arrange.Horizontal
+            Padding = 1
+            Border = False
+            ScrollBar = Scroll.None
+            { btnCopy Button
+              MoveScaled(2,0,11,4)
+            }
+            { rdoPublic RadioButton
+              MoveScaled(15,0,14,4)
+            }
+            { btoSearchOnCode ButtonBox Search
+              Name = "btoSearchOnCode"
+              MoveScaled(44,0,23,4)
+              Tag = "code"
+              ToolTip = ("Buscar coincidencias en todos los fragmentos de código.")
+              Picture = Picture["icon:/16/clear"]
+            }
+          }
+          { grwCode GridView
+            MoveScaled(3,9,69,27)
+            Font = Font["Monospace"]
+            Expand = True
+            Border = False
+            Header = GridView.Vertical
+            ScrollBar = Scroll.None
+          }
+        }
+        { pnlVar VSplit
+          MoveScaled(95,1,14,38)
+          Expand = True
+          { grwVars GridView
+            MoveScaled(0,0,16,16)
+            Font = Font["Monospace"]
+            Expand = True
+            Border = False
+            Header = GridView.Vertical
+            ScrollBar = Scroll.None
+          }
+          { txlDesc TextLabel
+            MoveScaled(1,27,12,10)
+            Expand = True
+          }
+        }
+      }
+    }
+    { tmrMessages #Timer
+      #MoveScaled(44,3)
+      Enabled = True
+      Delay = 250
+    }
+  }
+  { Panel4 Panel
+    MoveScaled(2,75,86,5)
+    Background = Color.Background
+    Arrangement = Arrange.Horizontal
+    Padding = 5
+    { txlInformation TextLabel
+      MoveScaled(8,1,24,4)
+      Visible = False
+      Expand = True
+    }
+  }
+}

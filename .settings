@@ -1,14 +1,30 @@
 [Bookmarks]
 MUtility=[231]
+GEFUtility=[1697]
+GEFData=[2390]
+GEFDataEdit=[1330]
 
 [Breakpoints]
-Count=0
+Count=1
+Breakpoint[1]="GEFData.2620"
 
 [DebugWindow]
 Count=0
 
+[DebugWindow/GEFDesk.FileChooser(User.Home, "txt:sql")]
+Geometry=[-10,19,224,280]
+
 [DebugWindow/GEFStarter]
 Geometry=[998,331,575,533]
+
+[DebugWindow/GEFStarter.conProgram]
+Geometry=[-10,19,224,280]
+
+[DebugWindow/GEFStarter.stxFTitles[intK]]
+Geometry=[1503,520,224,280]
+
+[DebugWindow/GEFStarter.stxFieldsToShow]
+Geometry=[959,652,224,280]
 
 [DebugWindow/GEFStarter.stxFieldsViewCurrent]
 Geometry=[1507,109,350,280]
@@ -17,13 +33,16 @@ Geometry=[1507,109,350,280]
 Geometry=[1048,394,589,353]
 
 [DebugWindow/GEFStarter.stxTableFields]
-Geometry=[960,25,339,859]
+Geometry=[940,19,339,859]
 
 [DebugWindow/GEFStarter.stxTableFields[0]]
-Geometry=[974,39,224,280]
+Geometry=[1421,563,224,353]
 
 [DebugWindow/GEFStarter.stxTableFields[14]]
 Geometry=[974,39,339,859]
+
+[DebugWindow/GEFStarter.stxTableFields[17]]
+Geometry=[964,33,339,859]
 
 [DebugWindow/GEFStarter.stxTableFields[1]]
 Geometry=[974,39,224,280]
@@ -55,20 +74,35 @@ Geometry=[974,39,339,859]
 [DebugWindow/GEFStarter.stxTableFields[9]]
 Geometry=[974,39,339,859]
 
+[DebugWindow/GEFStarter.stxTableFields[intFld]]
+Geometry=[1563,140,224,398]
+
+[DebugWindow/GEFStarter.stxTableFields[intR]]
+Geometry=[-10,19,224,280]
+
+[DebugWindow/GEFStarter.stxTableFields[intZ]]
+Geometry=[950,121,297,495]
+
+[DebugWindow/GEFStarter.stxVTitles[intS]]
+Geometry=[1156,339,224,280]
+
 [DebugWindow/GEFStarter.stxViewFields]
-Geometry=[1642,419,224,280]
+Geometry=[1416,33,450,666]
 
 [DebugWindow/GEFStarter.stxViewFields[0]]
-Geometry=[1410,46,224,316]
+Geometry=[1656,433,224,280]
 
 [DebugWindow/GEFStarter.stxViewFields[1]]
-Geometry=[1677,48,224,280]
+Geometry=[1656,433,224,280]
 
 [DebugWindow/GEFStarter.stxViewFields[2]]
-Geometry=[1658,419,224,280]
+Geometry=[1656,433,224,280]
 
 [DebugWindow/GEFStarter.stxViewFields[3]]
-Geometry=[1430,707,224,280]
+Geometry=[1656,433,224,280]
+
+[DebugWindow/GEFStarter.stxViewFields[80]]
+Geometry=[1430,47,450,666]
 
 [DebugWindow/GEFStarter.stxViews]
 Geometry=[960,25,224,280]
@@ -76,8 +110,20 @@ Geometry=[960,25,224,280]
 [DebugWindow/GEFStarter.stxViewsEx]
 Geometry=[960,25,224,280]
 
+[DebugWindow/GEFUtility.DokuProj(strPath)]
+Geometry=[1092,328,224,280]
+
+[DebugWindow/GEFUtility.FileLoad("engines.txt")]
+Geometry=[-10,19,224,280]
+
 [DebugWindow/GEFUtility.RListDir(strPath)]
 Geometry=[27,47,224,280]
+
+[DebugWindow/GEFUtility.RListFiles(strDir, stxFilter)]
+Geometry=[732,695,224,280]
+
+[DebugWindow/Image]
+Geometry=[0,25,224,280]
 
 [DebugWindow/MStarter.stxProgVal]
 Geometry=[848,381,224,280]
@@ -88,8 +134,29 @@ Geometry=[848,381,224,280]
 [DebugWindow/MUtility.DokuProj(Application.Path)]
 Geometry=[0,27,256,320]
 
+[DebugWindow/Me.Menus]
+Geometry=[0,25,224,280]
+
+[DebugWindow/Me.Menus[0]]
+Geometry=[646,153,224,280]
+
+[DebugWindow/Me.Menus[1]]
+Geometry=[842,489,224,280]
+
 [DebugWindow/Mstarter.stxProgVal]
 Geometry=[848,381,224,280]
+
+[DebugWindow/Panel(Panel(pnlData.Children[0]).Next).Next]
+Geometry=[972,347,224,280]
+
+[DebugWindow/Panel(objp.Children[0]).Children]
+Geometry=[100,397,224,280]
+
+[DebugWindow/Panel(objp.Children[1]).Children]
+Geometry=[650,652,224,280]
+
+[DebugWindow/Panel(pnlData.Children[0]).Next]
+Geometry=[968,341,224,280]
 
 [DebugWindow/Panel(txeCode.View.Children[0]).Children]
 Geometry=[1075,166,373,335]
@@ -103,8 +170,17 @@ Geometry=[1180,684,315,325]
 [DebugWindow/Panel(txeCode.View.Children[1]).Children[0]]
 Geometry=[1196,574,315,325]
 
+[DebugWindow/RDir(File.Dir(strPath), strFilter, gb.File)]
+Geometry=[-10,19,224,280]
+
 [DebugWindow/RDir(strPath, "*", gb.Directory)]
 Geometry=[27,47,224,280]
+
+[DebugWindow/RDir(strPath, "*." & strExt, gb.File)]
+Geometry=[1257,538,224,280]
+
+[DebugWindow/RDir(strPath, strFilter, gb.File)]
+Geometry=[1234,209,608,564]
 
 [DebugWindow/ScrollArea(Panel(txeCode.View.Children[0]).Children[0]).Children]
 Geometry=[1023,436,373,335]
@@ -121,20 +197,35 @@ Geometry=[160,503,256,320]
 [DebugWindow/Split(Split(strline, "()")[2], " ")]
 Geometry=[197,117,256,320]
 
+[DebugWindow/Split(str, " ")]
+Geometry=[-10,19,224,280]
+
+[DebugWindow/[1]]
+Geometry=[-10,19,224,280]
+
+[DebugWindow/con]
+Geometry=[-7,20,224,280]
+
 [DebugWindow/con.Tables]
 Geometry=[354,101,256,320]
 
 [DebugWindow/conCreate]
 Geometry=[1179,131,467,518]
 
+[DebugWindow/conData]
+Geometry=[-10,19,224,280]
+
 [DebugWindow/conProgram]
 Geometry=[0,342,224,280]
 
 [DebugWindow/connDB]
-Geometry=[960,25,224,280]
+Geometry=[950,19,494,699]
 
 [DebugWindow/connDB.Tables]
 Geometry=[376,27,256,320]
+
+[DebugWindow/imgIcon]
+Geometry=[0,25,224,280]
 
 [DebugWindow/inx]
 Geometry=[0,27,256,320]
@@ -142,8 +233,29 @@ Geometry=[0,27,256,320]
 [DebugWindow/inxCoin]
 Geometry=[1154,27,312,1016]
 
+[DebugWindow/inxIndex]
+Geometry=[1183,235,224,280]
+
 [DebugWindow/inxKey]
-Geometry=[1596,343,256,320]
+Geometry=[1586,335,256,320]
+
+[DebugWindow/mnuMenu]
+Geometry=[980,379,607,547]
+
+[DebugWindow/mnuMenu.Children]
+Geometry=[994,393,607,547]
+
+[DebugWindow/mnuMenu.Children[0]]
+Geometry=[1248,614,607,547]
+
+[DebugWindow/mnuMenu.Children[1]]
+Geometry=[1008,407,607,547]
+
+[DebugWindow/mnuMenu.Window]
+Geometry=[994,393,607,547]
+
+[DebugWindow/mubRefresh]
+Geometry=[0,25,224,280]
 
 [DebugWindow/obj0.Children[int0]]
 Geometry=[0,371,256,320]
@@ -160,53 +272,200 @@ Geometry=[1293,96,388,896]
 [DebugWindow/obj2]
 Geometry=[940,230,535,815]
 
+[DebugWindow/objCmo.Tag]
+Geometry=[-7,20,224,280]
+
+[DebugWindow/objCurr]
+Geometry=[89,438,224,280]
+
+[DebugWindow/objCurr.Parent]
+Geometry=[15,110,224,280]
+
+[DebugWindow/objp.Children]
+Geometry=[-7,20,224,280]
+
+[DebugWindow/objp.Children[0]]
+Geometry=[86,383,224,280]
+
+[DebugWindow/objp.Children[1]]
+Geometry=[375,519,224,280]
+
+[DebugWindow/picIcon]
+Geometry=[-10,19,224,280]
+
+[DebugWindow/pnl1]
+Geometry=[0,33,224,280]
+
 [DebugWindow/pnlConfig.Children]
 Geometry=[1202,203,256,320]
+
+[DebugWindow/pnlData]
+Geometry=[-10,19,224,280]
+
+[DebugWindow/pnlData.Children]
+Geometry=[950,321,224,280]
+
+[DebugWindow/pnlData.Children[0]]
+Geometry=[964,335,224,280]
+
+[DebugWindow/prsDownload]
+Geometry=[870,312,224,280]
+
+[DebugWindow/res]
+Geometry=[785,456,224,280]
+
+[DebugWindow/res.Connection]
+Geometry=[799,470,224,280]
+
+[DebugWindow/res.Fields]
+Geometry=[799,470,224,280]
+
+[DebugWindow/resCombo]
+Geometry=[0,28,224,280]
+
+[DebugWindow/resEdit]
+Geometry=[1066,306,224,280]
+
+[DebugWindow/resSQL]
+Geometry=[692,233,224,280]
+
+[DebugWindow/resSQL.Fields]
+Geometry=[-10,19,224,280]
 
 [DebugWindow/scwConfig.Children]
 Geometry=[983,83,256,957]
 
 [DebugWindow/stx]
-Geometry=[688,69,256,320]
+Geometry=[0,38,1920,1013]
+
+[DebugWindow/stx1]
+Geometry=[141,38,224,280]
+
+[DebugWindow/stx2]
+Geometry=[1406,722,532,592]
 
 [DebugWindow/stxAddr]
 Geometry=[1076,246,573,576]
 
+[DebugWindow/stxButtonsFields]
+Geometry=[1241,509,224,509]
+
 [DebugWindow/stxClass]
-Geometry=[1332,259,256,320]
+Geometry=[1135,172,256,320]
 
 [DebugWindow/stxCod]
 Geometry=[962,626,929,395]
 
 [DebugWindow/stxCode]
-Geometry=[1179,27,741,970]
+Geometry=[1382,39,236,280]
 
 [DebugWindow/stxCoin]
 Geometry=[1334,129,256,320]
+
+[DebugWindow/stxDBEngines]
+Geometry=[-10,19,224,280]
+
+[DebugWindow/stxDBFields]
+Geometry=[-10,19,224,280]
+
+[DebugWindow/stxDBPreloaded]
+Geometry=[-10,19,224,280]
 
 [DebugWindow/stxDesc]
 Geometry=[0,27,256,320]
 
 [DebugWindow/stxDirs]
-Geometry=[1129,99,618,834]
+Geometry=[1119,91,618,834]
+
+[DebugWindow/stxDoc]
+Geometry=[781,277,1498,565]
+
+[DebugWindow/stxExt]
+Geometry=[1209,167,224,280]
+
+[DebugWindow/stxFTitles]
+Geometry=[1349,325,357,666]
+
+[DebugWindow/stxFTitles[0]]
+Geometry=[1096,277,224,280]
+
+[DebugWindow/stxFTitles[150]]
+Geometry=[1353,331,357,666]
+
+[DebugWindow/stxFTitles[151]]
+Geometry=[1363,339,357,666]
+
+[DebugWindow/stxFTitles[15]]
+Geometry=[1363,339,357,666]
+
+[DebugWindow/stxFTitles[1]]
+Geometry=[1349,325,224,280]
+
+[DebugWindow/stxFTitles[21]]
+Geometry=[1369,341,224,280]
+
+[DebugWindow/stxFTitles[2]]
+Geometry=[1349,325,224,280]
+
+[DebugWindow/stxFTitles[3]]
+Geometry=[1369,341,224,280]
+
+[DebugWindow/stxFTitles[4]]
+Geometry=[1369,341,224,280]
+
+[DebugWindow/stxFTitles[53]]
+Geometry=[1363,339,357,666]
+
+[DebugWindow/stxFTitles[6]]
+Geometry=[1363,339,224,280]
+
+[DebugWindow/stxFTitles[7]]
+Geometry=[1363,339,224,280]
+
+[DebugWindow/stxFTitles[intTl]]
+Geometry=[814,490,224,280]
 
 [DebugWindow/stxFast]
 Geometry=[0,27,256,320]
 
+[DebugWindow/stxField]
+Geometry=[1582,198,224,514]
+
+[DebugWindow/stxFieldInfo]
+Geometry=[1126,314,224,280]
+
+[DebugWindow/stxFile]
+Geometry=[907,173,224,280]
+
 [DebugWindow/stxFiles]
-Geometry=[809,226,957,434]
+Geometry=[548,529,957,434]
+
+[DebugWindow/stxFilter]
+Geometry=[-10,19,224,280]
+
+[DebugWindow/stxFirldsToShow]
+Geometry=[1125,333,224,280]
 
 [DebugWindow/stxFld]
-Geometry=[960,25,224,280]
+Geometry=[930,19,224,280]
 
 [DebugWindow/stxFld[0]]
-Geometry=[974,39,224,280]
+Geometry=[944,33,224,280]
+
+[DebugWindow/stxFld[1]]
+Geometry=[1296,476,230,402]
 
 [DebugWindow/stxFunc]
 Geometry=[1174,301,256,320]
 
 [DebugWindow/stxGDir]
-Geometry=[969,314,530,553]
+Geometry=[1351,89,530,553]
+
+[DebugWindow/stxImageInfo]
+Geometry=[-10,19,944,316]
+
+[DebugWindow/stxIndex]
+Geometry=[-7,20,224,280]
 
 [DebugWindow/stxInfo]
 Geometry=[0,27,256,320]
@@ -214,20 +473,32 @@ Geometry=[0,27,256,320]
 [DebugWindow/stxKey]
 Geometry=[1574,187,290,585]
 
+[DebugWindow/stxMatch]
+Geometry=[1681,579,224,280]
+
 [DebugWindow/stxMet]
 Geometry=[846,201,726,346]
+
+[DebugWindow/stxMetFile]
+Geometry=[-10,19,806,987]
+
+[DebugWindow/stxMetMatch]
+Geometry=[-10,18,224,280]
 
 [DebugWindow/stxMethd]
 Geometry=[779,480,1141,421]
 
 [DebugWindow/stxMethod]
-Geometry=[848,252,696,585]
+Geometry=[1023,678,739,280]
 
 [DebugWindow/stxMod]
 Geometry=[0,25,224,280]
 
 [DebugWindow/stxName]
 Geometry=[759,194,256,320]
+
+[DebugWindow/stxOut]
+Geometry=[746,88,1131,820]
 
 [DebugWindow/stxPackagesInstall]
 Geometry=[848,381,224,280]
@@ -238,11 +509,119 @@ Geometry=[1099,702,524,320]
 [DebugWindow/stxPaths]
 Geometry=[24,33,224,280]
 
+[DebugWindow/stxPr]
+Geometry=[1385,213,391,557]
+
+[DebugWindow/stxPro]
+Geometry=[1127,115,305,754]
+
 [DebugWindow/stxProgram]
 Geometry=[0,33,649,749]
 
 [DebugWindow/stxProj]
 Geometry=[802,285,552,568]
+
+[DebugWindow/stxProjCurrent]
+Geometry=[0,25,1754,603]
+
+[DebugWindow/stxProject]
+Geometry=[674,383,224,280]
+
+[DebugWindow/stxProjects]
+Geometry=[-10,351,1662,472]
+
+[DebugWindow/stxProjects[0]]
+Geometry=[1041,149,286,498]
+
+[DebugWindow/stxProjects[0][0]]
+Geometry=[1055,163,286,498]
+
+[DebugWindow/stxProjects[0][0][0]]
+Geometry=[42,224,286,498]
+
+[DebugWindow/stxProjects[0][0][1]]
+Geometry=[1069,177,286,498]
+
+[DebugWindow/stxProjects[0][0][1][0]]
+Geometry=[1083,191,286,498]
+
+[DebugWindow/stxProjects[0][1]]
+Geometry=[69,282,286,498]
+
+[DebugWindow/stxProjects[0][1][0]]
+Geometry=[83,296,286,498]
+
+[DebugWindow/stxProjects[0][2]]
+Geometry=[69,282,286,498]
+
+[DebugWindow/stxProjects[1]]
+Geometry=[1041,149,286,498]
+
+[DebugWindow/stxProjects[1][0]]
+Geometry=[1055,163,286,498]
+
+[DebugWindow/stxProjects[1][0][0]]
+Geometry=[42,224,286,498]
+
+[DebugWindow/stxProjects[1][0][1]]
+Geometry=[1069,177,286,498]
+
+[DebugWindow/stxProjects[1][0][1][0]]
+Geometry=[1083,191,286,498]
+
+[DebugWindow/stxProjects[1][1]]
+Geometry=[69,282,286,498]
+
+[DebugWindow/stxProjects[1][1][0]]
+Geometry=[83,296,286,498]
+
+[DebugWindow/stxProjects[2]]
+Geometry=[1041,149,286,498]
+
+[DebugWindow/stxProjects[2][0]]
+Geometry=[1055,163,286,498]
+
+[DebugWindow/stxProjects[2][0][0]]
+Geometry=[42,224,286,498]
+
+[DebugWindow/stxProjects[2][1]]
+Geometry=[55,268,286,498]
+
+[DebugWindow/stxProjects[2][1][0]]
+Geometry=[69,282,286,498]
+
+[DebugWindow/stxProjects[3]]
+Geometry=[14,196,286,498]
+
+[DebugWindow/stxProjects[3][1]]
+Geometry=[28,210,286,498]
+
+[DebugWindow/stxProjects[3][1][0]]
+Geometry=[42,224,286,498]
+
+[DebugWindow/stxProjects[4]]
+Geometry=[14,196,286,498]
+
+[DebugWindow/stxProjects[4][1]]
+Geometry=[28,210,286,498]
+
+[DebugWindow/stxProjects[4][1][0]]
+Geometry=[42,224,286,498]
+
+[DebugWindow/stxProjects[9]]
+Geometry=[41,254,286,498]
+
+[DebugWindow/stxProjects[9][0]]
+Geometry=[405,57,286,498]
+
+[DebugWindow/stxProjects[9][1]]
+Geometry=[750,66,286,498]
+
+[DebugWindow/stxRWords]
+Geometry=[1050,478,224,280]
+
+[DebugWindow/stxRecentDirs]
+Geometry=[1124,248,680,280]
 
 [DebugWindow/stxReltn]
 Geometry=[0,25,582,781]
@@ -250,14 +629,47 @@ Geometry=[0,25,582,781]
 [DebugWindow/stxSTmp]
 Geometry=[940,590,256,320]
 
+[DebugWindow/stxSentence]
+Geometry=[1318,217,592,617]
+
 [DebugWindow/stxSplitText]
 Geometry=[1127,367,256,320]
+
+[DebugWindow/stxStd]
+Geometry=[1492,125,318,719]
 
 [DebugWindow/stxStruc]
 Geometry=[1480,27,311,1017]
 
+[DebugWindow/stxTableFields]
+Geometry=[968,317,224,280]
+
+[DebugWindow/stxTableFields[0]]
+Geometry=[972,323,224,280]
+
+[DebugWindow/stxTag]
+Geometry=[1439,13,275,996]
+
+[DebugWindow/stxTag2]
+Geometry=[1172,513,224,280]
+
+[DebugWindow/stxTag2[0]]
+Geometry=[956,158,224,280]
+
+[DebugWindow/stxTag2[1]]
+Geometry=[1216,162,224,280]
+
+[DebugWindow/stxTag2[2]]
+Geometry=[1186,527,224,280]
+
+[DebugWindow/stxTag2[intX]]
+Geometry=[1390,294,456,503]
+
 [DebugWindow/stxText]
 Geometry=[1215,167,256,320]
+
+[DebugWindow/stxTitle]
+Geometry=[921,19,305,841]
 
 [DebugWindow/stxTitles]
 Geometry=[960,25,224,280]
@@ -265,20 +677,113 @@ Geometry=[960,25,224,280]
 [DebugWindow/stxTitles[0]]
 Geometry=[974,39,224,280]
 
+[DebugWindow/stxTmp]
+Geometry=[1017,666,224,280]
+
+[DebugWindow/stxTmp[0]]
+Geometry=[988,578,224,280]
+
 [DebugWindow/stxVTitles]
-Geometry=[18,150,224,280]
+Geometry=[8,142,224,280]
 
 [DebugWindow/stxVTitles[0]]
 Geometry=[32,164,224,280]
 
 [DebugWindow/stxVal]
-Geometry=[1390,311,343,631]
+Geometry=[1063,13,343,996]
+
+[DebugWindow/stxVal2]
+Geometry=[413,236,224,280]
+
+[DebugWindow/stxVal2[0]]
+Geometry=[793,189,224,280]
+
+[DebugWindow/stxVal2[16]]
+Geometry=[427,250,224,280]
+
+[DebugWindow/stxVal2[1]]
+Geometry=[1134,210,224,280]
+
+[DebugWindow/stxVal2[2]]
+Geometry=[1092,530,224,280]
+
+[DebugWindow/stxVal2[intX]]
+Geometry=[45,340,315,614]
 
 [DebugWindow/stxValues]
-Geometry=[960,25,224,280]
+Geometry=[1564,588,224,280]
+
+[DebugWindow/stxVars]
+Geometry=[1544,178,224,280]
+
+[DebugWindow/stx[0]]
+Geometry=[666,363,1019,548]
+
+[DebugWindow/stx[0][0]]
+Geometry=[1475,299,383,415]
+
+[DebugWindow/stx[0][0][0]]
+Geometry=[1072,366,383,415]
+
+[DebugWindow/stx[0][1]]
+Geometry=[1058,352,383,415]
+
+[DebugWindow/stx[0][1][0]]
+Geometry=[1072,366,383,415]
+
+[DebugWindow/stx[0][2]]
+Geometry=[955,542,383,415]
+
+[DebugWindow/stx[0][2][0]]
+Geometry=[610,480,742,491]
+
+[DebugWindow/stx[15]]
+Geometry=[1075,228,383,415]
+
+[DebugWindow/stx[15][1]]
+Geometry=[1089,242,383,415]
+
+[DebugWindow/stx[15][1][0]]
+Geometry=[1103,256,383,415]
+
+[DebugWindow/stx[1]]
+Geometry=[656,355,1019,548]
+
+[DebugWindow/stx[1][0]]
+Geometry=[1411,687,383,415]
+
+[DebugWindow/stx[1][1]]
+Geometry=[1089,242,383,415]
+
+[DebugWindow/stx[1][1][0]]
+Geometry=[1103,256,383,415]
+
+[DebugWindow/stx[2]]
+Geometry=[1464,517,383,415]
+
+[DebugWindow/stx[2][0]]
+Geometry=[-154,729,383,415]
+
+[DebugWindow/stx[3]]
+Geometry=[1233,800,383,415]
+
+[DebugWindow/stx[4]]
+Geometry=[1075,228,383,415]
+
+[DebugWindow/stx[4][0]]
+Geometry=[1089,242,383,415]
+
+[DebugWindow/stx[int][0][0]]
+Geometry=[1559,77,292,788]
+
+[DebugWindow/stx[int][1][0]]
+Geometry=[1255,25,281,986]
 
 [DebugWindow/tbl.PrimaryKey]
 Geometry=[0,27,256,320]
+
+[DebugWindow/trvProjects[strPatrent]]
+Geometry=[0,25,224,280]
 
 [DebugWindow/txeCode]
 Geometry=[1556,458,256,320]
@@ -307,17 +812,58 @@ Geometry=[9,88,256,776]
 [DebugWindow/txeCode[0].InitialState]
 Geometry=[25,104,256,776]
 
+[DebugWindow/vrx]
+Geometry=[758,276,315,741]
+
+[DebugWindow/vrxInit]
+Geometry=[1281,567,224,280]
+
+[DebugWindow/vrxParameter]
+Geometry=[1391,264,363,657]
+
+[DebugWindow/vrxParameter[10]]
+Geometry=[1331,99,363,657]
+
+[DebugWindow/vrxParameter[8]]
+Geometry=[-7,20,224,280]
+
+[DebugWindow/vrxParameter[9]]
+Geometry=[1331,99,363,657]
+
+[DebugWindow/vrxProc]
+Geometry=[1303,217,224,280]
+
+[DebugWindow/vrxTmp]
+Geometry=[1423,60,224,280]
+
+[DebugWindow/vrxTmp[0]]
+Geometry=[14,39,224,280]
+
+[DebugWindow/vrxTmp[0][0]]
+Geometry=[0,527,224,280]
+
+[DebugWindow/vrxTmp[1]]
+Geometry=[1437,74,224,280]
+
+[DebugWindow/vrxTmp[1][0]]
+Geometry=[1451,88,224,280]
+
+[DebugWindow/vrxVal]
+Geometry=[1195,191,224,280]
+
+[DebugWindow/vrxValues]
+Geometry=[1087,399,224,280]
+
+[DebugWindow/vrx[0]]
+Geometry=[704,320,305,563]
+
 [Executable]
 Path="gambas-extra-functions.gambas"
 
 [OpenFile]
-Count=5
-Active=5
-File[1]=".src/std/FMain.form"
-File[2]=".src/std/FMain.class:22.314"
-File[3]=".src/gef-modules/GEFUtility.module:2.1060"
-File[4]=".src/gef-testing/FTest.form"
-File[5]=".src/gef-testing/FTest.class:0.90"
+Count=1
+Active=1
+File[1]=".src/gef-modules/GEFData.module:41.538"
 
 [Watches]
 Count=2

@@ -49,6 +49,20 @@ Public Function DirParent(strPath As String) As String  ''Devuelve el directorio
 
 End
 
+Public Function DirBase(strPath As String) As String  ''Devuelve el directorio sin la ruta hasta el mismo, es decir devuelve el nombre del directorio. si se pasa "/home/usuario/musica" devolvera "musica"
+
+  Dim strBase As String
+  Dim stx As New String[]
+
+  If InStr(strPath, "/") > 0 Then
+    stx = Split(strPath, "/")
+    strBase = stx[stx.Max]
+  Endif
+
+  Return strBase
+
+End
+
 Public Function CodeStructure() As String[] ''Crea una matriz con las estructuras del lenguaje gambas que, por ejemplo, puede servir para iterpretar el código.
 
   Dim stxStructure As New String[]
@@ -122,19 +136,15 @@ Public Function CodeTag(str As String) As String ''Analiza de una cadena de text
   Dim stxStruc As New String[]
   Dim stxSTmp As New String[]
   Dim stxCoin As New Integer[] 'Coincidencia
-  'Dim intKey As Integer
   Dim int1 As Integer
   Dim int2 As Integer
   Dim int3 As Integer 'Coincidencia
-  'Dim intRep As Integer
-  'Dim int4 As Integer
   Dim inxCoin As New Integer[]
   Dim intCoin As Integer
   Dim strOutput As String
   Dim strType As String
   Dim strJob As String
   Dim stxSplitText As String[]
-  'Dim strChar As String
   Dim strIsComment As String
   Dim intCh As Integer
 
@@ -184,7 +194,6 @@ Public Function CodeTag(str As String) As String ''Analiza de una cadena de text
 
       For int1 = 0 To stxStruc.Max ' alrededor de 50 frases
         stxSTmp = Split(stxStruc[int1], "#")
-        'File.Save(User .Home &/ "temp.txt", stxSTmp.Join("\t"))
         int3 = 0
 
         If String.Mid(strJob, 1, 1) = stxSTmp[0] Then
@@ -205,9 +214,7 @@ Public Function CodeTag(str As String) As String ''Analiza de una cadena de text
       If inxCoin[intCoin] = ArrayMax(inxCoin) Then
         strType = Split(stxStruc[intCoin], "#")[Split(stxStruc[intCoin], "#").Max]
       Endif
-      'strType = Split(stxStruc[intCoin], "#")[Split(stxStruc[intCoin], "#").Max]
-      'Print strType
-      'Break
+
     Endif
   Next
 
@@ -216,14 +223,7 @@ Public Function CodeTag(str As String) As String ''Analiza de una cadena de text
       strType = "Code"
   End Select
 
-  'Select strType
-
-  '  Case "Commentary 1"
-  ' skip
-  '  Case Else
   strOutput = strType & "\t" & str
-  'End Select
-  'strOutput = strType & "\t" & str
 
   Return strOutput
 
@@ -236,7 +236,6 @@ Public Function CodeMthod(stxPart As String[]) As String[]
   Dim strFast As String
   Dim strMode As String
   Dim strScope As String
-  'Dim strFunc As String
   Dim strType As String
   Dim strName As String
   Dim stxMethd As New String[]
@@ -343,7 +342,6 @@ End
 
 Public Function RelationProj(stxClass As String[], stxMet As String[], stxCod As String[]) As String[] ''Lee las matrices de métodos y codigo del proyecto para luego analizar las relaciones entre estos generando una matrix con estas relaciones.
 
-  'Dim int As Integer
   Dim stxReltn As New String[] ' Lista de métodos
   Dim intCod As Integer
   Dim intMet As Integer
@@ -415,8 +413,6 @@ Public Function DokuProj(strPath As String) As String[] ''Lee todas las clases y
         Case "module", "class"
           Print strFileBase
           stxText = FileLoadRaw(strFile)
-          ' FileLoasRaw devuelve la matriz contemplando las lineas en blanco.
-          'stxText = Replace(stxText, "\t", " ")  ' Reemplazo de tabuladores por espacios
 
           For int = 0 To stxText.Max
             intInit = int
@@ -451,7 +447,7 @@ Public Function DokuProj(strPath As String) As String[] ''Lee todas las clases y
                     Inc IntPlus
                   Endif
                   If strTypeCode = "Method End" Then
-                    'int = int + intPlus
+
                     intEnd = int + intPlus
                     Break
                   Else
@@ -461,13 +457,10 @@ Public Function DokuProj(strPath As String) As String[] ''Lee todas las clases y
                 Until int + intPlus >= stxText.Max
 
               Endif
-              'int = int + intPlus
-              'Next
 
               ' Aca esta el método completo
 
               stxProj.Add(strFile & "\t" & strFileBase & "\t" & stxMethod.Join("\n") & "\t" & stxCode.Join("\n") & "\t" & stxVars.Join("\n") & "\t" & CStr(intInit) & "\t" & CStr(intEnd))
-              'Print stxMethod.Join("\t") & strCode
 
             Endif
           Next
@@ -476,10 +469,6 @@ Public Function DokuProj(strPath As String) As String[] ''Lee todas las clases y
   End If
 
   Return stxProj
-
-End
-
-Public Function CodeComment(str As String)
 
 End
 
@@ -598,7 +587,6 @@ Public Function DokuHtml(strPath As String) As String ''Devuelve un html con las
                 strAttr = Split(Split(strFunParam, "\t")[intPrm], "#")[0]
 
                 If InStr(strAttr, "Optional") > 0 Then
-                  'strAttr = Split(strAttr, "~")[0] & Split(strAttr, "~")[1]
                   strHtml &= "<li><i>" & Split(strAttr, "~")[0] & "</i> <b>" & Split(strAttr, "~")[1] & "</b><i> As "
                 Else
                   strHtml &= "<li><b>" & strAttr & "</b><i> As "
@@ -611,7 +599,6 @@ Public Function DokuHtml(strPath As String) As String ''Devuelve un html con las
 
             strFunDesc = Replace(strFunDesc, "\n", "")
             strHtml &= "<p>" & strFunDesc & "</p>"
-            'strHtml &= "<p>" & strFu & "</p>"
 
           Endif
         Next
@@ -628,52 +615,22 @@ End
 
 Public Function DokuHtm2() As String ''Devuelve un html con las funciones de un módulo y todos los datos de estas, comoparametro de entrada requiere el directorio raiz a partir del cual buscar los módulos.
 
-  Dim stxFiles As String[]
   Dim strHtml As String
-  Dim strFile As String
-  Dim strLine As String
-  Dim intPub As Integer
-  Dim strFunName As String
-  Dim strFunParam As String
-  Dim strFunReturn As String
-  Dim strFunDesc As String
-  Dim stxFunky As New String[]
-  Dim intPrm As Integer
-  Dim intQty As Integer
-
-  Dim strKey As String
-  Dim strAttr As String
-
   Dim stxInfo As New String[]
-  Dim strFunCode As String
-
   Dim intFun As Integer
-  Dim stxFun As New String[]
   Dim strCurrClass As String
-  Dim stxCodeTmp As New String[]
-  Dim intCodeTmp As Integer
 
   stxInfo = GEFSys.ProjInfo()
 
-  'stxFiles = ScanDir(strPath)
-  'strKey = "Public Function "
-  'intPub = String.Len(strKey)
   ' Header
   strHtml &= "<!DOCTYPE html><html>"
   strHtml &= "<head>" ""
   strHtml &= "<meta charset=\"utf-8\"/>"
   strHtml &= "<meta name=\"description\"content=\"" & stxInfo[1] & "" > " " ""
   strHtml &= "<meta name=\"keywords\"content=\"" & stxInfo[3] & ", " & stxInfo[1] & "\">"
-  'strHtml &= "<meta name=\"author\"content=\"" & stxInfo[2] & "\">"
   strHtml &= "<meta name=\"viewport\"content=\"width=device-width, initial-scale=1.0\">"
   strHtml &= "<title>" & Application.Name & "</title>"
   strHtml &= "</head><body>"
-  'strHtml &= "<style>.center {text-align: center;}</style>"
-  'strHtml &= "<div class=\"center\">"
-  'strHtml &= "<img src=\"" & stxInfo[8] & "\" alt=\"Logo\" width=\"50\" height=\"50\">"
-  'strHtml &= "</div>"
-
-  'strHtml &= "<h1>" & Application.Name & "</h1>"
   strHtml &= "<p>" & ("Autor") & ": <b>" & stxInfo[2] & "</b></p>"
   strHtml &= "<p>" & ("Proveedor") & ": <b>" & stxInfo[3] & "</b></p>"
   strHtml &= "<p>" & ("Versión") & ": <b>" & stxInfo[4] & "</b></p>"
@@ -681,8 +638,6 @@ Public Function DokuHtm2() As String ''Devuelve un html con las funciones de un 
   strHtml &= "<p>" & GEFWeb.ListHtml(stxInfo[5], ":") & "</p>"
 
   strHtml &= "<p>" & Application.Name & " " & ("consta de") & " <b>" & CStr(FMain.stxClass.Count) & "</b> " & ("métdos") & " </p>"
-
-  'stxFun = GEFUtility.DokuProj(strPath)
 
   For intFun = 0 To FMain.stxClass.Max
 
@@ -694,29 +649,9 @@ Public Function DokuHtm2() As String ''Devuelve un html con las funciones de un 
     strHtml &= "<h3>" & FMain.stxName[intFun] & "</h3>"
     strHtml &= "<p>" & FMain.stxDesc[intFun] & "</p>"
     strHtml &= "<p>" & FMain.stxArgs[intFun] & "</p>"
-    'strHtml &= "<p>" & FMain.stxVars[intFun] & "</p>"
-    'stxCodeTmp.Clear
-    'stxCodeTmp = Split(FMain.stxCode[intFun], "\n")
-    'For intCodeTmp = 0 To stxCodeTmp.Max
     strHtml &= "<pre>" & FMain.stxCode[intFun] & "</pre>"
-    'Next
-
-    'strHtml &= "<code>" & Replace(FMain.stxCode[intFun], "\n", "</code><br>")
 
   Next
-  ' 'FMain.stxClass
-  ' FMain.stxFast
-  ' FMain.stxMod
-  ' FMain.stxScope
-  ' FMain.stxType
-  ' 'FMain.stxName
-  ' 'FMain.stxArgs
-  ' FMain.stxRetn
-  ' 'FMain.stxDesc
-  ' 'FMain.stxCode
-  ' 'FMain.stxVars
-
-  'Next
 
   Return strHtml
 
@@ -898,7 +833,6 @@ Public Function FilesList(strPath As String) As String[] ''Devuelve una lista de
 
   Dim strPathsTmp As String
   Dim stxPaths As New String[]
-  'Dim intP As Integer
 
   strPathsTmp = Replace(strPath, "\n", "")
   strPathsTmp = Replace(strPathsTmp, "\r", "")
@@ -915,10 +849,6 @@ Public Function FilesList(strPath As String) As String[] ''Devuelve una lista de
   Else
     stxPaths.Add(strPathsTmp)
   Endif
-
-  ' For intP = 0 To stxPaths.Max
-  '   stxPaths[intP] = GEFUtility.ConvertPath(stxPaths[intP])
-  ' Next
 
   Return stxPaths
 
@@ -1033,9 +963,7 @@ End
 Public Function FileLoadRaw(strPath As String) As String[] ''Devuelve una matriz de texto donde cada ítem es un renglón del archivo de texto.
 
   Dim strList As String
-  Dim stxListTmp As New String[]
   Dim stxList As New String[]
-  Dim intList As Integer
 
   stxList.Clear
 
@@ -1080,10 +1008,12 @@ Public Function FileTemplate(strFileSeed As String, strFileProduct As String, st
   Dim strTextProduct As String
   Dim intN As Integer
   Dim strFilePdf As String
-  Dim prsTemp As Process
-  Dim stxFilesOutput As String[]
+  'Dim prsTemp As Process
+  Dim stxFilesOutput As New String[]
+  Dim strFileSvg As String
 
   strFilePdf = File.Dir(strFileProduct) &/ File.BaseName(strFileProduct) & ".pdf"
+  strFileSvg = File.Dir(strFileProduct) &/ File.BaseName(strFileProduct) & ".svg"
 
   If Exist(strFileSeed) = True Then
     strTextProduct = File.Load(strFileSeed)
@@ -1098,10 +1028,9 @@ Public Function FileTemplate(strFileSeed As String, strFileProduct As String, st
       File.Save(strFileProduct, strTextProduct)
       Wait 0.1
 
-      prsTemp = Shell "dia " & strFileProduct & " -e " & strFilePdf
-      While prsTemp.State = prsTemp.Running
-        Wait 0.1
-      Wend
+      'Shell "dia " & strFileProduct & " -e " & strFileSvg Wait
+      Shell "dia " & strFileProduct & " -e " & strFilePdf Wait
+      'Shell "convert " & strFileSvg & " " & strFilePdf Wait
 
     Endif
 
@@ -1109,6 +1038,12 @@ Public Function FileTemplate(strFileSeed As String, strFileProduct As String, st
 
   If Exist(strFileProduct) = True Then
     stxFilesOutput.Add(strFileProduct)
+  Else
+    stxFilesOutput.Add("")
+  Endif
+
+  If Exist(strFileSvg) = True Then
+    stxFilesOutput.Add(strFileSvg)
   Else
     stxFilesOutput.Add("")
   Endif
@@ -1267,7 +1202,13 @@ Public Function FileExifRaw(strPath As String) As String[] ''Devuelve una matriz
 
 End
 
-Public Function Timestamp(datTime As Date) As String ''Retorna una cadena de texto con el tiempo en formato "yyyymmddhhnnss".
+Public Function Timestamp(datTime As Date) As String ''Retorna una cadena de texto con el tiempo en formato "yyyymmddhhnnss". Desde años a segundos.
+
+  Return Format(datTime, "yyyymmddhhnnss")
+
+End
+
+Public Function Timestampu(datTime As Date) As String ''Retorna una cadena de texto con el tiempo en formato "yyyymmddhhnnssuu". Desde años a milisegundos con tres digitos.
 
   Return Format(datTime, "yyyymmddhhnnss")
 
@@ -1341,6 +1282,19 @@ Public Function ArrayMax(inx As Integer[]) As Integer ''Devuelve el maximo valor
 
 End
 
+Public Function Between(str As String, str1 As String, str2 As String) As String ''Devuelve la cadena de texto comprendida entre las dos que se pasan como parámetro
+  'Idea original de Juan Luis Lopez
+
+  Dim intL As Integer
+  Dim intU As Integer
+
+  intL = InStr(str, str1) + Len(str1)
+  intU = InStr(str, str2, intL)
+
+  Return Mid(str, intL, intU - intL)
+
+End
+
 Public Function ArrayExclude(stxList As String[], strFind As String) As String[] ''Quita de la lista los textos que tengan la cadena de texto pasada como parametro
 
   Dim strItem As String
@@ -1370,7 +1324,6 @@ Public Function FileInfo(strFilePath As String) As String[] ''Devuelve una matri
   Dim strFileBase As String
   Dim strFileSize As String
   Dim strFileTime As String
-  '  Dim strFileCRC32 As String
   Dim strFileVersion As String
   Dim strSep As String
 
@@ -1400,9 +1353,6 @@ Public Function FileInfo(strFilePath As String) As String[] ''Devuelve una matri
     strFileTime = GEFUtility.Timestamp(Stat(strFilePath).Time)
     strFileTime = Replace(strFileTime, ":", ".")
     stxFileMeta.Add("FileTime" & strSep & strFileTime)
-
-    ' strFileCRC32 = GEFUtility.CRC32(strFilePath)
-    ' stxFileMeta.Add("FileCRC32" & strSep & strFileCRC32)
 
     strFileVersion = GEFutility.FileVersion(strFilePath)
     strFileVersion = Replace(strFileVersion, ":", ".")
@@ -1475,6 +1425,7 @@ Public Function NamingCon() As String[] ''Devuelve una lista de nombres de contr
   stxNCon.Add("ListView:lsw")
   stxNCon.Add("MaskBox:mko")
   stxNCon.Add("MenuButton:mub")
+  stxNCon.Add("MenuItem:mui")
   stxNCon.Add("MessageView:mgw")
   stxNCon.Add("MovieBox:mio")
   stxNCon.Add("Object:obj")
@@ -1672,6 +1623,58 @@ Public Function RListDir(strPath As String) As String[] ''Devuelve una lista de 
 
 End
 
+Public Function RListFiles(strPath As String, Optional stxExt As String[]) As String[] ''Devuelve una lista de directorios que se encuentran en la ruta que se pasa como parametro.
+
+  Dim stxTmp As New String[]
+  Dim stxFiles As New String[]
+  Dim strFile As String
+  Dim strExt As String
+
+  stxTmp.Clear
+
+  Select Stat(strPath).Type
+    Case gb.File
+      strPath = File.Dir(strPath)
+  End Select
+
+  For Each strExt In stxExt
+    stxTmp.Insert(RDir(strPath, "*." & strExt, gb.File))
+  Next
+
+  For Each strFile In stxTmp
+    stxFiles.Add(strPath &/ strFile)
+  Next
+
+  Return stxFiles
+
+End
+
+Public Function ListFiles(strPath As String, Optional stxExt As String[]) As String[] ''Devuelve una lista de archivos que se encuentran en la ruta que se pasa como parametro.
+
+  Dim stxTmp As New String[]
+  Dim stxFiles As New String[]
+  Dim strFile As String
+  Dim strExt As String
+
+  stxTmp.Clear
+
+  Select Stat(strPath).Type
+    Case gb.File
+      strPath = File.Dir(strPath)
+  End Select
+
+  For Each strExt In stxExt
+    stxTmp.Insert(Dir(strPath, "*." & strExt, gb.File))
+  Next
+
+  For Each strFile In stxTmp
+    stxFiles.Add(strPath &/ strFile)
+  Next
+
+  Return stxFiles
+
+End
+
 Public Function DirGambas(strPath As String) As Boolean ''Analiza si el directorio que se le pasa como paramentro de entrada es un direcotio de un proyecto gambas.
 
   Dim strGambas As String
@@ -1680,19 +1683,13 @@ Public Function DirGambas(strPath As String) As Boolean ''Analiza si el director
 
   ' Hay que acertar en todo para dar el ok
   If Exist(strPath &/ ".project") = True Then
-    strGambas = "g"
-    If Exist(strPath &/ ".settings") = True Then
-      strGambas &= "a"
-      If Exist(strPath &/ ".startup") = True Then
-        strGambas &= "m"
-        If Exist(strPath &/ ".src") = True Then
-          strGambas &= "b"
-          If Exist(strPath &/ ".hidden") = True Then
-            strGambas &= "a"
-            If Exist(strPath &/ ".gitignore") = True Then
-              strGambas &= "s"
-            Endif
-          Endif
+    strGambas = "gam"
+    If Exist(strPath &/ ".src") = True Then
+      strGambas &= "b"
+      If Exist(strPath &/ ".hidden") = True Then
+        strGambas &= "a"
+        If Exist(strPath &/ ".gitignore") = True Then
+          strGambas &= "s"
         Endif
       Endif
     Endif

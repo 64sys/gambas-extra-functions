@@ -25,53 +25,377 @@
 Public conData As Connection
 Public strTab As String
 Public intKey As Integer
+
+Private $bolLoaded As Boolean
+
+'Variables de edicion de los registros con los controles creados por código
+Private vrxInit As New Variant[] ' Lista de valores iniciales
+Private vrxProc As New Variant[] ' Lista de valores con cambios
+Private stxField As New String[] ' Lista de los nombres de los campos
+Private stxType As New String[] ' Lista de los tipos de datos de los campos
+Private stxUniqe As New String[] ' Lista de unicidad de los campos
+Private stxNull As New String[] ' Lista de nulidad de los campos
+Private stxDefault As New String[] ' Lista de valores por defecto de los campos
+Private intH As Integer 'Alto de un módulo de controles generalmente el alto de un TextBox al colocarlo en el formulario (28px)
+Private intWMax As Integer ' Ancho máximo de los controles, que no puede ser mayor que el del formulario que lo contiene
+
+'Private vrxParameter As New Variant[]
 Public strField As String
 
-Public Sub RunEditor(con As Connection, strTable As String, Optional intKx As Integer)
+Private strPicDir As String ' Directorio de imagenes para BBDD/TABLA actual
 
-  conData = con
-  strTab = strTable
-  If IsNull(intKx) = False Then
-    intKey = intKx
-    If MakeControls(strTable, intKx) = 1 Then
-      Me.Tag = intKx
-      Me.Height = 28 * 6
-      Me.ShowModal()
+Public Sub RunEditor(con As Connection, strTable As String, Optional int As Integer)
+
+  Dim intZ As Integer
+  Dim vrx As New Variant[]
+  Dim intX As Integer
+  Dim strKeyField As String
+  Dim str As String
+  Dim res As Result
+  Dim strRf As String
+  Dim resRF As Result
+  Dim strTableRef As String
+  Dim strFieldRef As String
+  Dim strFieldShw As String
+  Dim inxIndex As New Integer[]
+  Dim vrxValues As New Variant[]
+  Dim intS As Integer
+  Dim intW As Integer
+  Dim strTableTitle As String
+  Dim stxFirldsToShow As New String[]
+
+  'Ancho maximo de los controles
+  intWMax = FMain.Width
+
+  'Titulo de la tabla
+  For intW = 0 To GEFStarter.stxVTitles.Max
+    If GEFStarter.stxVTitles[intW][0] = "view_" & strTable Then
+      strTableTitle = GEFStarter.stxVTitles[intW][1]
+      Break
     Endif
-  Else
-    intKey = Null
-  Endif
 
-End
+  Next
 
-Public Sub btnOK_Click()
-
-  Dim objp As Object
-  Dim objx As Object
-  Dim stxFields As New String[]
-  Dim stxValues As New String[]
-
-  stxFields.Clear
-
-  For Each objp In pnlData.Children
-    If Object.Type(objp) = "Panel" Then
-      For Each objx In objp.Children
-        Select Object.Type(objx)
-          Case "TextBox", "ComboBox"
-            stxValues.Add(objx.Tag & "\t" & objx.Text)
-        End Select
-
-      Next
+  'Campos a mostrar en el formulario de edición
+  For intS = 0 To GEFStarter.stxFTitles.Max
+    If GEFStarter.stxFTitles[intS][0] = "view_" & strTable Then
+      stxFirldsToShow.Add(GEFStarter.stxFTitles[intS][1])
     Endif
   Next
 
-  If intKey Then ' Editando registro existente
-    GEFData.RecordEdit(conData, strTab, stxValues)
-  Else ' Nuevo registro
-    GEFData.RecordNew(conData, strTab, GEFStarter.stxTableFields, stxValues)
-  Endif
+  pnlData.Children.Clear
+  For intX = 0 To GEFStarter.stxTableFields.Max
+    If GEFStarter.stxTableFields[intX][0] = strTable Then
 
-  FMain.UpdateGrid()
+      If GEFStarter.stxTableFields[intX][5] = "YK" Then
+        strKeyField = GEFStarter.stxTableFields[intX][1]
+        Break
+      Endif
+    Endif
+  Next
+  stxField.Clear
+  vrxInit.Clear
+  vrxProc.Clear
+
+  conData = con
+  strTab = strTable
+  intKey = int
+
+  For intZ = 0 To GEFStarter.stxTableFields.Max
+    vrx.Clear
+
+    inxIndex.Clear
+    vrxValues.Clear
+    If GEFStarter.stxTableFields[intZ][0] = strTable Then
+      If stxFirldsToShow.Find(GEFStarter.stxTableFields[intZ][1]) > -1 Then
+
+        stxField.Add(GEFStarter.stxTableFields[intZ][1])
+        stxType.Add(GEFStarter.stxTableFields[intZ][2])
+        stxUniqe.Add(GEFStarter.stxTableFields[intZ][3])
+        stxNull.Add(GEFStarter.stxTableFields[intZ][4])
+        'stxDefault.Add(GEFStarter.stxTableFields[intZ][1])
+        stxDefault.Add("")
+
+        'Print GEFStarter.stxTableFields[intZ][1]
+        str = "select * from " & strTable & " where " & strKeyField & "='" & int & "'"
+        res = GEFStarter.conProgram.Exec(str)
+        'vrx.Clear
+        vrx = ControlParameters(GEFStarter.stxTableFields[intZ])
+        ' En algunos casos el campo que se desea cargar en la lista es por formula
+        ' es decir que no existe verdaderamente. para poder usar este tipo de campos
+        ' se en vez de usar la tabla se usa su vista asociada.
+        strTableRef = "view_" & GEFStarter.stxTableFields[intZ][7]
+        'strTableRef = GEFStarter.stxTableFields[intZ][7]
+        strFieldRef = GEFStarter.stxTableFields[intZ][8]
+        strFieldShw = GEFStarter.stxTableFields[intZ][9]
+
+        If res.Available Then
+          'Edicion de registro existente
+          lblInformation.Text = ("Editando un registro existente de la tabla") & " " & strTableTitle & " [ " & str & " ]"
+
+          vrxInit.Add(res[GEFStarter.stxTableFields[intZ][1]])
+          vrxProc.Add(res[GEFStarter.stxTableFields[intZ][1]])
+          vrx[12] = res[GEFStarter.stxTableFields[intZ][1]]
+          vrx[13] = res[GEFStarter.stxTableFields[intZ][1]]
+        Else
+          'Creacion de nuevo registro
+          lblInformation.Text = ("Creando un nuevo registro en la tabla") & " " & strTableTitle
+
+          Select GEFStarter.stxTableFields[intZ][2]
+            Case "integer", "serial", "real", "int4"
+              vrx[12] = Null
+              vrx[13] = Null
+              vrxInit.Add(Null)
+              vrxProc.Add(Null)
+            Case "text"
+              vrx[12] = ""
+              vrx[13] = ""
+              vrxInit.Add("")
+              vrxProc.Add("")
+          End Select
+
+        Endif
+
+        Select GEFStarter.stxTableFields[intZ][7] 'strTableRef ' Es referenciado?
+          Case "" ' No
+            'skip
+          Case Else ' Sí
+            strRf = "select " & strFieldRef & ", " & strFieldShw
+            strRf &= " from " & strTableRef
+            strRf &= " order by " & strFieldShw & " asc"
+            resRF = GEFStarter.conProgram.Exec(strRf)
+            If resRF.Available Then
+              While resRF.Available
+                inxIndex.Add(resRF[strFieldRef])
+                vrxValues.Add(resRF[strFieldShw])
+                resRF.MoveNext
+              Wend
+            Endif
+            Select vrx[13]
+              Case Null
+                For intS = 0 To inxIndex.Max
+                  If inxIndex.Find(intS) > -1 Then
+                    vrx[12] = vrxValues[intS] 'vrxValues[inxIndex[intS]]
+                    vrx[13] = inxIndex[intS]
+                    Break
+                  Endif
+                Next
+              Case Else
+                'Busco el valor que corresponda al indice, si no esta (tal vez porque fue borrado)
+                'Se asigna el valor nulo
+                If inxIndex.Find(vrx[13]) > -1 Then
+                  vrx[12] = vrxValues[inxIndex.Find(vrx[13])]
+                Else
+                  Message(("El índice no concuerda con ningun valor") & "." & gb.NewLine &
+                    ("Se asignara el valor nulo"))
+                  vrx[12] = ""
+                  vrx[13] = 0
+                Endif
+
+                'vrx[12] = vrxValues[inxIndex.Find(vrx[13])]
+                'vrx[12] = vrxValues[vrx[13]]
+            End Select
+            'vrx[2] = vrxValues[inxIndex.Find(vrx[3])]
+            vrx[19] = inxIndex
+            vrx[20] = vrxValues
+        End Select
+        ' Creacion de los controles del formulario
+        cmdMakeControlx(vrx)
+      Endif
+    Endif
+  Next
+  $bolLoaded = True
+  ' ' ---------------
+  Me.Width = FMain.Width
+  Me.Height = FMain.Height
+
+  Me.Caption = ("Editando la tabla") & " " & strTableTitle
+  Me.ShowModal()
+
+End
+
+Public Function ControlParameters(stx As String[]) As Variant[] '' Crea una matriz con todos los parametros necesarios para crear el control.
+  '	RunEditor       ControlParameters
+  '0	Table-Name
+  '1	                Nombre-Campo
+  '2		            Tipo-Campo
+  '3		            NU/YU
+  '4		            NN/YN
+  '5		            NK/YK
+  '6		            NA/YA
+  '7		            Ref-Table
+  '8		            Ref-Key-fld
+  '9		            Ref-Show-fld
+  '10		            Contenedor
+  '11		            Tipo-Control
+  '12	Clave
+  '13	Valor
+  '14		            Label-Text
+  '15		            Tooltip-Text
+  '16		            Command 1
+  '17		            Command 2
+  '18		            Command 3
+  '19	inxIndex
+  '20	vrxValues
+
+  Dim vrx As New Variant[]
+  Dim intCk As Integer
+  Dim intLen As Integer
+
+  vrx.Insert(["", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", ""])
+
+  ' stx[3] 'Unico yu|nu?
+  ' stx[4] 'Nulo yn|nn?
+  ' stx[5] 'Clave yk|nk?
+  ' stx[6] 'Autoincremental ya|na?
+  ' stx[7] 'Tabla Ref
+  ' stx[8] 'Campo Ref
+
+  vrx[10] = pnlData '0: Contenedor
+
+  vrx[1] = stx[1]
+
+  Select stx[2] '1: Tipo
+    Case "serial", "real", "integer", "int4"
+      Select stx[7]
+        Case "" ' Si es un campo referenciado stx[7] tendra el nombre de una tabla de lo contrario sera ""
+          'vrx[1] = "ValueBox"
+          vrx[11] = "ValueBox"
+        Case Else
+          'vrx[1] = "ComboBox"
+          vrx[11] = "ComboBox"
+      End Select
+
+    Case Else
+      For intCk = 0 To GEFStarter.stxFTitles.Max
+        If GEFStarter.stxFTitles[intCk][0] = stx[0] Then
+          If GEFStarter.stxFTitles[intCk][1] = stx[1] Then
+            intLen = GEFStarter.stxFTitles[intCk][3]
+          Endif
+        Endif
+      Next
+      If intLen < 81 Then
+        'vrx[1] = "TextBox"
+        vrx[11] = "TextBox"
+      Else
+        'vrx[1] = "TextArea"
+        vrx[11] = "TextArea"
+      Endif
+
+  End Select
+
+  vrx[1] = stx[1]
+  vrx[2] = stx[2]
+  vrx[3] = stx[3]
+  vrx[4] = stx[4]
+  vrx[5] = stx[5]
+  vrx[6] = stx[6]
+  vrx[7] = stx[7]
+  vrx[8] = stx[8]
+  vrx[9] = stx[9]
+  'vrx[10] = stx[10]
+  'vrx[11] = ' Tipo de control
+  'vrx[12] = ' Valor
+  'vrx[13] = ' Clave
+  vrx[14] = stx[10] ' Label
+  vrx[15] = stx[10] ' ToolTip
+  vrx[16] = stx[11] 'Herramienta 1 ' Numero correlativo
+  vrx[17] = stx[12] 'Herramienta 2 ' icono
+  vrx[18] = stx[13] 'Herramienta 3 ' Cálculo o proceso Ej: V=A+B.
+  'vrx[19] = "" ' Lista de indices
+  'vrx[20] = "" ' Lista de valores se rellenan en RunEditor
+
+  ' End Select
+  '
+  ' vrx[2] =  '2: Valor
+  '   vrx[3] =  '3: Clave
+  '   vrx[9] =  '9: Matriz indices
+  '   vrx[10] =  '10: Matriz Valores
+
+  Return vrx
+
+End
+
+Public Sub btnAcept_Click()
+
+  ' Dim stxFields As New String[]
+  ' Dim stxValues As New String[]
+  ' Dim int As Integer
+  ' Dim intCh As Integer
+  ' Dim intPr As Integer
+  '
+  ' stxFields.Clear
+  '
+  ' intCh = 0
+  '
+  ' For int = 0 To vrxInit.Max
+  '   If vrxInit[int] <> vrxProc[int] Then
+  '     Inc intCh
+  '   Endif
+  ' Next
+  '
+  ' Select intKey
+  '   Case 0, Null ' Nuevo registro
+  '     For intPr = 0 To vrxProc.Max
+  '       stxValues.Add(stxField[intPr] & "\t" & vrxProc[intPr])
+  '     Next
+  '     GEFData.RecordNew(conData, strTab, GEFStarter.stxTableFields, stxValues)
+  '     FMain.UpdateGrid()
+  '   Case Else   ' Editando registro existente
+  '     If intCh > 0 Then
+  '       For intPr = 0 To vrxProc.Max
+  '         stxValues.Add(stxField[intPr] & "\t" & vrxProc[intPr])
+  '       Next
+  '       GEFData.RecordEdit(conData, strTab, stxValues)
+  '       FMain.UpdateGrid()
+  '     Endif
+  ' End Select
+  '
+  ' Me.Close
+  SaveExit()
+
+End
+
+Public Sub SaveExit()
+
+  Dim stxFields As New String[]
+  Dim stxValues As New String[]
+  Dim int As Integer
+  Dim intCh As Integer
+  Dim intPr As Integer
+  '  Dim strSQLInsert As String ' SQL de insercion de registro nuevo
+
+  stxFields.Clear
+
+  intCh = 0
+
+  For int = 0 To vrxInit.Max
+    If vrxInit[int] <> vrxProc[int] Then
+      Inc intCh
+    Endif
+  Next
+
+  'Select intKey
+
+  '  Case 0, Null ' Nuevo registro
+  '    For intPr = 0 To vrxProc.Max
+  '      stxValues.Add(stxField[intPr] & "\t" & vrxProc[intPr])
+  '    Next
+
+  '    strSQLInsert = GEFData.SqlInsert(strTab, stxField, vrxProc)
+
+  '    GEFData.RecordNewTest(conData, strTab, GEFStarter.stxTableFields, stxValues)
+  '    FMain.UpdateGrid()
+
+  '  Case Else   ' Editando registro existente
+  If intCh > 0 Then
+    For intPr = 0 To vrxProc.Max
+      stxValues.Add(stxField[intPr] & "\t" & vrxProc[intPr])
+    Next
+    GEFData.RecordEdit(conData, strTab, stxValues)
+    FMain.UpdateGrid()
+  Endif
+  'End Select
 
   Me.Close
 
@@ -252,112 +576,131 @@ End
 '
 ' End
 
-Public Function MakeControls(strTable As String, Optional intKey As Integer) As Integer
-
-  Dim intState As Integer
-  Dim pnl As Panel
-  Dim txo As TextBox
-  Dim lbl As Label
-  Dim cmo As ComboBox
-  Dim strComboSql As String
-  Dim resCombo As Result
-  Dim resEdit As Result
-  Dim strSQLEdit As String
-  Dim intFld As Integer
-  Dim bolReadonly As Boolean
-  Dim intWidt As Integer
-
-  intState = 0
-
-  pnlData.Children.Clear
-  pnlData.Arrangement = 3
-
-  If IsNull(intKey) = False Then
-    ' Busqueda del campo primary key de la tabla
-    For intFld = 0 To GEFStarter.stxTableFields.Max
-      If GEFStarter.stxTableFields[intFld][0] = strTable Then
-        If GEFStarter.stxTableFields[intFld][5] = "YK" Then
-          strSQLEdit = "select * from " & GEFStarter.stxTableFields[intFld][0]
-          strSQLEdit &= " where " & GEFStarter.stxTableFields[intFld][1]
-          strSQLEdit &= "='" & CStr(intKey) & "'"
-
-          resEdit = conData.Exec(strSQLEdit)
-
-        Endif
-      Endif
-    Next
-
-    For intFld = 0 To GEFStarter.stxTableFields.Max
-      If GEFStarter.stxTableFields[intFld][0] = strTable Then
-        'If GEFStarter.stxTableFields[intFld][5] <> "YK" Then
-        Select GEFStarter.stxTableFields[intFld][5] ' Si el campo es Primary Key o no
-          Case "YK"
-            bolReadonly = True
-            intWidt = 60
-
-          Case "NK"
-            bolReadonly = False
-            intWidt = 120
-        End Select
-        '--------------------------------
-        pnl = New Panel(pnlData)
-        pnl.Name = "pnl-" & GEFStarter.stxTableFields[intFld][1] 'strFieldName
-        pnl.Width = intWidt
-        pnl.Height = 58
-        pnl.Arrangement = 2
-        pnl.Padding = 2
-
-        lbl = New Label(pnl)
-        lbl.Name = "lbl-" & GEFStarter.stxTableFields[intFld][1] 'strFieldName
-        lbl.Text = GEFStarter.stxTableFields[intFld][10] 'strFieldName
-        lbl.Width = intWidt
-        lbl.Height = 28
-
-        Select GEFStarter.stxTableFields[intFld][7]
-          Case ""
-            txo = New TextBox(pnl)
-            txo.Name = "txo-" & GEFStarter.stxTableFields[intFld][1] 'strFieldName
-            txo.Tag = GEFStarter.stxTableFields[intFld][1] 'strFieldName
-            txo.Width = intWidt
-            txo.Height = 28
-            txo.ReadOnly = bolReadonly
-
-            If resEdit.Available Then
-              txo.Text = resEdit[GEFStarter.stxTableFields[intFld][1]]
-            Endif
-
-          Case Else
-            strComboSql = "select " & GEFStarter.stxTableFields[intFld][8] & ", "
-            strComboSql &= GEFStarter.stxTableFields[intFld][9] & " from "
-            strComboSql &= GEFStarter.stxTableFields[intFld][7] & " order by " & GEFStarter.stxTableFields[intFld][9] & " asc"
-
-            resCombo = conData.Exec(strComboSql)
-
-            cmo = New ComboBox(pnl)
-            cmo.Name = "cmo-" & GEFStarter.stxTableFields[intFld][1]
-            cmo.Tag = GEFStarter.stxTableFields[intFld][1]
-            cmo.Width = pnl.Width
-            cmo.Height = 28
-            While resCombo.Available
-              cmo.Add(resCombo[GEFStarter.stxTableFields[intFld][9]])
-              If resEdit.Available Then
-                If resCombo[GEFStarter.stxTableFields[intFld][8]] = resEdit[GEFStarter.stxTableFields[intFld][1]] Then
-                  cmo.Text = resCombo[GEFStarter.stxTableFields[intFld][9]]
-                Endif
-              Endif
-              resCombo.MoveNext
-            Wend
-        End Select
-        '--------------------------------
-      Endif
-    Next
-  Endif
-
-  intState = 1
-
-  Return intState
-
-End
+' Public Function MakeControls(strTable As String, Optional intKey As Integer) As Integer
+'
+'   Dim intState As Integer
+'   Dim pnl As Panel
+'   Dim txo As TextBox
+'   Dim lbl As Label
+'   Dim cmo As ComboBox
+'   Dim strComboSql As String
+'   Dim resCombo As Result
+'   Dim resEdit As Result
+'   Dim strSQLEdit As String
+'   Dim intFld As Integer
+'   Dim bolReadonly As Boolean
+'   Dim intWidt As Integer
+'   Dim bolVisible As Boolean
+'
+'   intState = 0
+'
+'   pnlData.Children.Clear
+'   pnlData.Arrangement = 3
+'
+'   If IsNull(intKey) = False Then
+'     ' Busqueda del campo primary key de la tabla
+'     For intFld = 0 To GEFStarter.stxTableFields.Max
+'       If GEFStarter.stxTableFields[intFld][0] = strTable Then
+'         If GEFStarter.stxTableFields[intFld][5] = "YK" Then
+'           strSQLEdit = "select * from " & GEFStarter.stxTableFields[intFld][0]
+'           strSQLEdit &= " where " & GEFStarter.stxTableFields[intFld][1]
+'           strSQLEdit &= "='" & CStr(intKey) & "'"
+'
+'           resEdit = conData.Exec(strSQLEdit)
+'
+'         Endif
+'       Endif
+'     Next
+'
+'     For intFld = 0 To GEFStarter.stxTableFields.Max
+'       ' Esta línea se usa para que cada control sea visible en el formulario
+'       bolVisible = True
+'       bolReadOnly = False
+'
+'       If GEFStarter.stxTableFields[intFld][0] = strTable Then
+'         'If GEFStarter.stxTableFields[intFld][5] <> "YK" Then
+'         Select GEFStarter.stxTableFields[intFld][5] ' Si el campo es Primary Key o no
+'           Case "YK"
+'             bolReadonly = True
+'             intWidt = 60
+'             If IsNull(intKey) = True Then
+'               ' En caso que se trate de un registro nuevo el control del key se oculta
+'               ' ya que se trata de un registro "autoincrement" y lo resuelve la base de datos
+'               bolVisible = False
+'             Else
+'               bolVisible = True
+'             Endif
+'
+'           Case "NK"
+'             bolReadonly = False
+'             intWidt = 120
+'         End Select
+'         '--------------------------------
+'         pnl = New Panel(pnlData)
+'         pnl.Name = "pnl-" & GEFStarter.stxTableFields[intFld][1] 'strFieldName
+'         pnl.Width = intWidt
+'         pnl.Height = 58
+'         pnl.Arrangement = 2
+'         pnl.Padding = 2
+'
+'         lbl = New Label(pnl)
+'         lbl.Name = "lbl-" & GEFStarter.stxTableFields[intFld][1] 'strFieldName
+'         lbl.Text = GEFStarter.stxTableFields[intFld][10] 'strFieldName
+'         lbl.Width = intWidt
+'         lbl.Height = 28
+'
+'         Select GEFStarter.stxTableFields[intFld][7]
+'           Case ""
+'             txo = New TextBox(pnl)
+'             txo.Name = "txo-" & GEFStarter.stxTableFields[intFld][1] 'strFieldName
+'             txo.Tag = GEFStarter.stxTableFields[intFld][1] 'strFieldName
+'             txo.Width = intWidt
+'             txo.Height = 28
+'             txo.ReadOnly = bolReadonly
+'
+'             If resEdit.Available Then
+'               txo.Text = resEdit[GEFStarter.stxTableFields[intFld][1]]
+'             Endif
+'
+'           Case Else
+'             strComboSql = "select " & GEFStarter.stxTableFields[intFld][8] & ", "
+'             strComboSql &= GEFStarter.stxTableFields[intFld][9] & " from "
+'             strComboSql &= GEFStarter.stxTableFields[intFld][7] & " order by " & GEFStarter.stxTableFields[intFld][9] & " asc"
+'
+'             resCombo = conData.Exec(strComboSql)
+'
+'             cmo = New ComboBox(pnl)
+'             cmo.Name = "cmo-" & GEFStarter.stxTableFields[intFld][1]
+'
+'             'cmo.Tag = GEFStarter.stxTableFields[intFld][1]
+'
+'             cmo.Width = pnl.Width
+'             cmo.Height = 28
+'             While resCombo.Available
+'               cmo.Add(resCombo[GEFStarter.stxTableFields[intFld][9]])
+'               If resEdit.Available Then
+'                 If resCombo[GEFStarter.stxTableFields[intFld][8]] = resEdit[GEFStarter.stxTableFields[intFld][1]] Then
+'                   cmo.Text = resCombo[GEFStarter.stxTableFields[intFld][9]]
+'                   'If IsNumber(resCombo[GEFStarter.stxTableFields[intFld][8]]) Then
+'                   cmo.Tag = resCombo[GEFStarter.stxTableFields[intFld][8]]
+'                   'Else
+'                   '  cmo.Tag = resCombo[GEFStarter.stxTableFields[intFld][8]]
+'                   'Endif
+'                 Endif
+'               Endif
+'               resCombo.MoveNext
+'             Wend
+'         End Select
+'         '--------------------------------
+'       Endif
+'     Next
+'   Endif
+'
+'   intState = 1
+'
+'   Return intState
+'
+' End
 
 Public Function WriteRecord() As Integer
 
@@ -384,5 +727,800 @@ Public Function WriteRecord() As Integer
   GEFData.RecordNew(conData, strTab, GEFStarter.stxFieldsTableCurrentrent, stxValues)
 
   Return intState
+
+End
+'-----------------------------------------------------------
+
+Public Sub cmdMakeControlx(vrxParameter As Variant[])
+  'vrxParameter
+  '0: Contenedor
+  '1: Tipo de campo
+  '2: Valor
+  '3: Clave
+  '4: Campo
+  '5: Label
+  '6: ToolTip
+  '7: Numero correlativo
+  '8: Icono
+  '9: Tipo de control
+  '10:
+
+  Dim intR As Integer ' Recorrido
+  Dim intWLabel, intWValue, intWCombo, intW As Integer
+  Dim pnl1, pnl1a, pnl1b As Panel
+  Dim lbl1 As Label
+  Dim btn1 As Button
+  Dim btn2 As Button
+  Dim btn3 As Button
+  Dim cmo1 As ComboBox
+  Dim txo1 As TextBox
+  Dim txa1 As TextArea
+  Dim vao1 As ValueBox
+  Dim lso1 As ListBox
+  '  Dim pic1 As Picture
+
+  Dim intBorder As Integer
+  Dim strPanelName As String
+  Dim intIdx As Integer
+  Dim stxKey As New String[]
+  Dim strPicPath As String
+  'Dim strPicDir As String
+  Dim strPicAlt As String
+
+  strPanelName = vrxParameter[10].Name
+
+  stxKey.Clear
+  intW = 0
+  intWLabel = String.Len(vrxParameter[14])
+  intWValue = String.Len(vrxParameter[12])
+
+  'Averiguar si hay imagen disponible
+  If vrxParameter[2] = "serial" Then
+    tobPicture.Width = tobPicture.Parent.Width
+    tobPicture.Height = tobPicture.Parent.Width
+
+    strPicDir = GEFStarter.stxProgVal[1] &/ File.BaseName(GEFStarter.stxProgVal[2])
+    If Exist(strPicDir) = True Then
+      strPicPath = strPicDir &/ GEFStarter.stxProgVal[20] &/ CStr(vrxParameter[12]) & ".png"
+      strPicAlt = strPicDir &/ GEFStarter.stxProgVal[20] &/ CStr(vrxParameter[12]) & ".jpeg"
+
+      If Exist(strPicPath) = True Then
+
+        If Stat(strPicPath).Type = gb.File Then
+          tobPicture.Picture = Image.Load(strPicPath).Stretch(tobPicture.Height, tobPicture.Height).Picture
+          tobPicture.Tag = strPicPath & "\t" & strPicPath
+        Endif
+
+      Else
+
+        If Exist(strPicAlt) = True Then
+          If Stat(strPicAlt).Type = gb.File Then
+            Shell "convert '" & strPicAlt & "' '" & strPicPath & "'" Wait
+
+            tobPicture.Picture = Image.Load(strPicPath).Stretch(tobPicture.Height, tobPicture.Height).Picture
+
+            tobPicture.Tag = strPicPath & "\t" & strPicPath
+          Endif
+        Else
+          tobPicture.Picture = Image.Load("./blank.png").Stretch(tobPicture.Height, tobPicture.Height).Picture
+          tobPicture.Tag = "./blank.png" & "\t" & strPicPath
+        Endif
+
+      Endif
+
+    Else
+      Mkdir strPicDir
+    Endif
+
+  Endif
+
+  ' Para el caso de combobox con multiples valores
+  Select vrxParameter[11]
+    Case "ComboBox", "ButtonBox", "ListBox"
+      intWValue = intWLabel
+      intWCombo = 0
+      For intR = 0 To vrxParameter[20].Max ' vrxValue.Max
+        intWCombo = String.Len(vrxParameter[20][intR])
+        If intWCombo > intWValue Then
+          intWValue = intWCombo
+        Endif
+      Next
+
+      intW = intWValue * 6 + 32 + 48
+
+    Case Else
+
+      If intWLabel >= intWValue Then
+        intW = intWLabel * 7 + 14
+      Else
+        intW = intWValue * 7 + 14
+      Endif
+  End Select
+
+  intBorder = 8
+
+  intH = 24
+
+  pnl1 = New Panel(vrxParameter[10])
+
+  With pnl1
+    If intW + 14 < intWMax - 154 - 28 Then
+      .Width = intW + 14
+    Else
+      .Width = intWMax - 154 - 28
+    Endif
+    '.Width = intW + 14
+    .Height = (intH + 4) * 2
+    .Name = "pnl" & Str(vrxParameter[16])
+    .AutoResize = False
+    .Expand = False
+    .Arrangement = Arrange.Vertical
+    .Border = 1
+    .Background = Color.TextBackground
+  End With
+
+  pnl1a = New Panel(pnl1)
+
+  With pnl1a
+    .Name = "pnl" & Str(vrxParameter[16]) & "a"
+    .AutoResize = False
+    .Expand = False
+    .Width = pnl1.Width
+    .Height = intH
+    .Arrangement = Arrange.Horizontal
+  End With
+
+  lbl1 = New Label(pnl1a) As "GFieldInfo"
+  With lbl1
+    .Text = " " & vrxParameter[14]
+    .Alignment = Align.Normal
+    .Expand = True
+    '.Height =
+    '.Background = &H800000
+  End With
+
+  ' Si el campo tiene asignada una herramientas en el comando 1 aquí se agrega el botón
+  Select vrxParameter[16]
+    Case ""
+      ' skip
+    Case Else
+      btn1 = New Button(pnl1a) As "GFieldCommand"
+      With btn1
+        .AutoResize = False
+        .Picture = Picture["icon:/22/exec"]
+        .Name = "btn" & Str(vrxParameter[1]) & "~" & Str(vrxParameter[16])
+        .Tag = Str(vrxParameter[16])
+        .Width = intH
+        .Height = intH
+
+      End With
+  End Select
+  ' Si el campo tiene asignada una herramientas en el comando 1 aquí se agrega el botón
+  Select vrxParameter[17]
+    Case ""
+      ' skip
+    Case Else
+      btn2 = New Button(pnl1a) As "GFieldCommand"
+      With btn2
+        .AutoResize = False
+        .Picture = Picture["icon:/22/exec"]
+        .Name = "btn" & Str(vrxParameter[1]) & "~" & Str(vrxParameter[17])
+        .Tag = Str(vrxParameter[17])
+        .Width = intH
+        .Height = intH
+      End With
+  End Select
+  ' Si el campo tiene asignada una herramientas en el comando 1 aquí se agrega el botón
+  Select vrxParameter[18]
+    Case ""
+      ' skip
+    Case Else
+      btn3 = New Button(pnl1a) As "GFieldCommand"
+      With btn3
+        .AutoResize = False
+        .Picture = Picture["icon:/22/exec"]
+        .Name = "btn" & Str(vrxParameter[1]) & "~" & Str(vrxParameter[18])
+        .Tag = Str(vrxParameter[18])
+        .Width = intH
+        .Height = intH
+
+      End With
+
+  End Select
+
+  Select vrxParameter[11]
+
+    Case "TextBox" '>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>
+      pnl1b = New Panel(pnl1)
+      With pnl1b
+        .Name = "pnl" & Str(vrxParameter[16]) & "b"
+        .AutoResize = False
+        .Expand = True
+        .Arrangement = Arrange.Horizontal
+        .Width = pnl1.Width
+        .Height = intH
+      End With
+
+      txo1 = New TextBox(pnl1b) As "GFieldData"
+      With txo1
+        .Expand = True
+        .Name = "txo" & Str(vrxParameter[16])
+        .Tooltip = vrxParameter[15]
+        .Tag = vrxParameter[1]
+        .Text = vrxParameter[12]
+        .Border = Border.None
+      End With
+
+    Case "TextArea" '>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>
+      pnl1b = New Panel(pnl1)
+      With pnl1b
+        .Name = "pnl" & Str(vrxParameter[16]) & "b"
+        .AutoResize = False
+        .Expand = False
+        .Arrangement = Arrange.Horizontal
+        ' Segun el largo de los caracteres
+        If String.Len(vrxParameter[12]) < 121 Then
+          .Height = intH
+        Else
+          '.Height = intH * 3
+          If String.Len(vrxParameter[12]) Mod 121 > 0 Then
+            .Height = intH * (CInt(String.Len(vrxParameter[12]) / 121) + 1)
+            pnl1.Height = (intH + 4) + .Height
+          Else
+            .Height = intH * (CInt(String.Len(vrxParameter[12]) / 121))
+            pnl1.Height = (intH + 4) + .Height
+          Endif
+        Endif
+      End With
+
+      txa1 = New TextArea(pnl1b) As "GFieldData"
+      With txa1
+        .Expand = True
+        .Name = "txa" & Str(vrxParameter[16])
+        .Tooltip = vrxParameter[15]
+        .Tag = vrxParameter[1]
+        .Text = vrxParameter[12]
+        .Border = Border.None
+        .Alignment = Align.Normal
+        .Wrap = True
+        '.Background = Color.DarkCyan
+      End With
+
+    Case "ValueBox" '>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>
+      pnl1b = New Panel(pnl1)
+      With pnl1b
+        .Name = "pnl" & Str(vrxParameter[16]) & "b"
+        .AutoResize = False
+        .Expand = True
+        .Arrangement = 2
+      End With
+
+      vao1 = New ValueBox(pnl1b) As "GFieldData"
+      With vao1
+        .Expand = True
+        .Name = "vao" & Str(vrxParameter[16])
+        .Tooltip = vrxParameter[15]
+        .Tag = vrxParameter[1]
+        .Value = vrxParameter[12]
+        .Border = Border.None
+      End With
+
+    Case "ComboBox" '>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>
+      pnl1b = New Panel(pnl1) ' Creo un nuevo panel
+
+      With pnl1b
+        .Name = "pnl" & Str(vrxParameter[16]) & "b"
+        .AutoResize = False
+        .Expand = True
+        .Arrangement = 1
+        .Spacing = True
+      End With
+
+      ' Creación de un ValueBox adjunto al ComboBox para guardar el valor del key
+      vao1 = New ValueBox(pnl1b) As "GFieldData"
+      With vao1
+        .Expand = False
+        .Width = 32
+        .Name = "vao" & Str(vrxParameter[16])
+        .Value = vrxParameter[13]
+        .Tag = vrxParameter[1]
+        .ReadOnly = True
+        .Border = Border.None
+
+      End With
+
+      ' Creacion del combobox
+      cmo1 = New ComboBox(pnl1b) As "GFieldWizard" ' Creo el combobox
+      With cmo1
+        .Expand = True
+        .Name = "cmo" & Str(vrxParameter[16])
+        .Tooltip = vrxParameter[15]
+        .Text = vrxParameter[12]
+        '.Tag = Null
+        '.Tag = vrxParameter[9].Join("/")
+        stxKey.Clear
+        For intIdx = 0 To vrxParameter[19].Max
+          stxKey.Add(CStr(vrxParameter[19][intIdx]))
+        Next
+        .Tag = stxKey.Join("\t")
+        .List = vrxParameter[20]
+        .Border = Border.None
+      End With
+
+    Case "ListBox" '>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>
+      pnl1b = New Panel(pnl1) ' Creo un nuevo panel
+
+      With pnl1b
+        .Name = "pnl" & Str(vrxParameter[16]) & "b"
+        .AutoResize = False
+        .Expand = True
+        .Arrangement = 1
+        .Spacing = True
+      End With
+
+      ' Creación de un ValueBox adjunto al ButtonBox para guardar el valor del key
+      vao1 = New ValueBox(pnl1b) As "GFieldData"
+      With vao1
+        .Expand = False
+        .Width = 32
+        .Name = "vao" & Str(vrxParameter[16])
+        .Value = vrxParameter[13]
+        .Tag = vrxParameter[1]
+        .ReadOnly = True
+        .Border = Border.None
+        .Font.Bold = True
+
+      End With
+
+      ' Creacion del TextBox
+      txo1 = New TextBox(pnl1b) As "GFieldWizardTemp"
+      With txo1
+        .Expand = True
+        .Name = "txo" & Str(vrxParameter[16])
+        .Tooltip = vrxParameter[15]
+        .Text = vrxParameter[12]
+        .Tag = vrxParameter[1]
+        '.List = vrxParameter[10]
+        .Border = Border.None
+      End With
+
+      ' Creación del listview
+      lso1 = New ListBox(pnl1b) 'As "GFieldWizardTemp" ' Creo el ButtonBox
+
+      With lso1
+        .Expand = True
+        .Name = "lso" & Str(vrxParameter[16])
+        .Tooltip = vrxParameter[15]
+        .List = vrxParameter[20]
+        .Index = vrxParameter[20].Find(vrxParameter[12])
+        .Tag = vrxParameter[19].Join("/")
+        .Border = Border.None
+        .Visible = False
+      End With
+
+  End Select
+
+End
+
+Public Sub GFieldWizard_Click()
+
+  'Dim strValue As String
+  'Dim ctnValue As New Collection
+  Dim objData As Object
+  'Dim cmoData As ComboBox
+  'Dim intNumber As Integer ' Es el numero de control
+  'Dim intIndex As Integer ' Es el indice de las matrices
+  Dim intKeyFk As Integer ' Es la clave foranea
+
+  Dim strName As String
+  Dim pnlCombo As Panel
+  Dim objCmo As Object
+  Dim objVao As Object
+  Dim stxIndex As New String[]
+  Dim stxValue As New String[]
+
+  '  If $bolLoaded = True Then
+
+  objData = Last
+
+  stxIndex.Clear
+  stxValue.Clear
+
+  pnlCombo = objData.Parent
+
+  strName = objData.Name
+  'strOldName = objData.Name
+
+  'intNumber = CInt(String.Mid(strName, 4, Len(strName) - 3))
+
+  For Each objCmo In pnlCombo.Children
+    Select Object.Type(objCmo)
+      Case "ComboBox"
+        If objCmo.Name = "cmo" '& Str(intNumber) Then
+          Print objCmo.Tag
+
+          stxIndex = Split(objCmo.Tag, "\t")
+          stxValue = objCmo.List
+          intKeyFk = CInt(stxIndex[stxValue.Find(objCmo.Text)])
+
+          For Each objVao In pnlCombo.Children
+            Select Object.Type(objVao)
+              Case "ValueBox"
+                If objVao.Name = "vao" '& Str(intNumber) Then
+                  objVao.Value = intKeyFk
+                  Print objVao.Name & ":" & Str(objVao.Value)
+                  'objControl.Text = Format(Now(), "hhnnss")
+                Endif
+            End Select
+
+          Next
+
+        Endif
+    End Select
+
+  Next
+
+  'Endif
+
+End
+
+Public Sub GFieldData_Change()
+
+  Dim objCurr As Object
+  Dim pnl1 As Panel
+  Dim pnl0 As Panel
+  Dim strType As String
+  Dim strFieldCh As String
+  Dim intIdx As Integer
+  Dim intControlH As Integer
+  Dim intControlW As Integer
+  Dim intPlus As Integer
+
+  If $bolLoaded = True Then
+    objCurr = Last
+    strType = Object.Type(objCurr)
+
+    strFieldCh = objCurr.Tag
+    If InStr(strFieldCh, "\t") > 0 Then
+      strField = Split(strFieldCh, "\t")[1]
+    Else
+    Endif
+
+    intIdx = stxField.Find(strFieldCh)
+
+    Select strType
+      Case "TextBox", "TextArea"
+        vrxProc[intIdx] = objCurr.Text
+        If Object.Type(objCurr.Parent) = "Panel" Then
+          pnl1 = objCurr.Parent
+          If Object.Type(pnl1.Parent) = "Panel" Then
+            pnl0 = pnl1.Parent
+            Print pnl0.Name
+            Print pnl0.Width
+
+            If String.Len(objCurr.Text) < 81 Then
+              If pnl0.Width < String.Len(objCurr.Text) * 7 + 14 Then
+                pnl0.Width = String.Len(objCurr.Text) * 7 + 14
+              Endif
+            Else
+              If strType = "TextArea" Then
+                If pnl0.Width < intWMax - 154 - 28 Then
+                  intControlW = pnl0.Width + 14
+                Else
+                  intControlW = intWMax - 154 - 28
+                Endif
+                pnl0.Width = intControlW
+                pnl1.Width = intControlW
+
+                If String.Len(objCurr.Text) Mod 121 > 0 Then
+                  intPlus = CInt(String.Len(objCurr.Text) / 121) + 1
+                  intControlH = intH * (intPlus)
+                Else
+                  intPlus = CInt(String.Len(objCurr.Text) / 121)
+                  intControlH = intH * intPlus
+                Endif
+              Endif
+              pnl0.Height = intH + 4 + intControlH '+ (4 * intPlus)
+              pnl1.Height = intControlH
+
+            Endif
+          Endif
+        Endif
+        'Endif
+
+      Case "ValueBox"
+        vrxProc[intIdx] = objCurr.Value
+        'Case "TextArea"
+        '  Print Object.Parent(objCurr).Name & "xxxx"
+    End Select
+  Endif
+
+End
+
+Public Sub Form_KeyPress()
+
+  Print Key.Code
+
+  If Key.Code = 16777220 Then
+    Print "Form_KeyPress ENTER"
+    SaveExit()
+  Else
+    If Key.code = Key.Esc Then
+      Print "Form_KeyPress SCAPE"
+      Me.Close
+    Endif
+  Endif
+
+End
+
+Public Sub Form_KeyRelease()
+
+  Print Key.Code
+  If Key.Code = Key.Enter Then
+    Print "Form_KeyRelease ENTER"
+    SaveExit()
+  Else
+    If Key.code = Key.Esc Then
+      Print "Form_KeyRelease SCAPE"
+      Me.Close
+    Endif
+  Endif
+
+End
+
+Public Sub tobPicture_Drop()
+
+  Dim strUrl As String
+  ' Dim bolDownload As Boolean
+  Dim prsDownload As Process
+  ' Dim bolRefresh As Boolean
+  Dim strCurrPic As String
+  Dim strNextPic As String
+  Dim strComm As String
+  Dim stxImageInfo As New String[]
+  Dim strFile As String
+
+  strCurrPic = Split(tobPicture.Tag, "\t")[0]
+  strNextPic = Split(tobPicture.Tag, "\t")[1]
+
+  strUrl = GEFUtility.ArrangePath((Drag.Paste("text/uri-list")))
+  strUrl = Replace(strUrl, "file://", "")
+
+  Print strUrl
+
+  If Exist(strUrl) = True Then
+    If Stat(strUrl).Type = gb.File
+      If Exist(strNextPic) = True Then
+        Select Message.Question(("El archivo ya existe.") & gb.NewLine &
+              ("¿Desea remplazarlo?"), ("Remplazar"), ("Cancelar"))
+          Case 1
+            Shell "cp " & strUrl & " '" & strNextPic & "'" Wait
+            'tobPicture.Refresh
+        End Select
+      Else
+        Shell "cp " & strUrl & " '" & strNextPic & "'" Wait
+        'tobPicture.Refresh
+      Endif
+    Endif
+  Else ' Probablemente se trate de una imagen remota de internet
+    If String.Mid(strUrl, 1, 4) = "http" Then
+      If Exist("/tmp/image") Then
+        Shell "kill /tmp/image"
+      Endif
+      If Exist("/tmp/image.png") Then
+        Shell "kill /tmp/image.png"
+      Endif
+      strComm = "wget " & strUrl & " --output-document=" & "/tmp/image"
+
+      prsDownload = Shell strComm Wait
+      ' While prsDownload.State = prsDownload.Running
+      '   Wait 0.1
+      '       Wend
+      'Verificación del tipo de imagen
+      stxImageInfo = GEFUtility.FileInfo("/tmp/image")
+
+      strFile = GEFBatch.ImageConvert("/tmp/image", "png")
+      If strFile <> "0" Then
+        Shell "mv " & strFile & " '" & strNextPic & "'" Wait
+        Wait 0.2
+      Endif
+
+    Endif
+  Endif
+  If Exist(strNextPic) = True Then
+    tobPicture.Picture = Image.Load(strNextPic).Stretch(tobPicture.Height, tobPicture.Height).Picture
+    tobPicture.Refresh
+  Endif
+
+End
+
+Public Sub btnPrint_Click()
+
+  Dim strSql As String ' strTab, conData, strKey son variables globales dle formulario
+  Dim intF As Integer
+  Dim strTmpField As String ' Campos del resultado
+  Dim strKeyField As String ' Campo del resultado que tiene la clave
+
+  Dim res As Result
+
+  'Dim stx As New String[]
+  'Dim intR As Integer
+  Dim intV As Integer
+  Dim intT As Integer
+  'Dim stxOut As New String[]
+  Dim strTag As String
+  Dim strTmp As String
+  Dim strPro As String
+  Dim strPdf As String
+  Dim strVal As Variant
+  Dim strPicPath As String
+  Dim strTpic As String
+  Dim intKPic As Variant
+  Dim intLen As Integer
+  Dim stxTag As New String[]
+  Dim stxVal As New String[]
+  Dim stxValtmp As New String[]
+  Dim stxFiles As New String[]
+
+  Dim strWord As String
+  Dim strLine As String
+  Dim strValTmp As String
+  Dim strFile As String
+  Dim strPic As String
+
+  strTmp = "./reports/orchard-seeds-envelope.dia"
+  strPro = User.Home &/ strTab & ".dia"
+  strPdf = User.Home &/ strTab & ".pdf"
+
+  For intF = 0 To GEFStarter.stxFTitles.Max
+    If GEFStarter.stxFTitles[intF][0] = "view_" & strTab Then
+      strTmpField = GEFStarter.stxFTitles[intF][1]
+      For intT = 0 To GEFStarter.stxTableFields.Max
+        If GEFStarter.stxTableFields[intT][1] = strTmpField Then
+          If GEFStarter.stxTableFields[intT][2] = "serial" Then
+            strKeyField = strTmpField
+          Endif
+        Endif
+      Next
+    Endif
+  Next
+  strSql = "select * from " & "view_" & strTab
+  strSql &= " where " & strKeyField & "='" & CStr(intKey) & "'"
+  res = conData.Exec(strSql)
+  If res.Available Then
+    For intV = 0 To GEFStarter.stxViewFields.Max
+      If GEFStarter.stxViewFields[intV][0] = "view_" & strTab Then
+        strTmpField = GEFStarter.stxViewFields[intV][1]
+        strTag = "~" & strTmpField & "~"
+        stxTag.Add(strTag)
+        Select TypeOf(res[strTmpField])
+          Case gb.Null
+            strVal = ""
+          Case gb.Boolean, gb.Byte, gb.Short, gb.Integer, gb.Long, gb.Single, gb.Float
+            strVal = CStr(res[strTmpField])
+          Case gb.Date
+            strVal = Format(res[strTmpField], "yyyy.mm.dd")
+          Case gb.String
+            strVal = res[strTmpField]
+            strVal = Replace(strVal, "  ", "")
+            intLen = String.Len(strVal)
+            If intLen > 121 Then
+              stxValTmp = Split(strVal, " ")
+              For Each strWord In stxValTmp
+                If String.Len(strLine & " " & strWord) < 121 Then
+                  strLine &= strWord & " "
+                Else
+                  strValTmp &= strLine & "\n"
+                  strLine = strWord & " "
+                Endif
+              Next
+              strValTmp &= strLine & "\n"
+              strVal = strValTmp
+            Endif
+          Case gb.Variant
+            strVal = res[strTmpField]
+        End Select
+        stxVal.Add(strVal)
+      Endif
+      ' Asignación del archivo de imagen si es que existe
+      ' Dependiendo de la vista a usar, la foto puede provenir de otra tabla
+      Select "view_" & strTab
+        Case "view_seeds"
+          strTpic = "varietas"
+          intKPic = res["dvidx"]
+        Case Else
+          strTpic = GEFStarter.stxProgVal[20]
+          intKPic = res[strKeyField]
+      End Select
+      strPicPath = strPicDir &/ strTpic &/ CStr(intKPic) & ".png"
+      ' stxOut[intR] = Replace(stxOut[intR], "~picturepath~", strPicPath)
+      ' Las imagenes PNG dan problemas para generar archivos PDF con DIA
+      ' así que opto por crear una copia JPEG
+    Next
+    If Exist(strPicPath) = True Then
+      strPic = GEFBatch.ImageConvert(strPicPath, "jpeg")
+    Endif
+    stxTag.Add("~picturepath~")
+    stxVal.Add(strPic)
+
+    stxFiles = GEFUtility.FileTemplate(strTmp, strPro, stxTag, stxVal)
+
+    If stxFiles.Count > 0 Then
+      For Each strFile In stxFiles
+
+        If String.LCase(File.Ext(strFile)) = "pdf" Then
+          Desktop.Open(strFile)
+        Else
+
+        Endif
+
+      Next
+    Endif
+  Else
+    Message("No se obtuvieron resultados en la consulta")
+  Endif
+
+End
+
+Public Sub GFieldCommand_click()
+
+  Dim obj As Object
+  Dim obj1 As Object
+  Dim obj2 As Object
+  Dim obj3 As Object
+  Dim obj4 As Object
+  Dim strText As String
+  Dim strTool As String
+  Dim strExec As String
+
+  obj = Last
+  If Object.Type(obj) = "Button" Then
+    Print obj.Name
+    strTool = obj.Tag
+    obj1 = obj.Parent
+    obj2 = obj1.Parent
+    If obj2.Children.Count = 2 Then
+      obj3 = obj2.Children[1]
+      For Each obj4 In obj3.Children
+        Select Object.Type(obj4)
+          Case "TextBox", "ComboBox"
+            strText = obj4.Text
+        End Select
+      Next
+    Endif
+
+  Endif
+
+  Select strTool
+    Case "wikispecie"
+      strExec = GEFWeb.SpecieWeb(strText, "spa")
+    Case "sendemail"
+      strExec = ""
+    Case "imagesearch"
+      strExec = GEFWeb.ImageSearchWeb(strText, "spa", "duck")
+  End Select
+
+  If strExec <> "" Then
+    Desktop.Open(strExec)
+  Endif
+
+End
+
+Public Sub tobPicture_MouseDown()
+
+  Dim strPic0 As String ' La imagen actual
+  Dim strPic1 As String ' La imagen que deberia ser
+
+  Select Mouse.Button
+    Case 1
+      Print "Click"
+    Case 2
+      strPic0 = Split(tobPicture.Tag, "\t")[0]
+      strPic1 = Split(tobPicture.Tag, "\t")[1]
+      If strPic0 = strPic1 Then
+        Desktop.Open(strPic1)
+      Endif
+
+  End Select
 
 End

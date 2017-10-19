@@ -37,6 +37,9 @@ Public Function FileDelibery(strTool As String, strPath As String, Optional intP
     Case "Image-Convert" ' Convesion de formatos de imagenes
       str = ImageConvert(strPath, strMod)
 
+    Case "Image-Book" ' Convesion de formatos de imagenes
+      str = ImageBook(strPath, strMod)
+
       '## JPEG
       'Case "JPEG>Email" 'Crea copias reducidas en un directorio temporal y las adjunta en un nuevo email.
       '  'str = JPEGEmail(strPath)
@@ -62,8 +65,11 @@ Public Function FileDelibery(strTool As String, strPath As String, Optional intP
 
       '## PNG
     Case "PNG>Copy-Reduced-Color" 'Crea una copia reducida en la misma ubicación que la original
+      '      str = PNGJPEGReduced(strPath, strMod)
+      'Case "PNG>Copy-256-Color" 'Crea una copia reducida en la misma ubicación que la original de 256x256
+
     Case "PNG>JPEG-Copy-Reduced-Color" 'Crea una copia reducida en la misma ubicación que la original
-      str = PNGJPEGReduced(strPath)
+      '      str = PNGJPEGReduced(strPath)
 
       '## TIF
     Case "TIF>JPEG" 'Crea una copia de una imagen TIFF en otra JPEG
@@ -103,8 +109,8 @@ Public Function FileDelibery(strTool As String, strPath As String, Optional intP
       str = HTMLPDF(strPath, strMod)
 
       '## Sonido
-    Case "Play-Sound" 'Reproductor de archivos de sonido.
-      str = PlaySound(strPath)
+      ' Case "Play-Sound" 'Reproductor de archivos de sonido.
+      '   str = PlaySound(strPath)
 
       '## Video
     Case "Video>Frame" 'Extractor de fotograma de un video
@@ -130,7 +136,46 @@ Public Function FileDelibery(strTool As String, strPath As String, Optional intP
 
 End
 
-Public Function HTMLPDF(strPath As String, strMod As String) As String ''Esta funcion convierte un arcivo html en pdf usando el prgrama wkhtmltopdf
+Public Function HTMLMD(strPath As String, strMod As String) As String ''Esta funcion convierte un arcihvo html en Markdown usando el prgrama pandoc.
+
+  Dim strCommand As String
+  Dim prsAE As Process
+  Dim strDir As String
+  Dim strDirBase As String
+  Dim strOutputFile As String
+
+  strDir = File.Dir(strPath)
+  strDirBase = File.BaseName(strPath)
+
+  strOutputFile = strDir &/ strDirBase & ".md"
+
+  strCommand = "cd " & strDir & "\n"
+  strCommand &= "pandoc "
+  strCommand &= "-o " & strOutputFile '& " "
+  strCommand &= " " & strPath
+
+  Print strCommand
+
+  If Exist(strOutputFile) Then
+    Kill strOutputFile
+  Endif
+
+  prsAE = Shell strCommand
+
+  While
+    prsAE.State = prsAE.Running
+    Wait 0.5
+  Wend
+  Wait 0.5
+  If Stat(strOutputFile).Type = gb.File Then
+    Return strOutputFile
+  Else
+    Return "0"
+  Endif
+
+End
+
+Public Function HTMLPDF(strPath As String, strMod As String) As String ''Esta funcion convierte un archivo html en pdf usando el prgrama wkhtmltopdf o pandoc.
 
   Dim strCommand As String
   Dim prsAE As Process
@@ -186,24 +231,14 @@ End
 
 Public Function ImageConvert(strPath As String, strFormat As String) As String ''Convierte una imágenes JPEG a otra formato PNG.
 
-  Dim prs2 As Process
   Dim strCommand2 As String
-
   Dim strRenPath As String
 
-  If GEFStarter.strState = "running" Then
+  strRenPath = File.Dir(strPath) &/ String.LCase(File.BaseName(strPath)) & "." & strFormat
 
-    strRenPath = File.Dir(strPath) &/ String.LCase(File.BaseName(strPath)) & "." & strFormat
+  strCommand2 = "convert -background white -alpha remove -alpha off -quality 80 '" & strPath & "' '" & strRenPath & "'"
 
-    strCommand2 = "convert -quality 80 '" & strPath & "' '" & strRenPath & "'"
-
-    prs2 = Shell strCommand2
-    While
-      prs2.State = prs2.Running
-      Wait 0.05
-    Wend
-
-  Endif
+  Shell strCommand2 Wait
 
   If Exist(strRenPath) Then
     If Stat(strRenPath).Type = gb.File Then
@@ -212,64 +247,6 @@ Public Function ImageConvert(strPath As String, strFormat As String) As String '
       Return "0"
     Endif
   Endif
-
-End
-
-Public Function PlaySound(strPath As String) As String ''Esta funcion reproduce un archivo OGG comn el programa mplayer. Dependenciaas: mplayer. Devuelve el numero PID del proceso.
-
-  'Basic options: (complete list in the man page)
-  ' -vo <drv>        select video output driver ('-vo help' for a list)
-  ' -ao <drv>        select audio output driver ('-ao help' for a list)
-  ' vcd://<trackno>  play (S)VCD (Super Video CD) track (raw device, no mount)
-  ' dvd://<titleno>  play DVD title from device instead of plain file
-  ' -alang/-slang    select DVD audio/subtitle language (by 2-char country code)
-  ' -ss <position>   seek to given (seconds or hh:mm:ss) position
-  ' -nosound         do not play sound
-  ' -fs              fullscreen playback (or -vm, -zoom, details in the man page)
-  ' -x <x> -y <y>    set display resolution (for use with -vm or -zoom)
-  ' -sub <file>      specify subtitle file to use (also see -subfps, -subdelay)
-  ' -playlist <file> specify playlist file
-  ' -vid x -aid y    select video (x) and audio (y) stream to play
-  ' -fps x -srate y  change video (x fps) and audio (y Hz) rate
-  ' -pp <quality>    enable postprocessing filter (details in the man page)
-  ' -framedrop       enable frame dropping (for slow machines)
-
-  'Basic keys: (complete list in the man page, also check input.conf)
-  ' <-  or  ->       seek backward/forward 10 seconds
-  ' down or up       seek backward/forward  1 minute
-  ' pgdown or pgup   seek backward/forward 10 minutes
-  ' < or >           step backward/forward in playlist
-  ' p or SPACE       pause movie (press any key to continue)
-  ' q or ESC         stop playing and quit program
-  ' + or -           adjust audio delay by +/- 0.1 second
-  ' o                cycle OSD mode:  none / seekbar / seekbar + timer
-  ' * or /           increase or decrease PCM volume
-  ' x or z           adjust subtitle delay by +/- 0.1 second
-  ' r or t           adjust subtitle position up/down, also see -vf expand
-
-  '  Dim strCommand As String
-  '  Dim prsS As Process ' Proceso de creacion de sonido
-  'Dim intS As Integer '
-
-  If Exist(strPath) = True Then
-    Music.Load(strPath)
-    Music.Play()
-
-    ' strCommand = "play '" & strPath & "'"
-    ' Print strCommand
-    ' prsS = Shell strCommand
-    '
-  Endif
-  '
-  ' While prsS.State = prsS.Running
-  '   Wait 0.2
-  ' Wend
-
-  While Music.Playing
-    Wait 0.2
-  Wend
-
-  Return strPath
 
 End
 
@@ -283,20 +260,13 @@ Public Function WAV2OGG(strPath As String) As String ''Esta función convierte u
 
   strDir = File.Dir(strPath)
   strDirBase = File.BaseName(strPath)
-
   strAudioFile = strDir &/ strDirBase & ".ogg"
-
   strCommand = "avconv -i '" & strPath & "' -vn "
-  'strCommand &= "-af volume=7dB:precision=fixed "
   strCommand &= " '" & strAudioFile & "'"
-
   Print strCommand
-
   prsWAVE = Shell strCommand For Read As "ExtAudio"
-
   While
     prsWAVE.State = prsWAVE.Running
-    'Print "Running"
     Wait 2
   Wend
 
@@ -433,7 +403,7 @@ Public Function LATEXPDF(strPath As String, strMod As String) As String ''Convie
       strCommand = "pdflatex -output-format=pdf '" & strPath & "'"
   End Select
 
-  prsAE = Shell strCommand ' For Read As "HmlToPdf"
+  prsAE = Shell strCommand
 
   While
     prsAE.State = prsAE.Running
@@ -727,17 +697,18 @@ Public Function MediaArrange(strPath As String, strLog As String) As String ''De
     For intEx = 0 To stxExif.Max
       Select Split(stxExif[intEx], "\t")[0]
         Case "MediaCreateDate", "DateTimeOriginal"
-          'stxExif[intEx] = "MediaCreateDate" & "\t" & Split(stxExif[intEx], "\t")[1]
 
           strTimeStamp = Split(stxExif[intEx], "\t")[1]
           strTimeStamp = GEFValidator.OnlyNumbers(strTimeStamp)
           strTimeStamp = String.Mid(strTimeStamp, 1, 14)
 
-        Case "Make" ' Fabricante de la cámara
+        Case "Make"
+          ' Fabricante de la cámara
           strMnfr = Split(stxExif[intEx], "\t")[1]
           strMnfr = String.UCase(strMnfr)
 
-        Case "Model" ' Modelo de cámara sin caracteres extraños.
+        Case "Model"
+          ' Modelo de cámara sin caracteres extraños.
           strModel = Split(stxExif[intEx], "\t")[1]
           strModel = GEFValidator.NoSymbols(strModel)
           strModel = String.UCase(strModel)
@@ -957,6 +928,66 @@ Public Function TIFJPEG(strPath As String) As String ''Convierte una imágenes T
 
 End
 
+Public Function ImageBook(strPath As String, Optional strMod As String) As String ''Convierte una imágenes TIF a JPEG.
+
+  Dim strBase As String
+
+  Dim strRenPath As String
+  Dim strInit As String
+  Dim strMogrify As String
+  Dim strTrim As String
+  Dim img As Image
+  Dim strComm1 As String
+  Dim strComm2 As String
+  Dim strComm3 As String
+
+  Select strMod
+    Case "", Null
+      strMod = "jpeg"
+  End Select
+
+  strBase = File.Dir(strPath) &/ String.LCase(File.BaseName(strPath))
+  strRenPath = strBase & "." & strMod
+  strInit = strBase & "-in" & "." & strMod
+  strTrim = strBase & "-tr" & "." & strMod
+  strMogrify = strBase & "-mg" & "." & strMod
+
+  strComm1 = "convert "
+  strComm1 &= "-density 300 "
+  strComm1 &= "-resample 300x300 "
+  strComm1 &= "-trim "
+  strComm1 &= "'" & strPath & "' "
+  strComm1 &= "'" & strInit & "'"
+
+  Shell strComm1 Wait
+
+  img = Image.Load(strInit)
+
+  strComm2 = "mogrify -resize 2360x3387! '" & strInit & "' '" & strMogrify & "'"
+
+  Shell strComm2 Wait
+
+  strComm3 = "convert "
+  strComm3 &= "-page A4 "
+  strComm3 &= "-gravity north "
+  strComm3 &= "-extent 2360x3387 "
+  strComm3 &= "-border 60 "
+  strComm3 &= "-bordercolor white "
+  strComm3 &= "'" & strMogrify & "' "
+  strComm3 &= "'" & strRenPath & "'"
+
+  Shell strComm3 Wait
+
+  If Exist(strRenPath) Then
+    If Stat(strRenPath).Type = gb.File Then
+      Return strRenPath
+    Else
+      Return "0"
+    Endif
+  Endif
+
+End
+
 Public Function JPEGPNG(strPath As String) As String ''Convierte una imágenes JPEG a otra formato PNG.
 
   Dim prs2 As Process
@@ -1026,8 +1057,6 @@ Public Function JPEGCopyRC(strPath As String, Optional strCompress As String) As
   Dim strCommand As String
 
   If GEFStarter.strState = "running" Then
-
-    'strRenPath = File.Dir(strPath) &/ String.LCase(File.BaseName(strPath)) & "-" & strCompress & "-rc.jpeg"
 
     If Exist(strRenPath) = False Then
 
@@ -1111,29 +1140,25 @@ Public Function JPEGCopyRG(strPath As String, Optional strCompress As String) As
 
 End
 
-Public Function PNGJPEGReduced(strPath As String, Optional strCompress As String) As String ''Devuelve la ruta al archivo jpeg creado
+Public Function PNGReduced(strPath As String, Optional strCompress As String) As String ''Devuelve la ruta al archivo jpeg creado
 
   Dim prs As Process
 
   Dim strRenPath As String
   Dim strCommand As String
 
-  If GEFStarter.strState = "running" Then
+  If Exist(strRenPath) = False Then
 
-    'strRenPath = File.Dir(strPath) &/ String.LCase(File.BaseName(strPath)) & "-rc.jpeg"
+    'strRenPath = File.Dir(strPath) &/ String.LCase(File.BaseName(strPath)) & "-" & strCompress & "-rc.jpeg"
 
-    If Exist(strRenPath) = False Then
+    strCommand = "convert " & strCompress & " '" & strPath & "' '" & strPath & "'"
+    'strCommand &= " '" & strPath & "' '" & strRenPath & "'"
+    prs = Shell strCommand
 
-      strRenPath = File.Dir(strPath) &/ String.LCase(File.BaseName(strPath)) & "-" & strCompress & "-rc.jpeg"
-
-      strCommand = "convert -compress jpeg -quality " & strCompress & " -enhance"
-      strCommand &= " '" & strPath & "' '" & strRenPath & "'"
-      prs = Shell strCommand
-      While
-        prs.State = prs.Running
-        Wait 0.05
-      Wend
-    Endif
+    While
+      prs.State = prs.Running
+      Wait 0.05
+    Wend
   Endif
 
   If Exist(strRenPath) Then

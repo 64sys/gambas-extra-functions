@@ -1,0 +1,19 @@
+fondo
+texto normal
+palabras clave
+tipo de datos
+subrutinas
+operadores
+símbolos
+numeros
+cadenas
+comentarios
+ayuda
+preprocesador
+puntos de interrupcion
+linea actual
+seleccion
+resaltado
+editando linea
+errores
+

@@ -38,128 +38,524 @@ Public Function DBTemplate(stxDB As String[]) As String ''Crea una plantilla de 
 
 End
 
-Public Function DBViewsTitles() As String[][] ''Esta funcion se debe modificar para cada plantilla de base de datos, o estructura de base de datos (no para cada motor). Es devuelta una matriz de texto de 3 dimensiones de la forma Tabla|Vista//Titulo-de-Tabla|Vista//Icono donde Titulo-de-Tabla|Vista es un texto que como se ve en el código esta entre parentesis ("") y ello permite que se puedan traducir con la aplicacion, prestando asi una versatilidad mayor y haciendo que el programa sea mas amigable.
+Public Function FileSqlLoad(str As String) As String[]
+
+  Dim int As Integer
+  Dim intRod1 As Integer
+  Dim intRod2 As Integer
+  Dim stx As New String[]
+  Dim strRod1 As String
+  Dim strRod2 As String
+  Dim strTmp As String
+
+  strRod1 = "CREATE TABLE "
+  strRod2 = ");"
+  intRod1 = 1
+  intRod2 = 1
+
+  Do
+    If intRod2 <> 0 Then
+      intRod1 = InStr(str, strRod1, intRod2)
+      If intRod1 <> 0 Then
+        intRod2 = InStr(str, ");", intRod1)
+        strTmp = String.Mid(str, intRod1, intRod2 + 2 - intRod1)
+        If InStr(strTmp, "sqlite_sequence") = 0 Then
+          stx.Add(strTmp)
+        Endif
+        Print strTmp
+      Else
+        Break
+      Endif
+    Else
+      Break
+    Endif
+  Loop
+
+  Return stx
+
+End
+
+Public Function DBViewsTitles(strWhichdb As String) As String[][] ''Esta funcion se debe modificar para cada plantilla de base de datos, o estructura de base de datos (no para cada motor). Es devuelta una matriz de texto de 3 dimensiones de la forma Tabla|Vista//Titulo-de-Tabla|Vista//Icono donde Titulo-de-Tabla|Vista es un texto que como se ve en el código esta entre parentesis ("") y ello permite que se puedan traducir con la aplicacion, prestando asi una versatilidad mayor y haciendo que el programa sea mas amigable.
 
   Dim stxVTitles As New String[][]
   ' // Carga de vistas y tablas, y se debe modificar cuando se use otra estructura de BBDD
+  Select strWhichdb
+    Case "works.sqlite"
+      ' Nombre alternativo para la aplicacion
+      GEFStarter.stxProgVal[17] = ("Reparaciones")
+      GEFStarter.stxProgVal[19] = GEFStarter.stxProgVal[1] &/ "works"
+      ' Nombres de las tablas
+      stxVTitles.Add(["view_jobs", ("Trabajos"), "icon:/16/add"])
+      stxVTitles.Add(["view_boms", ("Materiales y tareas"), "icon:/16/add"])
+      stxVTitles.Add(["view_codes", ("Códigos"), "icon:/16/add"])
+      stxVTitles.Add(["view_codcls", ("Clases de códigos"), "icon:/16/add"])
+      stxVTitles.Add(["view_composites", ("Compuestos"), "icon:/16/add"])
+      stxVTitles.Add(["view_deliverables", ("Informes"), "icon:/16/add"])
+      stxVTitles.Add(["view_logistics", ("Logística"), "icon:/16/add"])
+      stxVTitles.Add(["view_owners", ("Clientes"), "icon:/16/add"])
+      stxVTitles.Add(["view_suppliers", ("Suministradores"), "icon:/16/add"])
+      stxVTitles.Add(["view_uoms", ("Unidades de medida"), "icon:/16/add"])
+      stxVTitles.Add(["view_cities", ("Ciudades"), "icon:/16/add"])
 
-  stxVTitles.Add(["view_jobs", ("Trabajos"), "icon:/16/add"])
-  stxVTitles.Add(["view_boms", ("Materiales y tareas"), "icon:/16/add"])
-  stxVTitles.Add(["view_codes", ("Códigos"), "icon:/16/add"])
-  stxVTitles.Add(["view_composites", ("Compuestos"), "icon:/16/add"])
-  stxVTitles.Add(["view_deliverables", ("Informes"), "icon:/16/add"])
-  stxVTitles.Add(["view_logistics", ("Logística"), "icon:/16/add"])
-  stxVTitles.Add(["view_owners", ("Clientes"), "icon:/16/add"])
-  stxVTitles.Add(["view_suppliers", ("Suministradores"), "icon:/16/add"])
-  stxVTitles.Add(["view_uoms", ("Unidades de medida"), "icon:/16/add"])
+    Case "orchard.sqlite"
+      ' Nombre alternativo para la aplicacion
+      GEFStarter.stxProgVal[17] = ("Huerto")
+      GEFStarter.stxProgVal[19] = GEFStarter.stxProgVal[1] &/ "orchard"
+      ' Nombres de las tablas
+      stxVTitles.Add(["view_species", ("Especies"), "icon:/16/add"])
+      stxVTitles.Add(["view_varietas", ("Variedades"), "icon:/16/add"])
+      stxVTitles.Add(["view_seeds", ("Semillas"), "icon:/16/add"])
+      stxVTitles.Add(["view_plants", ("Plantínes"), "icon:/16/add"])
+      stxVTitles.Add(["view_plots", ("Parcelas"), "icon:/16/add"])
+      stxVTitles.Add(["view_sowing", ("Siembra"), "icon:/16/add"])
+      stxVTitles.Add(["view_sowingclass", ("Tipos de siembra"), "icon:/16/add"])
+      stxVTitles.Add(["view_planting", ("Transplantes"), "icon:/16/add"])
+      stxVTitles.Add(["view_plantingclass", ("Tipos de siembra"), "icon:/16/add"])
+      stxVTitles.Add(["view_schedule", ("Cronograma"), "icon:/16/add"])
+      stxVTitles.Add(["view_harvests", ("Cosechas"), "icon:/16/add"])
+      stxVTitles.Add(["view_harvestsresume", ("Resumen"), "icon:/16/add"])
+      stxVTitles.Add(["view_inputs", ("Insumos"), "icon:/16/add"])
+      stxVTitles.Add(["view_suppliers", ("Suministradores"), "icon:/16/add"])
+      stxVTitles.Add(["view_marks", ("Marcas"), "icon:/16/add"])
+      stxVTitles.Add(["view_aditives", ("Aditivos"), "icon:/16/add"])
+      stxVTitles.Add(["view_bioclass", ("Clasificacion biológica"), "icon:/16/add"])
+      stxVTitles.Add(["view_favorables", ("Asociaciones favorables"), "icon:/16/add"])
+      stxVTitles.Add(["view_remarks", ("Notas"), "icon:/16/add"])
+
+  End Select
 
   Return stxVTitles
 
 End
 
-Public Function DBFieldsTitles() As String[][] ''Esta funcion se debe modificar para cada plantilla de base de datos, o estructura de base de datos (no para cada motor). Es devuelta una matriz de texto de 3 dimensiones de la forma Tabla|Vista//Nombre-de-campo//Titulo-de-campo donde Titulo-de-campo es un texto que como se ve en el código esta entre parentesis ("") y ello permite que los titulos de los campos se puedan traducir con la aplicacion, prestando asi una versatilidad mayor y haciendo que el programa sea mas amigable.
+Public Function DBFieldsTitles(strWhichdb As String) As String[][] ''Esta funcion se debe modificar para cada plantilla de base de datos, o estructura de base de datos (no para cada motor). Es devuelta una matriz de texto de 3 dimensiones de la forma Tabla|Vista//Nombre-de-campo//Titulo-de-campo donde Titulo-de-campo es un texto que como se ve en el código esta entre parentesis ("") y ello permite que los titulos de los campos se puedan traducir con la aplicacion, prestando asi una versatilidad mayor y haciendo que el programa sea mas amigable.
 
   Dim stxFTitles As New String[][]
-  ' // Carga de vistas y tablas, y se debe modificar cuando se use otra estructura de BBDD
+  Dim intFld As Integer
+  Dim intLen As Integer
+  Dim intW As Integer
+  Dim sql As String
+  Dim res As Result
 
-  stxFTitles.Add(["boms", "midx", ("Índice")])
-  stxFTitles.Add(["boms", "mjob", ("Trabajo")])
-  stxFTitles.Add(["boms", "mcod", ("Código")])
-  stxFTitles.Add(["boms", "mqty", ("Cantidad")])
+  ' // ATENCION !!!!! Carga de vistas y tablas.
+  ' // Se debe modificar cuando se Use otra estructura de BBDD
+  ' // Este código esta preparado para algunas bases precargadas pero modificando
+  ' // este módulo y el archivo preloaded.txt puede agregar todas las bases que desee.
 
-  stxFTitles.Add(["view_boms", "midx", ("Índice")])
-  stxFTitles.Add(["view_boms", "mjob", ("Trabajo")])
-  stxFTitles.Add(["view_boms", "mcod", ("Código")])
-  stxFTitles.Add(["view_boms", "mclass", ("Clase")])
-  stxFTitles.Add(["view_boms", "mqty", ("Cantidad")])
-  stxFTitles.Add(["view_boms", "mprice", ("Precio")])
-  stxFTitles.Add(["view_boms", "muom", ("Unidad")])
-  stxFTitles.Add(["view_boms", "msupplier", ("Suministrador")])
+  Select strWhichdb
+    Case "works.sqlite"
+      stxFTitles.Add(["boms", "midx", ("Índice"), "1", "", "", ""])
+      stxFTitles.Add(["boms", "mjob", ("Trabajo"), "1", "", "", ""])
+      stxFTitles.Add(["boms", "mcod", ("Código"), "1", "", "", ""])
+      stxFTitles.Add(["boms", "mqty", ("Cantidad"), "1", "", "", ""])
+      stxFTitles.Add(["boms", "mprice", ("Precio"), "1", "", "", ""])
+      stxFTitles.Add(["boms", "msupplier", ("Suministrador"), "1", "", "", ""])
 
-  stxFTitles.Add(["codcls", "sidx", ("Índice")])
-  stxFTitles.Add(["codcls", "sname", ("Clase")])
+      stxFTitles.Add(["view_boms", "midx", ("Índice"), "1", "", "", ""])
+      stxFTitles.Add(["view_boms", "mjob", ("Trabajo"), "1", "", "", ""])
+      stxFTitles.Add(["view_boms", "mcod", ("Código"), "1", "", "", ""])
+      stxFTitles.Add(["view_boms", "mclass", ("Clase"), "1", "", "", ""])
+      stxFTitles.Add(["view_boms", "mqty", ("Cantidad"), "1", "", "", ""])
+      stxFTitles.Add(["view_boms", "mprice", ("Precio"), "1", "", "", ""])
+      stxFTitles.Add(["view_boms", "muom", ("Unidad"), "1", "", "", ""])
+      stxFTitles.Add(["view_boms", "msupplier", ("Suministrador"), "1", "", "", ""])
 
-  stxFTitles.Add(["codes", "cidx", ("Índice")])
-  stxFTitles.Add(["codes", "cname", ("Insumo")])
-  stxFTitles.Add(["codes", "cclass", ("Clase")])
-  stxFTitles.Add(["codes", "cqty", ("Cantidad")])
-  stxFTitles.Add(["codes", "cuom", ("Unidad")])
-  stxFTitles.Add(["codes", "cprice", ("Precio")])
+      stxFTitles.Add(["cities", "yidx", ("Índice"), "1", "", "", ""])
+      stxFTitles.Add(["cities", "yname", ("Ciudad"), "1", "", "", ""])
 
-  stxFTitles.Add(["view_codes", "cidx", ("Índice")])
-  stxFTitles.Add(["view_codes", "cname", ("Insumo")])
-  stxFTitles.Add(["view_codes", "cclass", ("Clase")])
-  stxFTitles.Add(["view_codes", "cqty", ("Cantidad")])
-  stxFTitles.Add(["view_codes", "cuom", ("Unidad")])
-  stxFTitles.Add(["view_codes", "cprice", ("Precio")])
+      stxFTitles.Add(["view_cities", "yidx", ("Índice"), "1", "", "", ""])
+      stxFTitles.Add(["view_cities", "yname", ("Ciudad"), "1", "", "", ""])
 
-  stxFTitles.Add(["composites", "aidx", ("Índice")])
-  stxFTitles.Add(["composites", "aname", ("Compuesto")])
-  stxFTitles.Add(["composites", "adesc", ("Descripción")])
+      stxFTitles.Add(["codcls", "sidx", ("Índice"), "1", "", "", ""])
+      stxFTitles.Add(["codcls", "sname", ("Clase"), "1", "", "", ""])
 
-  stxFTitles.Add(["view_composites", "aidx", ("Índice")])
-  stxFTitles.Add(["view_composites", "aname", ("Compuesto")])
-  stxFTitles.Add(["view_composites", "adesc", ("Descripción")])
+      stxFTitles.Add(["view_codcls", "sidx", ("Índice"), "1", "", "", ""])
+      stxFTitles.Add(["view_codcls", "sname", ("Clase"), "1", "", "", ""])
 
-  stxFTitles.Add(["deliverables", "didx", ("Índice")])
-  stxFTitles.Add(["deliverables", "dname", ("Informe")])
+      stxFTitles.Add(["codes", "cidx", ("Índice"), "1", "", "", ""])
+      stxFTitles.Add(["codes", "cname", ("Insumo"), "1", "", "", ""])
+      stxFTitles.Add(["codes", "cclass", ("Clase"), "1", "", "", ""])
+      stxFTitles.Add(["codes", "cqty", ("Cantidad"), "1", "", "", ""])
+      stxFTitles.Add(["codes", "cuom", ("Unidad"), "1", "", "", ""])
+      'stxFTitles.Add(["codes", "cprice", ("Precio"), "1", "", "", ""])
 
-  stxFTitles.Add(["view_deliverables", "didx", ("Índice")])
-  stxFTitles.Add(["view_deliverables", "dname", ("Informe")])
+      stxFTitles.Add(["view_codes", "cidx", ("Índice"), "1", "", "", ""])
+      stxFTitles.Add(["view_codes", "cname", ("Insumo"), "1", "", "", ""])
+      stxFTitles.Add(["view_codes", "cclass", ("Clase"), "1", "", "", ""])
+      stxFTitles.Add(["view_codes", "cqty", ("Cantidad"), "1", "", "", ""])
+      stxFTitles.Add(["view_codes", "cuom", ("Unidad"), "1", "", "", ""])
+      'stxFTitles.Add(["view_codes", "cprice", ("Precio"), "1", "", "", ""])
 
-  stxFTitles.Add(["jobs", "jidx", ("Índice")])
-  stxFTitles.Add(["jobs", "jname", ("Trabajo")])
-  stxFTitles.Add(["jobs", "jdate", ("Fecha")])
-  stxFTitles.Add(["jobs", "jowner", ("Cliente")])
-  stxFTitles.Add(["jobs", "jlogistic", ("Logística")])
+      stxFTitles.Add(["composites", "aidx", ("Índice"), "1", "", "", ""])
+      stxFTitles.Add(["composites", "aname", ("Compuesto"), "1", "", "", ""])
+      stxFTitles.Add(["composites", "adesc", ("Descripción"), "1", "", "", ""])
 
-  stxFTitles.Add(["view_jobs", "jidx", ("Índice")])
-  stxFTitles.Add(["view_jobs", "jname", ("Trabajo")])
-  stxFTitles.Add(["view_jobs", "jdate", ("Fecha")])
-  stxFTitles.Add(["view_jobs", "jowner", ("Cliente")])
-  stxFTitles.Add(["view_jobs", "jlogistic", ("Logística")])
+      stxFTitles.Add(["view_composites", "aidx", ("Índice"), "1", "", "", ""])
+      stxFTitles.Add(["view_composites", "aname", ("Compuesto"), "1", "", "", ""])
+      stxFTitles.Add(["view_composites", "adesc", ("Descripción"), "1", "", "", ""])
 
-  stxFTitles.Add(["logistics", "lidx", ("Índice")])
-  stxFTitles.Add(["logistics", "lname", ("Logística")])
+      stxFTitles.Add(["deliverables", "didx", ("Índice"), "1", "", "", ""])
+      stxFTitles.Add(["deliverables", "dname", ("Informe"), "1", "", "", ""])
 
-  stxFTitles.Add(["view_logistics", "lidx", ("Índice")])
-  stxFTitles.Add(["view_logistics", "lname", ("Logística")])
+      stxFTitles.Add(["view_deliverables", "didx", ("Índice"), "1", "", "", ""])
+      stxFTitles.Add(["view_deliverables", "dname", ("Informe"), "1", "", "", ""])
 
-  stxFTitles.Add(["owners", "oidx", ("Índice")])
-  stxFTitles.Add(["owners", "oname", ("Cliente")])
-  stxFTitles.Add(["owners", "ophone", ("Fijo")])
-  stxFTitles.Add(["owners", "omovile", ("Móvil")])
-  stxFTitles.Add(["owners", "oaddress", ("Dirección")])
-  stxFTitles.Add(["owners", "ocity", ("Ciudad")])
+      stxFTitles.Add(["jobs", "jidx", ("Índice"), "1", "", "", ""])
+      stxFTitles.Add(["jobs", "jname", ("Trabajo"), "1", "", "", ""])
+      stxFTitles.Add(["jobs", "jdate", ("Fecha"), "1", "", "", ""])
+      stxFTitles.Add(["jobs", "jowner", ("Cliente"), "1", "", "", ""])
+      stxFTitles.Add(["jobs", "jlogistic", ("Logística"), "1", "", "", ""])
 
-  stxFTitles.Add(["view_owners", "oidx", ("Índice")])
-  stxFTitles.Add(["view_owners", "oname", ("Cliente")])
-  stxFTitles.Add(["view_owners", "ophone", ("Fijo")])
-  stxFTitles.Add(["view_owners", "omovile", ("Móvil")])
-  stxFTitles.Add(["view_owners", "oaddress", ("Dirección")])
-  stxFTitles.Add(["view_owners", "ocity", ("Ciudad")])
+      stxFTitles.Add(["view_jobs", "jidx", ("Índice"), "1", "", "", ""])
+      stxFTitles.Add(["view_jobs", "jname", ("Trabajo"), "1", "", "", ""])
+      stxFTitles.Add(["view_jobs", "jdate", ("Fecha"), "1", "", "", ""])
+      stxFTitles.Add(["view_jobs", "jowner", ("Cliente"), "1", "", "", ""])
+      stxFTitles.Add(["view_jobs", "jlogistic", ("Logística"), "1", "", "", ""])
 
-  stxFTitles.Add(["suppliers", "fidx", ("Índice")])
-  stxFTitles.Add(["suppliers", "fname", ("Suministrador")])
-  stxFTitles.Add(["suppliers", "fphone", ("Fijo")])
-  stxFTitles.Add(["suppliers", "fmovile", ("Móvil")])
-  stxFTitles.Add(["suppliers", "faddress", ("Dirección")])
-  stxFTitles.Add(["suppliers", "fcity", ("Ciudad")])
+      stxFTitles.Add(["logistics", "lidx", ("Índice"), "1", "", "", ""])
+      stxFTitles.Add(["logistics", "lname", ("Logística"), "1", "", "", ""])
 
-  stxFTitles.Add(["view_suppliers", "fidx", ("Índice")])
-  stxFTitles.Add(["view_suppliers", "fname", ("Suministrador")])
-  stxFTitles.Add(["view_suppliers", "fphone", ("Fijo")])
-  stxFTitles.Add(["view_suppliers", "fmovile", ("Móvil")])
-  stxFTitles.Add(["view_suppliers", "faddress", ("Dirección")])
-  stxFTitles.Add(["view_suppliers", "fcity", ("Ciudad")])
+      stxFTitles.Add(["view_logistics", "lidx", ("Índice"), "1", "", "", ""])
+      stxFTitles.Add(["view_logistics", "lname", ("Logística"), "1", "", "", ""])
 
-  stxFTitles.Add(["uoms", "uidx", ("Índice")])
-  stxFTitles.Add(["uoms", "uname", ("Magnitud")])
-  stxFTitles.Add(["uoms", "usymbol", ("Simbolo")])
+      stxFTitles.Add(["owners", "oidx", ("Índice"), "1", "", "", ""])
+      stxFTitles.Add(["owners", "oname", ("Cliente"), "1", "", "", ""])
+      stxFTitles.Add(["owners", "ophone", ("Fijo"), "1", "", "", ""])
+      stxFTitles.Add(["owners", "omovile", ("Móvil"), "1", "", "", ""])
+      stxFTitles.Add(["owners", "oaddress", ("Dirección"), "1", "", "", ""])
+      stxFTitles.Add(["owners", "ocity", ("Ciudad"), "1", "", "", ""])
 
-  stxFTitles.Add(["view_uoms", "uidx", ("Índice")])
-  stxFTitles.Add(["view_uoms", "uname", ("Magnitud")])
-  stxFTitles.Add(["view_uoms", "usymbol", ("Simbolo")])
+      stxFTitles.Add(["view_owners", "oidx", ("Índice"), "1", "", "", ""])
+      stxFTitles.Add(["view_owners", "oname", ("Cliente"), "1", "", "", ""])
+      stxFTitles.Add(["view_owners", "ophone", ("Fijo"), "1", "", "", ""])
+      stxFTitles.Add(["view_owners", "omovile", ("Móvil"), "1", "", "", ""])
+      stxFTitles.Add(["view_owners", "oaddress", ("Dirección"), "1", "", "", ""])
+      stxFTitles.Add(["view_owners", "ocity", ("Ciudad"), "1", "", "", ""])
+
+      stxFTitles.Add(["suppliers", "fidx", ("Índice"), "1", "", "", ""])
+      stxFTitles.Add(["suppliers", "fname", ("Suministrador"), "1", "", "", ""])
+      stxFTitles.Add(["suppliers", "fphone", ("Fijo"), "1", "", "", ""])
+      stxFTitles.Add(["suppliers", "fmovile", ("Móvil"), "1", "", "", ""])
+      stxFTitles.Add(["suppliers", "faddress", ("Dirección"), "1", "", "", ""])
+      stxFTitles.Add(["suppliers", "fcity", ("Ciudad"), "1", "", "", ""])
+
+      stxFTitles.Add(["view_suppliers", "fidx", ("Índice"), "1", "", "", ""])
+      stxFTitles.Add(["view_suppliers", "fname", ("Suministrador"), "1", "", "", ""])
+      stxFTitles.Add(["view_suppliers", "fphone", ("Fijo"), "1", "", "", ""])
+      stxFTitles.Add(["view_suppliers", "fmovile", ("Móvil"), "1", "", "", ""])
+      stxFTitles.Add(["view_suppliers", "faddress", ("Dirección"), "1", "", "", ""])
+      stxFTitles.Add(["view_suppliers", "fcity", ("Ciudad"), "1", "", "", ""])
+
+      stxFTitles.Add(["uoms", "uidx", ("Índice"), "1", "", "", ""])
+      stxFTitles.Add(["uoms", "uname", ("Magnitud"), "1", "", "", ""])
+      stxFTitles.Add(["uoms", "usymbol", ("Simbolo"), "1", "", "", ""])
+
+      stxFTitles.Add(["view_uoms", "uidx", ("Índice"), "1", "", "", ""])
+      stxFTitles.Add(["view_uoms", "uname", ("Magnitud"), "1", "", "", ""])
+      stxFTitles.Add(["view_uoms", "usymbol", ("Simbolo"), "1", "", "", ""])
+
+    Case "orchard.sqlite"
+
+      stxFTitles.Add(["eventsclass", "cidx", ("Índice"), "1", "", "", ""])
+      stxFTitles.Add(["eventsclass", "cname", ("Evento"), "1", "", "", ""])
+
+      stxFTitles.Add(["events", "eidx", ("Índice"), "1", "", "", ""])
+      stxFTitles.Add(["events", "ekind", ("Tipo"), "1", "", "", ""])
+      stxFTitles.Add(["events", "edate", ("Fecha"), "1", "", "", ""])
+      stxFTitles.Add(["events", "eplant", ("Planta"), "1", "", "", ""])
+
+      stxFTitles.Add(["plants", "pidx", ("Índice"), "1", "", "", ""])
+      stxFTitles.Add(["plants", "pvariety", ("Variedad"), "1", "", "", ""])
+      stxFTitles.Add(["plants", "pbatch", ("Lote"), "1", "", "", ""])
+      stxFTitles.Add(["plants", "pmark", ("Marca"), "1", "", "", ""])
+      stxFTitles.Add(["plants", "psupplier", ("Suministrador"), "1", "", "", ""])
+      stxFTitles.Add(["plants", "pbioclass", ("Biológico"), "1", "", "", ""])
+      stxFTitles.Add(["plants", "pqty", ("Cantidad"), "1", "", "", ""])
+      stxFTitles.Add(["plants", "pprice", ("Precio"), "1", "", "", ""])
+      stxFTitles.Add(["plants", "pdate", ("Fecha"), "1", "", "", ""])
+      stxFTitles.Add(["plants", "premark", ("Notas"), "1", "", "", ""])
+      stxFTitles.Add(["plants", "pframe", ("Marco"), "1", "", "", ""])
+
+      stxFTitles.Add(["view_plants", "pidx", ("Índice"), "1", "", "", ""])
+      stxFTitles.Add(["view_plants", "pname", ("Semilla"), "1", "", "", ""])
+      stxFTitles.Add(["view_plants", "pvariety", ("Variedad"), "1", "", "", ""])
+      stxFTitles.Add(["view_plants", "pbatch", ("Lote"), "1", "", "", ""])
+      stxFTitles.Add(["view_plants", "pmark", ("Marca"), "1", "", "", ""])
+      stxFTitles.Add(["view_plants", "psupplier", ("Suministrador"), "1", "", "", ""])
+      stxFTitles.Add(["view_plants", "pbioclass", ("Biológico"), "1", "", "", ""])
+      stxFTitles.Add(["view_plants", "pqty", ("Cantidad"), "1", "", "", ""])
+      stxFTitles.Add(["view_plants", "pprice", ("Precio"), "1", "", "", ""])
+      stxFTitles.Add(["view_plants", "pdate", ("Fecha"), "1", "", "", ""])
+      stxFTitles.Add(["view_plants", "premark", ("Notas"), "1", "", "", ""])
+      stxFTitles.Add(["view_plants", "pframe", ("Marco"), "1", "", "", ""])
+
+      stxFTitles.Add(["aditives", "aidx", ("Índice"), "1", "", "", ""])
+      stxFTitles.Add(["aditives", "aname", ("Aditivo"), "1", "", "", ""])
+
+      stxFTitles.Add(["remarks", "nidx", ("Índice"), "1", "", "", ""])
+      stxFTitles.Add(["remarks", "nname", ("Notas"), "1", "", "", ""])
+
+      stxFTitles.Add(["view_remarks", "nidx", ("Índice"), "1", "", "", ""])
+      stxFTitles.Add(["view_remarks", "nname", ("Notas"), "1", "", "", ""])
+
+      stxFTitles.Add(["inputs", "iidx", ("Índice"), "1", "", "", ""])
+      stxFTitles.Add(["inputs", "iname", ("Insumo"), "1", "", "", ""])
+      stxFTitles.Add(["inputs", "imark", ("Marca"), "1", "", "", ""])
+      stxFTitles.Add(["inputs", "isupplier", ("Suministrador"), "1", "", "", ""])
+      stxFTitles.Add(["inputs", "icode", ("Código"), "1", "", "", ""])
+      stxFTitles.Add(["inputs", "iqty", ("Cantidad"), "1", "", "", ""])
+      stxFTitles.Add(["inputs", "iprice", ("Precio"), "1", "", "", ""])
+      stxFTitles.Add(["inputs", "idate", ("Fecha"), "1", "", "", ""])
+      stxFTitles.Add(["inputs", "iremark", ("#~Iremark~#"), "1", "", "", ""])
+
+      stxFTitles.Add(["suppliers", "fidx", ("Índice"), "1", "", "", ""])
+      stxFTitles.Add(["suppliers", "fname", ("Suministrador"), "1", "", "", ""])
+      stxFTitles.Add(["suppliers", "fphone", ("Teléfono"), "1", "", "", ""])
+      stxFTitles.Add(["suppliers", "fmovile", ("Móvil"), "1", "", "", ""])
+      stxFTitles.Add(["suppliers", "femail", ("Correo"), "1", "", "", ""])
+      stxFTitles.Add(["suppliers", "fweb", ("Dirección de Internet"), "1", "", "", ""])
+      stxFTitles.Add(["suppliers", "faddress", ("Dirección postal"), "1", "", "", ""])
+
+      stxFTitles.Add(["harvests", "ridx", ("Índice"), "1", "", "", ""])
+      'stxFTitles.Add(["harvests", "rname", ("Cosecha"), "1", "", "", ""])
+      stxFTitles.Add(["harvests", "rvariety", ("Variedad"), "1", "", "", ""])
+      stxFTitles.Add(["harvests", "rdate", ("Fecha"), "1", "", "", ""])
+      stxFTitles.Add(["harvests", "rqty", ("Cantidad"), "1", "", "", ""])
+      stxFTitles.Add(["harvests", "ritems", ("Items"), "1", "", "", ""])
+
+      stxFTitles.Add(["view_harvests", "ridx", ("Índice"), "1", "", "", ""])
+      stxFTitles.Add(["view_harvests", "rname", ("Cosecha"), "1", "", "", ""])
+      'stxFTitles.Add(["view_harvests", "rspecie", ("Especie"), "1", "", "", ""])
+      stxFTitles.Add(["view_harvests", "rvaiety", ("Variedad"), "1", "", "", ""])
+      stxFTitles.Add(["view_harvests", "rdate", ("Fecha"), "1", "", "", ""])
+      stxFTitles.Add(["view_harvests", "rqty", ("Cantidad"), "1", "", "", ""])
+      stxFTitles.Add(["view_harvests", "ramount", ("Importe"), "1", "", "", ""])
+
+      stxFTitles.Add(["view_harvestsresume", "rspecie", ("Especie"), "1", "", "", ""])
+      stxFTitles.Add(["view_harvestsresume", "rqtykg", "Kg", "1", "", "", ""]) ' No se traduce por ser una unidad de medida
+      stxFTitles.Add(["view_harvestsresume", "ramount", ("Importe"), "1", "", "", ""])
+
+      stxFTitles.Add(["marks", "kidx", ("Índice"), "1", "", "", ""])
+      stxFTitles.Add(["marks", "kname", ("Marca"), "1", "", "", ""])
+      stxFTitles.Add(["marks", "kdesc", ("Descripción"), "1", "", "", ""])
+      stxFTitles.Add(["marks", "kcode", ("Código"), "1", "", "", ""])
+      stxFTitles.Add(["marks", "kphone", ("Teléfono"), "1", "", "", ""])
+      stxFTitles.Add(["marks", "kmovile", ("Móvil"), "1", "", "", ""])
+      stxFTitles.Add(["marks", "kemail", ("Email"), "1", "", "", ""])
+      stxFTitles.Add(["marks", "kweb", ("Web"), "1", "", "", ""])
+      stxFTitles.Add(["marks", "kaddress", ("Dirección"), "1", "", "", ""])
+
+      stxFTitles.Add(["view_marks", "kidx", ("Índice"), "1", "", "", ""])
+      stxFTitles.Add(["view_marks", "kname", ("Marca"), "1", "", "", ""])
+      stxFTitles.Add(["view_marks", "kdesc", ("Descripción"), "1", "", "", ""])
+      stxFTitles.Add(["view_marks", "kcode", ("Código"), "1", "", "", ""])
+      stxFTitles.Add(["view_marks", "kphone", ("Teléfono"), "1", "", "", ""])
+      stxFTitles.Add(["view_marks", "kmovile", ("Móvil"), "1", "", "", ""])
+      stxFTitles.Add(["view_marks", "kemail", ("Email"), "1", "", "", ""])
+      stxFTitles.Add(["view_marks", "kweb", ("Web"), "1", "", "", ""])
+      stxFTitles.Add(["view_marks", "kaddress", ("Dirección"), "1", "", "", ""])
+
+      stxFTitles.Add(["bioclass", "bidx", ("Índice"), "1", "", "", ""])
+      stxFTitles.Add(["bioclass", "bname", ("Biologico"), "1", "", "", ""])
+      stxFTitles.Add(["bioclass", "bdesc", ("Descripción"), "1", "", "", ""])
+
+      stxFTitles.Add(["seeds", "didx", ("Índice"), "1", "", "", ""])
+      'stxFTitles.Add(["seeds", "dname", ("Semilla"), "1", "", "", ""])
+      stxFTitles.Add(["seeds", "dvariety", ("Variedad"), "1", "", "", ""])
+      stxFTitles.Add(["seeds", "dbatch", ("Lote"), "1", "", "", ""])
+      stxFTitles.Add(["seeds", "dmark", ("Marca"), "1", "", "", ""])
+      stxFTitles.Add(["seeds", "dsupplier", ("Suministrador"), "1", "", "", ""])
+      stxFTitles.Add(["seeds", "dbioclass", ("Biológico"), "1", "", "", ""])
+      stxFTitles.Add(["seeds", "dqty", ("Cantidad"), "1", "", "", ""])
+      stxFTitles.Add(["seeds", "dprice", ("Precio"), "1", "", "", ""])
+      stxFTitles.Add(["seeds", "ddate", ("Fecha"), "1", "", "", ""])
+      stxFTitles.Add(["seeds", "dremark", ("Notas"), "1", "", "", ""])
+      stxFTitles.Add(["seeds", "dgermtemp", "Celsius", "1", "", "", ""]) ' No se traduce puesto que se trata de una unidad de medida
+      stxFTitles.Add(["seeds", "dgermdays", ("Días"), "1", "", "", ""])
+      stxFTitles.Add(["seeds", "dframe", ("Marco"), "1", "", "", ""])
+
+      stxFTitles.Add(["view_seeds", "didx", ("Índice"), "1", "", "", ""])
+      stxFTitles.Add(["view_seeds", "dname", ("Semilla"), "1", "", "", ""])
+      stxFTitles.Add(["view_seeds", "dvariety", ("Variedad"), "1", "", "", ""])
+      stxFTitles.Add(["view_seeds", "dbatch", ("Lote"), "1", "", "", ""])
+      stxFTitles.Add(["view_seeds", "dmark", ("Marca"), "1", "", "", ""])
+      stxFTitles.Add(["view_seeds", "dsupplier", ("Suministrador"), "1", "", "", ""])
+      stxFTitles.Add(["view_seeds", "dbioclass", ("Tipo"), "1", "", "", ""])
+      stxFTitles.Add(["view_seeds", "dqty", ("Cantidad"), "1", "", "", ""])
+      stxFTitles.Add(["view_seeds", "davailable", ("Disponibles"), "1", "", "", ""])
+      stxFTitles.Add(["view_seeds", "dprice", ("Precio"), "1", "", "", ""])
+      stxFTitles.Add(["view_seeds", "ddate", ("Fecha"), "1", "", "", ""])
+      stxFTitles.Add(["view_seeds", "dremark", ("Nota"), "1", "", "", ""])
+      stxFTitles.Add(["view_seeds", "dgermtemp", ("Temperatura"), "1", "", "", ""])
+      stxFTitles.Add(["view_seeds", "dgermdays", ("Dias"), "1", "", "", ""])
+
+      stxFTitles.Add(["sowing", "widx", ("Índice"), "1", "", "", ""])
+      stxFTitles.Add(["sowing", "wseed", ("Semilla"), "1", "", "", ""])
+      stxFTitles.Add(["sowing", "wseedqty", ("Cantidad"), "1", "", "", ""])
+      stxFTitles.Add(["sowing", "wsuccessful", ("Exito"), "1", "", "", ""])
+      stxFTitles.Add(["sowing", "wplot", ("Parcela"), "1", "", "", ""])
+      stxFTitles.Add(["sowing", "wmethod", ("Método"), "1", "", "", ""])
+      stxFTitles.Add(["sowing", "waditives", ("Aditivos"), "1", "", "", ""])
+      stxFTitles.Add(["sowing", "wdate", ("Fecha"), "1", "", "", ""])
+
+      stxFTitles.Add(["view_sowing", "widx", ("Índice"), "1", "", "", ""])
+      stxFTitles.Add(["view_sowing", "wseed", ("Semilla"), "1", "", "", ""])
+      stxFTitles.Add(["view_sowing", "wdbatch", ("Lote"), "1", "", "", ""])
+      stxFTitles.Add(["view_sowing", "wkmark", ("Marca"), "1", "", "", ""])
+      stxFTitles.Add(["view_sowing", "wseedqty", ("Cantidad"), "1", "", "", ""])
+      stxFTitles.Add(["view_sowing", "wsuccessful", ("Exito"), "1", "", "", ""])
+      stxFTitles.Add(["view_sowing", "wplot", ("Parcela"), "1", "", "", ""])
+      stxFTitles.Add(["view_sowing", "wmethod", ("Método"), "1", "", "", ""])
+      stxFTitles.Add(["view_sowing", "waditives", ("Aditivos"), "1", "", "", ""])
+      stxFTitles.Add(["view_sowing", "wdate", ("Fecha"), "1", "", "", ""])
+
+      stxFTitles.Add(["sowingclass", "gidx", ("Índice"), "1", "", "", ""])
+      stxFTitles.Add(["sowingclass", "gname", ("Tipo de siembra"), "1", "", "", ""])
+
+      stxFTitles.Add(["view_sowingclass", "gidx", ("Índice"), "1", "", "", ""])
+      stxFTitles.Add(["view_sowingclass", "gname", ("Tipo de siembra"), "1", "", "", ""])
+
+      stxFTitles.Add(["view_schedule", "uvarietas", ("Variedad"), "1", "", "", ""])
+      stxFTitles.Add(["view_schedule", "useeding", ("Siembra"), "1", "", "", ""])
+      stxFTitles.Add(["view_schedule", "utransplanting", ("Transplante"), "1", "", "", ""])
+      stxFTitles.Add(["view_schedule", "uharvest", ("Cosecha"), "1", "", "", ""])
+
+      stxFTitles.Add(["plotsclass", "qidx", ("Índice"), "1", "", "", ""])
+      stxFTitles.Add(["plotsclass", "qname", ("Tipo"), "1", "", "", ""])
+      stxFTitles.Add(["plotsclass", "qdesc", ("Descripción"), "1", "", "", ""])
+
+      stxFTitles.Add(["plots", "tidx", ("Índice"), "1", "", "", ""])
+      stxFTitles.Add(["plots", "tname", ("Parcela"), "1", "", "", ""])
+      stxFTitles.Add(["plots", "tform", ("Forma"), "1", "", "", ""])
+      stxFTitles.Add(["plots", "tclass", ("Tipo"), "1", "", "", ""])
+      stxFTitles.Add(["plots", "tdate", ("Fecha"), "1", "", "", ""])
+      stxFTitles.Add(["plots", "tsurface", ("Superficie"), "1", "", "", ""])
+
+      stxFTitles.Add(["view_plots", "tidx", ("Índice"), "1", "", "", ""])
+      stxFTitles.Add(["view_plots", "tname", ("Parcela"), "1", "", "", ""])
+      stxFTitles.Add(["view_plots", "tform", ("Forma"), "1", "", "", ""])
+      stxFTitles.Add(["view_plots", "tclass", ("Tipo"), "1", "", "", ""])
+      stxFTitles.Add(["view_plots", "tdate", ("Fecha"), "1", "", "", ""])
+      stxFTitles.Add(["view_plots", "tsurface", ("Superficie"), "1", "", "", ""])
+
+      stxFTitles.Add(["favorables", "xidx", ("Índice"), "1", "", "", ""])
+      stxFTitles.Add(["favorables", "xplant", ("Planta"), "1", "", "", ""])
+      stxFTitles.Add(["favorables", "xfav", ("Favorable"), "1", "", "", ""])
+      stxFTitles.Add(["favorables", "xremark", ("Notas"), "1", "", "", ""])
+
+      stxFTitles.Add(["unfavorables", "yidx", ("Índice"), "1", "", "", ""])
+      stxFTitles.Add(["unfavorables", "yplant", ("Planta"), "1", "", "", ""])
+      stxFTitles.Add(["unfavorables", "yfav", ("Desfavorable"), "1", "", "", ""])
+      stxFTitles.Add(["unfavorables", "yremark", ("Notas"), "1", "", "", ""])
+
+      stxFTitles.Add(["species", "sidx", ("Índice"), "1", "", "", ""])
+      stxFTitles.Add(["species", "sname", ("Especie"), "1", "wikispecie", "", ""])
+      stxFTitles.Add(["species", "sdesc", ("Descripción"), "1", "", "", ""])
+      stxFTitles.Add(["species", "scode", ("Código"), "1", "", "", ""])
+      stxFTitles.Add(["species", "sremark", ("Notas"), "1", "", "", ""])
+
+      stxFTitles.Add(["varietas", "vidx", ("Índice"), "1", "", "", ""])
+      stxFTitles.Add(["varietas", "vname", ("Variedad"), "1", "imagesearch", "", ""])
+      stxFTitles.Add(["varietas", "vnik", ("Nombre"), "1", "", "", ""])
+      stxFTitles.Add(["varietas", "vcode", ("Código"), "1", "", "", ""])
+      stxFTitles.Add(["varietas", "vspecie", ("Especie"), "1", "", "", ""])
+      stxFTitles.Add(["varietas", "vprice", ("Precio"), "1", "", "", ""])
+      stxFTitles.Add(["varietas", "vdesc", ("Descripción"), "1", "", "", ""])
+      stxFTitles.Add(["varietas", "vseeding", ("Siembra") & " 1", "1", "", "", ""])
+      stxFTitles.Add(["varietas", "vtransplanting", ("Transplante") & " 1", "1", "", "", ""])
+      stxFTitles.Add(["varietas", "vharvest", ("Cosecha") & " 1", "1", "", "", ""])
+      stxFTitles.Add(["varietas", "vseeding2", ("Siembra") & " 2", "1", "", "", ""])
+      stxFTitles.Add(["varietas", "vtransplanting2", ("Transplante") & " 2", "1", "", "", ""])
+      stxFTitles.Add(["varietas", "vharvest2", ("Cosecha") & " 2", "1", "", "", ""])
+      stxFTitles.Add(["varietas", "vwater", ("Riego"), "1", "", "", ""])
+      stxFTitles.Add(["varietas", "vremark", ("Notas"), "1", "", "", ""])
+
+      stxFTitles.Add(["view_varietas", "vidx", ("Índice"), "1", "", "", ""])
+      stxFTitles.Add(["view_varietas", "vname", ("Variedad"), "1", "", "", ""])
+      stxFTitles.Add(["view_varietas", "vnik", ("Nombre"), "1", "", "", ""])
+      stxFTitles.Add(["view_varietas", "vcode", ("Código"), "1", "", "", ""])
+      stxFTitles.Add(["view_varietas", "vspecie", ("Especie"), "1", "", "", ""])
+      stxFTitles.Add(["view_varietas", "vprice", ("Precio"), "1", "", "", ""])
+      stxFTitles.Add(["view_varietas", "vdesc", ("Descripción"), "1", "", "", ""])
+      stxFTitles.Add(["view_varietas", "vseeding", ("Siembra") & " 1", "1", "", "", ""])
+      stxFTitles.Add(["view_varietas", "vtransplanting", ("Transplante") & " 1", "1", "", "", ""])
+      stxFTitles.Add(["view_varietas", "vharvest", ("Cosecha") & " 1", "1", "", "", ""])
+      stxFTitles.Add(["view_varietas", "vseeding2", ("Siembra") & " 2", "1", "", "", ""])
+      stxFTitles.Add(["view_varietas", "vtransplanting2", ("Transplante") & " 2", "1", "", "", ""])
+      stxFTitles.Add(["view_varietas", "vharvest2", ("Cosecha") & " 2", "1", "", "", ""])
+      stxFTitles.Add(["view_varietas", "vwater", ("Riego"), "1", "", "", ""])
+      stxFTitles.Add(["view_varietas", "vremark", ("Notas"), "1", "", "", ""])
+
+      stxFTitles.Add(["view_inputs", "iidx", ("Índice"), "1", "", "", ""])
+      stxFTitles.Add(["view_inputs", "iname", ("Insumo"), "1", "", "", ""])
+      stxFTitles.Add(["view_inputs", "imark", ("Marca"), "1", "", "", ""])
+      stxFTitles.Add(["view_inputs", "isupplier", ("Suministrador"), "1", "", "", ""])
+      stxFTitles.Add(["view_inputs", "icode", ("Código"), "1", "", "", ""])
+      stxFTitles.Add(["view_inputs", "iqty", ("Cantidad"), "1", "", "", ""])
+      stxFTitles.Add(["view_inputs", "iprice", ("Precio"), "1", "", "", ""])
+      stxFTitles.Add(["view_inputs", "idate", ("Fecha"), "1", "", "", ""])
+      stxFTitles.Add(["view_inputs", "iremark", ("Nota"), "1", "", "", ""])
+
+      stxFTitles.Add(["view_expenses", "expense", ("Gastos"), "1", "", "", ""])
+
+      stxFTitles.Add(["view_aditives", "aidx", ("Índice"), "1", "", "", ""])
+      stxFTitles.Add(["view_aditives", "aname", ("Aditivo"), "1", "", "", ""])
+
+      stxFTitles.Add(["view_bioclass", "bidx", ("Índice"), "1", "", "", ""])
+      stxFTitles.Add(["view_bioclass", "bname", ("Clase biológica"), "1", "", "", ""])
+      stxFTitles.Add(["view_bioclass", "bdesc", ("Descripción"), "1", "", "", ""])
+
+      stxFTitles.Add(["view_suppliers", "fidx", ("Índice"), "1", "", "", ""])
+      stxFTitles.Add(["view_suppliers", "fname", ("Suministrador"), "1", "", "", ""])
+      stxFTitles.Add(["view_suppliers", "fphone", ("Teléfono"), "1", "", "", ""])
+      stxFTitles.Add(["view_suppliers", "fmovile", ("Móvil"), "1", "", "", ""])
+      stxFTitles.Add(["view_suppliers", "femail", ("Correo electróico"), "1", "sendemail", "", ""])
+      stxFTitles.Add(["view_suppliers", "fweb", "Web", "1", "", "", ""])
+      stxFTitles.Add(["view_suppliers", "faddress", ("Dirección"), "1", "", "", ""])
+
+      stxFTitles.Add(["view_species", "sidx", ("Índice"), "1", "", "", ""])
+      stxFTitles.Add(["view_species", "sname", ("Especie"), "1", "wikispecie", "", ""])
+      stxFTitles.Add(["view_species", "sdesc", ("Descripción"), "1", "", "", ""])
+      stxFTitles.Add(["view_species", "scode", ("Código"), "1", "", "", ""])
+      stxFTitles.Add(["view_species", "sremark", ("Nota"), "1", "", "", ""])
+
+      stxFTitles.Add(["view_favorables", "xidx", ("Índice"), "1", "", "", ""])
+      stxFTitles.Add(["view_favorables", "xidx1", "1", "1", "", "", ""])
+      stxFTitles.Add(["view_favorables", "xplantsp", ("Especie"), "1", "", "", ""])
+      stxFTitles.Add(["view_favorables", "xplantnm", ("Nombre"), "1", "", "", ""])
+      stxFTitles.Add(["view_favorables", "xplantrk", ("Nota"), "1", "", "", ""])
+      stxFTitles.Add(["view_favorables", "xidx2", "2", "1", "", "", ""])
+      stxFTitles.Add(["view_favorables", "xfavsp", ("Favorable"), "1", "", "", ""])
+      stxFTitles.Add(["view_favorables", "xfavnm", ("Nombre"), "1", "", "", ""])
+      stxFTitles.Add(["view_favorables", "xfavrk", ("Nota"), "1", "", "", ""])
+
+  End Select
+  ' Medición de la cantidad de caracteres de cada campo
+  For intFld = 0 To stxFTitles.Max
+    Print stxFTitles[intfld][0] & ":" & stxFTitles[intfld][1] & ":" & stxFTitles[intfld][2] & ":" & stxFTitles[intfld][3]
+    intLen = String.Len(stxFTitles[intfld][2])
+    intW = String.Len(stxFTitles[intfld][2])
+    sql = "select " & stxFTitles[intfld][1] & " from " & stxFTitles[intfld][0]
+    res = GEFStarter.conProgram.Exec(sql)
+    If res.Available Then
+      While res.Available
+        If res[stxFTitles[intfld][1]] <> Null Then
+          intLen = String.Len(res[stxFTitles[intfld][1]])
+        Else
+          intLen = 0
+        Endif
+
+        If intLen > intW Then
+          intW = intLen
+        Endif
+        res.MoveNext
+      Wend
+      If intW <= String.Len(stxFTitles[intfld][2]) Then
+        intW = String.Len(stxFTitles[intfld][2])
+      Endif
+      stxFTitles[intfld][3] = intW
+    Endif
+  Next
 
   Return stxFTitles
 
@@ -168,7 +564,7 @@ End
 Public Function DBOpen(stxDB As String[]) As Connection ''Inicia una base de datos y si no existe la crea.
 
   Dim con As New Connection
-  Dim str As String
+  ' Dim str As String
   Dim tbl As Table
   Dim fld As Field
 
@@ -194,14 +590,14 @@ Public Function DBOpen(stxDB As String[]) As Connection ''Inicia una base de dat
         con.Open
         For Each tbl In con.Tables
           strTbN = tbl.Name
-          'Next
           Print "Table name: " & strTbN
 
           For Each fld In tbl.Fields
 
             strFdN = fld.Name
 
-            If tbl.PrimaryKey.Find(fld.Name) <> -1 Then ' ¿El campo es clave primaria de la tabla?
+            If tbl.PrimaryKey.Find(fld.Name) <> -1 Then
+              ' ¿El campo es clave primaria de la tabla?
               strFdT = DataType(-1)
             Else
               strFdT = DataType(fld.Type)
@@ -214,15 +610,13 @@ Public Function DBOpen(stxDB As String[]) As Connection ''Inicia una base de dat
 
           Next
         Next
-      Else ' No existe el archivo
-        con.Name = "" ' Especifico un nombre vacio para poder abrir luego
+      Else
+        ' No existe el archivo
+
+        Copy con.Name To con.Host &/ con.Name
+        Wait 0.1
+
         con.Open
-        con.Databases.Add(stxDB[2]) ' Agrego la base de datos nueva
-        con.Close
-        con.Name = stxDB[2] ' Cambio el nombre de la base de datos a la recientemente creada
-        con.Open
-        str = File.Load("db.template") ' Cargo la plantilla
-        con.ApplyTemplate(str) ' Aplico la plantilla a la nueva base.
 
       Endif
 
@@ -248,7 +642,6 @@ Public Function DBSqlite(stxDB As String[], Optional strMod As String) As Connec
   Dim strTimeStamp As String
   Dim strDBZip As String
   Dim strSQLCreate As String
-  '  Dim strTemplate As String
 
   If conCreate.Opened Then
     conCreate.Close
@@ -287,21 +680,9 @@ Public Function DBSqlite(stxDB As String[], Optional strMod As String) As Connec
       If Not conCreate.Databases.Exist(stxDB[2]) Then
         conCreate.Databases.Add(stxDB[2])
       Endif
-      'If Exist("new.sql") Then
       If Exist("db.template") Then
-        'strSQLCreate = File.Load("new.sql")
         strSQLCreate = File.Load("db.template")
-        'strSQLCreate = Chek4SQLscript(strSQLCreate)
-        'strSQLCreate = Replace(strSQLCreate, "BEGIN TRANSACTION;", "")
-        'strSQLCreate = Replace(strSQLCreate, "COMMIT;", "")
-
-        'conCreate.Exec(strSQLCreate)
-        'strTemplate = conCreate.GetTemplate(strSQLCreate)
-        'conCreate.Open
-        'conCreate.Databases.Add(stxDB[2])
-
         conCreate.ApplyTemplate(strSQLCreate)
-
       Else
         Message.Warning(("No existe el archivo") & " " & "new.sql" & gb.NewLine & ("La base de datos no sera creada"))
       Endif
@@ -374,7 +755,6 @@ Public Function RecordNew(connDB As Connection, strTable As String, stxDBFields 
   If resExist.Available Then
     If resExist.Count > 0 Then
       Print "El registro ya existe"
-      'Message.Info("El registro ya existe")
     Endif
 
   Else
@@ -395,6 +775,7 @@ Public Function RecordNew(connDB As Connection, strTable As String, stxDBFields 
     Next
 
     resIns = connDB.Create(strTable)
+
     For intField = 0 To stxDBFields.Max
       If stxDBFields[intField][0] = strTable Then
 
@@ -457,9 +838,11 @@ Public Function RecordNew(connDB As Connection, strTable As String, stxDBFields 
         intRefKey = RecordForeign(connDB, strTable, Split(stxValues[intExist], "\t")[0], Split(stxValues[intExist], "\t")[1], stxDBFields)
 
         Select intRefKey
-          Case -1 ' No es un campo referenciado
+          Case -1
+            ' No es un campo referenciado
             stxSqlExistWhere.Add(Split(stxValues[intExist], "\t")[0] & "='" & Split(stxValues[intExist], "\t")[1] & "'")
-          Case Else ' este es el caso ideal, donde el texto existe en la referencia, es único y por lo tanto se devuelve la clave en la tabla de referencia
+          Case Else
+            ' este es el caso ideal, donde el texto existe en la referencia, es único y por lo tanto se devuelve la clave en la tabla de referencia
             stxSqlExistWhere.Add(Split(stxValues[intExist], "\t")[0] & "='" & intRefKey & "'")
         End Select
       Endif
@@ -560,82 +943,6 @@ Public Function RecordForeign(connDB As Connection, strTable As String, strField
 
 End
 
-' Public Function RecordWrite(connDB As Connection, strTable As String, stxEdit As String[][], stxValues As String[]) As Integer ''Inserta un registro nuevo en la base de datos, ctnVal es una coleccion opcional del pares de campo:valor.
-'
-'   Dim resEdit As Result
-'   Dim intField As Integer
-'   Dim intVal As Integer
-'   Dim stxTag As New String[]
-'   Dim stxVal As New String[]
-'
-'   Dim strTag As String
-'   Dim strVal As String
-'   Dim stxVKey As New String[]
-'   Dim strFieldKey As String
-'   Dim intKey As Integer
-'   Dim intKeyRef As Integer
-'
-'   For intField = 0 To GEFStarter.stxTableFields.Max
-'     If GEFStarter.stxTableFields[intField][0] = strTable Then
-'       If GEFStarter.stxTableFields[intField][5] = "YK" Then
-'         strFieldKey = GEFStarter.stxTableFields[intField][1]
-'       Endif
-'     Endif
-'   Next
-'
-'   If stxValues.Count > 0 Then
-'     For intVal = 0 To stxValues.Max
-'       stxTag.Add(Split(stxValues[intVal], ":")[0])
-'       stxVal.Add(Split(stxValues[intVal], ":")[1])
-'       If Split(stxValues[intVal], ":")[0] = strFieldKey Then
-'         intKey = CInt(Split(stxValues[intVal], ":")[1])
-'         'Break
-'       Endif
-'     Next
-'   Endif
-'
-'   resEdit = connDB.Edit(strTable, strFieldKey & "=&1", intkey)
-'
-'   For intField = 0 To stxEdit.Max
-'     If stxEdit[intField][0] = strTable Then
-'       If stxEdit[intField][1] <> strFieldKey Then
-'         strTag = stxEdit[intField][1]
-'         intVal = stxTag.Find(strTag)
-'         If intVal > -1 Then
-'           strVal = stxVal[intVal]
-'         Else
-'           strVal = ""
-'         Endif
-'
-'         Select stxEdit[intField][7]
-'           Case ""
-'             If resEdit[strTag] <> strVal Then
-'               resEdit[strTag] = strVal
-'             Endif
-'
-'           Case Else ' Verificar si el registro existe en la tabla foránea
-'             If strVal <> "" Then
-'               intKeyRef = RecordExist(connDB, stxEdit[intField][7], stxEdit[intField][9], stxEdit[intField][8], strVal)
-'               Select intKeyRef
-'                 Case -1 'No existe el registor de referencia
-'                   stxVKey.Add(stxEdit[intField][9] & ":" & strVal)
-'                   RecordNew(connDB, stxEdit[intField][7], stxEdit, stxVKey)
-'                 Case Else ' Existe
-'                   If resEdit[strTag] <> intKeyRef Then
-'                     resEdit[strTag] = intKeyRef
-'                   Endif
-'               End Select
-'             Endif
-'         End Select
-'       Endif
-'     Endif
-'   Next
-'   resEdit.Update
-'
-'   'Comprobación de que el registro se creo correctamente
-'
-' End
-
 Public Function RecordNewRef(connDB As Connection, strTable As String, stxDBFields As String[][], stxValues As String[]) As Integer ''Inserta un registro nuevo en la base de datos, ctnVal es una coleccion opcional del pares de campo:valor.
 
   Dim resIns As Result
@@ -705,6 +1012,9 @@ Public Function getFields(connDB As Connection, strTbl As String, strMod As Stri
   Dim strFs2 As String
   Dim strFs3 As String
   Dim strTle As String
+  Dim strCmd1 As String
+  Dim strCmd2 As String
+  Dim strCmd3 As String
 
   Dim stxTmp As New String[][]
   Dim stxExt As New String[]
@@ -718,26 +1028,26 @@ Public Function getFields(connDB As Connection, strTbl As String, strMod As Stri
     For Each fld In resSQL.Fields
 
       strFld = fld.Name
-      strTyp = String.LCase(GEFUtility.TypeVar(fld.Type))
 
       If stxFTitles Then
         For intTl = 0 To stxFTitles.Max
           If stxFTitles[intTl][0] = strTbl Then
             If stxFTitles[intTl][1] = strFld Then
               strTle = stxFTitles[intTl][2]
+              strCmd1 = stxFTitles[intTl][4]
+              strCmd2 = stxFTitles[intTl][5]
+              strCmd3 = stxFTitles[intTl][6]
+
             Endif
           Endif
         Next
       Endif
-
       Select String.LCase(strMod)
         Case "table", "tables", "tabla", "tablas"
           stxExt = getFieldInfo(connDB, strTbl, strFld)
-
-          stxTmp.Add([strTbl, strFld, strTyp, stxExt[0], stxExt[1], stxExt[2], stxExt[3], stxExt[4], stxExt[5], stxExt[6], strTle])
-
+          strTyp = stxExt[4]
+          stxTmp.Add([strTbl, strFld, strTyp, stxExt[0], stxExt[1], stxExt[2], stxExt[3], stxExt[5], stxExt[6], stxExt[7], strTle, strCmd1, strCmd2, strCmd3])
         Case "view", "views", "vista", "vistas"
-
           strOrd = Settings[strTbl & "-Order" &/ strFld, ""] ' Orden
           strFty = Settings[strTbl & "-FilterType" &/ strFld, ""] ' Filtro Tipo
           strFva = Settings[strTbl & "-FilterValue" &/ strFld, ""] ' Filtro Valor
@@ -745,20 +1055,13 @@ Public Function getFields(connDB As Connection, strTbl As String, strMod As Stri
           strFs1 = "" ' Reserva 1 > Funcion especial, email, informe, etc.
           strFs2 = "" ' Reserva 2 >
           strFs3 = "" ' Reserva 3 >
-          'strTle = "" ' Titles
-
           stxTmp.Add([strTbl, strFld, strTyp, strOrd, strFty, strFva, strFwd, strFs1, strFs2, strFs3, strTle])
-
       End Select
-
       stxFld.Insert(stxTmp)
-
       stxTmp.Clear
       stxExt.Clear
-
     Next
   Endif
-
   Return stxFld
 
 End
@@ -842,8 +1145,6 @@ Public Function Chek4SQLscript(strInput As String) As String ''Devuelve un texto
   strOutput = Replace(strOutput, "\t", " ")
   strOutput = Replace(strOutput, "\x00", "")
   strOutput = Replace(strOutput, Chr(96), Chr(39)) ' ' > .
-  'strOutput = Replace(strOutput, Chr(39), Chr(46)) ' ' > .
-  'strOutput = Replace(strOutput, Chr(44), Chr(46)) ' , > .
 
   Return strOutput
 
@@ -928,6 +1229,9 @@ Public Function getFieldInfo(connDB As Connection, strTab As String, strFld As S
   Dim intWrd As Integer
   Dim intkey As Integer
 
+  Dim strFieldType As String
+  Dim strFieldTypeTmp As String
+
   Select connDB.Type
 
     Case "sqlite3"
@@ -950,8 +1254,11 @@ Public Function getFieldInfo(connDB As Connection, strTab As String, strFld As S
       stxWordsSQLite.Add("autoincrement")
       stxYesSQLite.Add("YA")
       stxNotSQLite.Add("NA")
-
       inxKeySQLite.Add(3)
+
+      '-----------------test para agregar el tipo de campo
+
+      '-----------------test para agregar el tipo de campo
 
       strSQLk = "SELECT * FROM sqlite_master WHERE type='table' AND name='" & strTab & "'"
       resDBk = connDB.Exec(strSQLk)
@@ -965,7 +1272,7 @@ Public Function getFieldInfo(connDB As Connection, strTab As String, strFld As S
           resDBk.MoveFirst
 
           stxFieldInfo.Clear
-          stxFieldInfo = ["", "", "", "", "", "", ""]
+          stxFieldInfo = ["", "", "", "", "", "", "", ""]
 
           For intSnt = 0 To stxSentence.Max
             If InStr(stxSentence[intSnt], "FOREIGN KEY") = 0 And InStr(stxSentence[intSnt], strFld) > 0 Then
@@ -973,6 +1280,25 @@ Public Function getFieldInfo(connDB As Connection, strTab As String, strFld As S
               strSentence = Replace(stxSentence[intSnt], "\t`", "")
               strSentence = Replace(strSentence, strFld & "`", "")
               strSentence = Replace(strSentence, "\t", "")
+
+              ' Agregado del tipo de campo
+              strFieldTypeTmp = String.UCase(Replace(strSentence, ",", ""))
+              Print strFieldTypeTmp
+              Select strFieldTypeTmp
+                Case "INTEGER PRIMARY KEY AUTOINCREMENT", "INTEGER NOT NULL PRIMARY KEY AUTOINCREMENT"
+                  strFieldType = "serial"
+                Case "INTEGER PRIMARY KEY", "INTEGER"
+                  strFieldType = "integer"
+                Case Else
+                  If InStr(strFieldTypeTmp, " ") > 0 Then
+                    strFieldType = String.LCase(Split(strFieldTypeTmp, " ")[0])
+                  Else
+                    strFieldType = String.LCase(strFieldTypeTmp)
+                  Endif
+              End Select
+
+              stxFieldInfo[4] = strFieldType
+              ' ------------------------
 
               For intWrd = 0 To stxWordsSQLite.Max
 
@@ -999,6 +1325,11 @@ Public Function getFieldInfo(connDB As Connection, strTab As String, strFld As S
               strSentence = Replace(strSentence, " )", "")
               strSentence = Replace(strSentence, "`", "")
               strSentence = Replace(strSentence, " ", "")
+              strSentence = Replace(strSentence, "(", "~")
+              strSentence = Replace(strSentence, ")", "~")
+              strSentence = Replace(strSentence, ",", "")
+              strSentence = Replace(strSentence, "\"", "")
+              strSentence = Replace(strSentence, "'", "")
 
               strFDOrigin = Split(strSentence, "~")[0]
               strTBReference = Split(strSentence, "~")[1]
@@ -1024,9 +1355,9 @@ Public Function getFieldInfo(connDB As Connection, strTab As String, strFld As S
 
               Endif
 
-              stxFieldInfo[4] = strTBReference
-              stxFieldInfo[5] = strFDReference
-              stxFieldInfo[6] = strFDShow
+              stxFieldInfo[5] = strTBReference
+              stxFieldInfo[6] = strFDReference
+              stxFieldInfo[7] = strFDShow
 
               Break
             Endif
@@ -1045,25 +1376,10 @@ Public Function getIndex(connDB As Connection, strTab As String) As String[]
 
   Dim strSQLk As String
   Dim resDBk As Result
-  '  Dim strSentenceSQL As String
   Dim strSentence As String
   Dim stxSentence As New String[]
-  '  Dim strFDOrigin As String
-  '  Dim strTBReference As String
-  '  Dim strFDReference As String
-  '  Dim tblReference As Table
-  '  Dim strFDShow As String
-  '  Dim stxRefFields As New String[]
-  '  Dim fldReference As Field
   Dim stxIndex As New String[]
   Dim intSnt As Integer
-
-  '  Dim stxWordsSQLite As New String[]
-  '  Dim stxYesSQLite As New String[]
-  '  Dim stxNotSQLite As New String[]
-  '  Dim inxKeySQLite As New Integer[]
-  '  Dim intWrd As Integer
-  '  Dim intkey As Integer
   Dim intPos1 As Integer
   Dim intPos2 As Integer
   Dim intFi As Integer
@@ -1260,7 +1576,6 @@ Public Function getTableFields(connDB As Connection, strTab As String) As String
             Next
             '----------------------------------------------------------------------------------
             ' Agregando a la matriz de salida
-            'stxTableInfo.Add(stxFieldInfo.Join(":"))
             stxTableInfo.Add(stxFieldInfo)
 
           Next
@@ -1316,7 +1631,6 @@ Public Function getViewFields(connDB As Connection, strView As String) As String
 
             stxFieldInfo[4] = CStr(intOrder) ' Tipo de filtro
 
-            'stxTableInfo.Add(stxFieldInfo.Join(":"))
             stxTableInfo.Add(stxFieldInfo)
 
             Inc intOrd
@@ -1357,6 +1671,7 @@ Public Function RecordExist(connDB As Connection, strTable As String, strFieldVa
   Else
     intKey = -1
   Endif
+
   Return intKey
 
 End
@@ -1400,6 +1715,62 @@ Public Function RecordDelete(connDB As Connection, strTable As String, stxDBFiel
   Return intKey
 
 End
+
+' Public Function SqlInsert(strTab As String, stxFields As String[], stxTypes As String[], stxUniques As String[], stxNulls As String[], vrxDefaults As Variant[], vrxValues As Variant[]) As String ''Creación de la sentencia SQL para insertar un registro nuevo en una tabla.
+'
+'   Dim intR As Integer
+'   Dim strSQLInsert As String
+'   Dim strInsFields As String
+'   Dim strInsValues As String
+'   Dim vrtDefault As Variant
+'   Dim strInsField As String
+'   Dim strInsValue As String
+'
+'   For intR = 0 To stxFields.Max
+'     Select intR
+'       Case 0
+'         strInsField = stxFields[intR]
+'         strInsValue = "Null" ' Porque la clave es autoincremental
+'
+'       Case Else
+'         strInsField &= "," & stxFields[intR]
+'
+'         If stxNulls[intR] = "NN" Then
+'
+'           If stxDefaults[intR] <> Null Then
+'             vrtDefault = vrxDefaults[intR]
+'
+'           Else
+'             Select stxTypes[intR]
+'               Case "integer"
+'                 vrtDefault = 1
+'               Case "text", "varchar"
+'                 vrtDefault = "''"
+'               Case "real", "float"
+'                 vrtDefault = 0
+'               Case Else
+'                 vrtDefault = "''"
+'             End Select
+'           Endif
+'         Else
+'           vrtDefault = vrxDefaults[intR]
+'         Endif
+'
+'         If stxUniques[intR] = "unique" Then
+'           strDefaultValue = "'" & Format(Now(), "yyyy-mm-dd#hh:nn:ss.uu") & "'"
+'         Endif
+'
+'     End Select
+'
+'     strInsValues &= "," & vrtDefault
+'
+'   Next
+'
+'   strSQLInsert = "insert into " & strTab & " (" & strInsFields & ")values (" & strInsValues & ")"
+'
+'   Return strSQLInsert
+'
+' End
 
 Public Function SqlMake(strTbl As String, stxFld As String[][]) As String
 
@@ -1446,9 +1817,9 @@ Public Function SqlMake(strTbl As String, stxFld As String[][]) As String
     Case 0
       strOrder = ""
     Case 1
-      strOrder = " order by " & stxOrder[0]
+      strOrder = "  order by " & stxOrder[0]
     Case Else
-      strOrder = " order by " & stxOrder.Join(", ")
+      strOrder = "  order by " & stxOrder.Join(", ")
 
   End Select
   strSqlOut &= strOrder
@@ -1500,7 +1871,6 @@ End
 Public Function TableMake2(cnx As Connection, stxParam As String[]) As Integer ''<p>Crea una tabla de combinacion de otras dos tablas en la conexion que se le pasa como parametro. Donde el orden de los paramentros dentro de la matriz debe ser el siguiente:</p><ul><li>0 Nombre de la tabla 1</li><li>1 Nombre del campo clave 1</li><li>2 Nombre del campo a mostrar 1</li><li>3 Nombre de la tabla 21</li><li>4 Nombre del campo clave 2</li><li>5 Nombre del campo a mostrar 2</li></ul>
 
   Dim tbl As Table
-  '  Dim int As Integer
   Dim strTable As String
   Dim strFKey As String 'Nombre del campo que sera Primary Key
 
@@ -1591,11 +1961,6 @@ Public Function ViewMake1(cnx As Connection, stxParam As String[]) As Integer ''
     intfld = 0
     For Each fld In .Fields
 
-      ' If intFld = .Fields.Count - 1 Then
-      '   strEnd = ""
-      ' Else
-      '   strEnd = ","
-      ' Endif
       Select .PrimaryKey.Find(fld.Name)
         Case 0 'es la primera clave el resto, si las hubiera, se destartan
           stxFields.Add(fld.Name & strEnd)
@@ -1638,8 +2003,6 @@ Public Function ViewMake1(cnx As Connection, stxParam As String[]) As Integer ''
   strCreate &= stxJoints.Join("\n")
   strCreate &= "\n"
   strCreate &= "ORDER BY " & stxOrders.Join(", ")
-  'strCreate &= "\n"
-  'strCreate &= ")"
 
   cnx.Exec(strCreate)
 
@@ -1719,12 +2082,17 @@ Public Function RecordEdit(connDB As Connection, strTable As String, stxValues A
   Dim intVal As Integer
   Dim strTag As String
   Dim strVal As String
+  Dim vrtVal As Variant
   Dim stxTag As New String[]
-  Dim stxVal As New String[]
+  Dim vrxVal As New Variant[]
   Dim strKey As String
   Dim intKey As Integer
   Dim resEdit As Result
   Dim int As Integer
+  Dim intChk As Integer
+  Dim strType As String
+  Dim strUniq As String
+  Dim strNull As String
 
   For int = 0 To GEFStarter.stxTableFields.Max
     If GEFStarter.stxTableFields[int][0] = strTable Then
@@ -1737,28 +2105,84 @@ Public Function RecordEdit(connDB As Connection, strTable As String, stxValues A
   If stxValues.Count > 0 Then
     For intVal = 0 To stxValues.Max
       strTag = Split(stxValues[intVal], "\t")[0]
+      'Verificacion del tipo de dato del campo
+      For int = 0 To GEFStarter.stxTableFields.Max
+        If GEFStarter.stxTableFields[int][0] = strTable Then
+          If GEFStarter.stxTableFields[int][1] = strTag Then
+            strType = GEFStarter.stxTableFields[int][2]
+            Break
+          Endif
+        Endif
+      Next
+
       strVal = Split(stxValues[intVal], "\t")[1]
+
+      Select strType
+        Case "serial", "integer", "int4"
+          Select strVal
+            Case "", " ", Null
+              vrtVal = Null
+            Case Else
+              vrtVal = CInt(Split(stxValues[intVal], "\t")[1])
+          End Select
+        Case "real", "float"
+          Select strVal
+            Case "", " ", Null
+              vrtVal = Null
+            Case Else
+              vrtVal = CFloat(Split(stxValues[intVal], "\t")[1])
+          End Select
+
+        Case "text"
+          Select strVal
+            Case "", " ", Null
+              vrtVal = ""
+            Case Else
+
+              vrtVal = Split(stxValues[intVal], "\t")[1]
+          End Select
+      End Select
+
       stxTag.Add(strTag)
-      stxVal.Add(strVal)
+      vrxVal.Add(vrtVal)
 
       If strTag = strKey Then
-        intKey = CInt(strVal)
-        'Break
+        Select vrtval
+          Case Null
+            intKey = 0
+          Case Else
+            intKey = vrtval
+        End Select
+
       Endif
     Next
   Endif
 
-  resEdit = connDB.Edit(strTable, strKey & "=&1", intkey)
+  Select intkey
+    Case 0
+      resEdit = connDB.Create(strTable)
+    Case Else
+      resEdit = connDB.Edit(strTable, strKey & "=&1", intkey)
+  End Select
 
   For int = 0 To stxTag.Max
 
     strTag = stxTag[int]
-    strVal = stxVal[int]
+    vrtVal = vrxVal[int]
 
-    If resEdit[strTag] <> strVal Then
-      resEdit[strTag] = strVal
+    For intChk = 0 To GEFStarter.stxTableFields.Max
+      If GEFStarter.stxTableFields[intChk][0] = strTable Then
+        If GEFStarter.stxTableFields[intChk][1] = strTag Then
+          strType = GEFStarter.stxTableFields[intChk][2]
+          strUniq = GEFStarter.stxTableFields[intChk][3]
+          strNull = GEFStarter.stxTableFields[intChk][4]
+        Endif
+      Endif
+    Next
+
+    If resEdit[strTag] <> vrtVal Then
+      resEdit[strTag] = vrtVal
     Endif
-
   Next
 
   resEdit.Update
@@ -2004,5 +2428,233 @@ Public Function DataType(int As Integer) As String ''Devuelve el nombre del tipo
   Endif
 
   Return str
+
+End
+
+Public Function MakeDBProfile(stx As String[]) As String[] ''Esta función crea el texto para poner el en módulo DBFieldsTitles. COmo parametro de entrada requiere una matriz de texto con todas la lineas del archivo SQL de la base de datos.
+
+  Dim stxOut As New String[]
+  Dim str As String
+  Dim strTable As String
+  Dim strField As String
+  Dim strTitle As String
+  Dim strType As String
+  Dim strRWord As String
+  Dim stxRWords As New String[]
+  Dim stxUsual As New String[][]
+  Dim stxTmpViews As New String[]
+  Dim bolIsfield As Boolean
+  Dim intCount As Integer
+  Dim strViewTitle As String
+  Dim intUs As Integer
+
+  stxRWords = RWords()
+  stxUsual = UsualFieldsNames()
+
+  stxOut.Add("'// " & ("Titulos de los campos de tablas y vistas"))
+
+  If stx.Count > 0 Then
+    For Each str In stx
+      bolIsfield = False
+
+      If InStr(str, "CREATE TABLE ") > 0 Then
+        strTable = Replace(str, "'", "~")
+        strTable = Replace(strTable, "\"", "~")
+        strTable = Replace(strTable, "`", "~")
+        strTable = Replace(strTable, " ", "")
+        strTable = Split(strTable, "~")[1]
+        strType = "Table"
+        intCount = 1
+      Else
+        If InStr(str, "CREATE VIEW ") > 0 Then
+          strTable = Replace(str, "'", "~")
+          strTable = Replace(strTable, "\"", "~")
+          strTable = Replace(strTable, "`", "~")
+          strTable = Replace(strTable, " ", "")
+          strTable = Split(strTable, "~")[1]
+          strType = "View"
+          strViewTitle = String.UCaseFirst(Replace(strTable, "view_", ""))
+          intCount = 1
+          stxTmpViews.Add("stxVTitles.Add([\"" & strTable & "\", " & "(\"" & strViewTitle & "\"), \"icon:/16/add\"])")
+
+        Else
+          intCount = 0
+          ' Verificacion de todas las palabras o frases SQL de la lista
+          ' Si no se encuentra ninguna de ellas entonces es un campo
+          For Each strRWord In stxRWords
+            If InStr(str, strRWord) > 0 Then
+              Inc intCount
+            Endif
+          Next
+        Endif
+
+      Endif
+      If intCount = 0 Then
+        If str <> "" Then
+          Select strType
+            Case "Table"
+              strField = Split(str, "`")[1]
+            Case "View"
+              strField = Split(str, " ")[Split(str, " ").Max]
+              strField = Replace(strField, ",", "")
+          End Select
+        Endif
+
+        If strField <> "" Then
+
+          For intUs = 0 To stxUsual.Max
+            If InStr(strField, stxUsual[intUs][0]) > 0 Then
+              strTitle = stxUsual[intUs][1]
+              Break
+            Else
+              strTitle = "[" & String.UCaseFirst(strField) & "]"
+            Endif
+          Next
+
+          stxOut.Add("stxFTitles.Add([\"" & strTable & "\", \"" & strField & "\", " & "(\"" & strTitle & "\")])")
+        Endif
+      Endif
+
+    Next
+
+  Endif
+
+  stxOut.Add("'// " & ("Titulos de las vistas"))
+  stxOut.Insert(stxTmpViews)
+
+  Return stxOut
+
+End
+
+Public Function MakeViews(stx As String[]) As String[] ''Esta función crea una vista para cada tabla para poner luego en el archivo SQL de creacion de base de datos.
+
+  Dim stxOut As New String[]
+  Dim str As String
+  Dim strTable As String
+  Dim strField As String
+  Dim strTitle As String
+  Dim strType As String
+  Dim strRWord As String
+  Dim stxRWords As New String[]
+
+  Dim stxTmpViews As New String[]
+  Dim bolIsfield As Boolean
+  Dim intCount As Integer
+  Dim strViewTitle As String
+  Dim stxFields As New String[]
+  Dim stxFName As New String[]
+  Dim stxFType As New String[]
+  Dim stxFRef As New String[]
+  Dim intW As Integer
+  Dim strTemp As String
+  Dim intF As Integer
+  Dim strFTemp As String
+  Dim intRob1 As Integer
+  Dim strFieldsTmp As String
+  Dim strFieldFK As String
+  Dim strRTable As String
+  Dim strRField As String
+  Dim intKey As Integer
+
+  stxRWords = RWords()
+  If stx.Count > 0 Then
+    For Each str In stx
+
+      strTable = Split(str, "(")[0]
+
+      strTemp = Replace(str, "\n", "")
+      strTemp = Replace(strTemp, "\t", "")
+      'strTemp = Replace(str, "(", ",")
+      strTemp = Replace(strTemp, "\"", "`")
+
+      intRob1 = InStr(strTemp, "(")
+
+      strTable = Split(strTemp, "`")[1]
+
+      strFieldsTmp = String.Mid(strTemp, intRob1 + 1)
+
+      stxFields = Split(strFieldsTmp, ",")
+
+      For intF = 0 To stxFields.Max
+        strFTemp = Replace(stxFields[intF], "'", "~")
+        If InStr(strFTemp, "FOREIGN KEY") = 0 Then
+          strField = Split(strFTemp, "`")[0]
+          strType = Split(strFTemp, "`")[1]
+          stxFName.Add(strField)
+          stxFType.Add(strType)
+          stxFRef.Add("")
+
+        Else
+          strFieldFK = Split(strFTemp, "`")[1]
+          strRTable = Split(strFTemp, "`")[3]
+          strRField = Split(strFTemp, "`")[5]
+          intKey = stxFName.Find(strFieldFK)
+
+          If intKey > -1 Then
+            stxFRef[intKey] = strRTable & "\t" & strRField
+          Endif
+        Endif
+        If InStr(strType, " ") > 0 Then
+          Select strType
+            Case "INTEGER PRIMARY KEY AUTOINCREMENT"
+              strType = "SERIAL"
+            Case Else
+              strType = Split(strTemp, " ")[0]
+          End Select
+        Endif
+        stxOut.Add(strTable & ":" & stxFName[intF] & ":" & stxFType[intF])
+      Next
+    Next
+  Endif
+  Return stxOut
+
+End
+
+Public Function RWords() As String[]
+
+  Dim stx As New String[]
+
+  stx.Add("CREATE TABLE ")
+  stx.Add("FOREIGN KEY")
+  stx.Add("select")
+  stx.Add("SELECT")
+  stx.Add(";")
+  stx.Add("left join ")
+  stx.Add("LEFT JOIN ")
+  stx.Add(" on ")
+  stx.Add("From ")
+  stx.Add("from ")
+  stx.Add("FROM ")
+  stx.Add("order by ")
+
+  Return stx
+
+End
+
+Public Function UsualFieldsNames() As String[][]
+
+  Dim stx As New String[][]
+
+  stx.Add(["date", ("Fecha")])
+  stx.Add(["idx", ("Índice")])
+  stx.Add(["name", ("Nombre")])
+  stx.Add(["email", ("Correo electrónico")])
+  stx.Add(["movile", ("Móvil")])
+  stx.Add(["telephone", ("Teléfono")])
+  stx.Add(["web", ("Dirección de Internet")])
+  stx.Add(["qty", ("Cantidad")])
+  stx.Add(["price", ("Precio")])
+  stx.Add(["mark", ("Marca")])
+  stx.Add(["desc", ("Descripción")])
+  stx.Add(["address", ("Dirección")])
+  stx.Add(["supplier", ("Suministrador")])
+  stx.Add(["class", ("Tipo")])
+  stx.Add(["cod", ("Código")])
+  stx.Add(["city", ("Ciudad")])
+  stx.Add(["symbol", ("Simbolo")])
+  stx.Add(["job", ("Trabajo")])
+  stx.Add(["client", ("Cliente")])
+
+  Return stx
 
 End

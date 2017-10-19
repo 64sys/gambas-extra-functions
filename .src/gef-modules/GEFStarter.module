@@ -29,6 +29,8 @@ Public stxProgVal As New String[] ''<ul><li>0 Database Engine</li><li>1 Database
 Public strAppPath As String
 Public strDBName As String
 Public stxDBEngines As New String[] ''Motores de bases de datos soportadas por gambas
+Public stxDBPreloaded As New String[] ''Bases de datos de ejemplo incluidas
+Public strDBDEfault As String '' Base de datos por defecto
 Public stxPackages As New String[]
 Public conProgram As New Connection ''Conexión a la base de datos
 Public strTemplate As String  ''Plantilla de la base de datos
@@ -48,12 +50,8 @@ Public resProgram As Result
 Public strViewNameSqlCurrent As String
 Public strViewNameHumanCurrent As String
 Public strSQLCurrent As String
-' Public intDataTreeWidth As Integer
-' Public intDataTreeHeight As Integer
-' Public intDataGridWidth As Integer
-' Public intDataGridHeight As Integer
 
-'Public strInputLanguage As String
+Public stxFieldsToShow As New String[] ' Campos que se mostraran en las listas (gridview) para cada vista se rellena en updategrid cada vez que se selecciona una nueva categoria en el treeview.
 
 '## variables del Programa ##
 '
@@ -75,6 +73,8 @@ Public Sub Main()
 
   strAppPath = User.Home &/ "." & Application.Name
   stxDBEngines = GEFUtility.FileLoad("engines.txt") ' Motores de bases de datos soportados por gambas
+  stxDBPreloaded = GEFUtility.FileLoad("preloaded.txt") ' Bases de datos precargadas de diferentes tipos, trabajos, materiales, recetas de cocina, etc. son archivos sqlite incluidos junto con el prgrama
+  strDBDEfault = "works.sqlite"
 
   ' Existencia de directorio de la aplicacion en el directorio home. Esto se ejecutara una unica vez.
   ' Aqui se pueden agregar mas comprobaciones de este tipo para copia de archivos de configuracion y demas cosas similares
@@ -90,7 +90,9 @@ Public Sub Main()
   Endif
 
   ' Carga de los parametros del prgrama conjuntamente con gb.settings./////////////////////////
-  strDBName = Replace(Application.Name & ".db", "-", "")
+
+  'strDBName = Settings[]
+  'strDBName = Replace(Application.Name & ".db", "-", "")
 
   If Initiator() = 1 Then
     strTemplate = GEFDataEdit.DBTemplate(stxProgVal)
@@ -124,8 +126,11 @@ Public Sub Main()
 
   conProgram = GEFData.DBOpen(stxProgVal)
 
-  stxVTitles = GEFData.DBViewsTitles()
-  stxFTitles = GEFData.DBFieldsTitles()
+  stxVTitles = GEFData.DBViewsTitles(stxProgVal[2])
+  stxFTitles = GEFData.DBFieldsTitles(stxProgVal[2])
+  If stxFTitles.Count = 0 Then
+    stxFTitles = GEFData.DBFieldsTitles("works.sqlite")
+  Endif
 
   If stxVTitles.Count > 0 Then
     'LoadTitles() = 1 Then
@@ -166,6 +171,8 @@ Public Sub Main()
         Print stxViewFields[intP].Join(":")
       Next
 
+      FMain.Text = stxProgVal[17]
+
       If conProgram.Opened Then
         FMain.Show()
       Else
@@ -174,100 +181,11 @@ Public Sub Main()
         FMain.Show()
       Endif
     Endif
+  Else
+
   Endif
 
 End
-
-' Private Sub LoadViews()
-'
-'   stxViews.Clear
-'   stxViews.Insert(GEFDataEdit.getTables(conProgram, "view")) ' Lista de VISTAS
-'
-' End
-
-' Private Function LoadTitles() As String ''La carga de títulos de los campos de las tablas y de las vistas. De esta manera permite luego traducir la aplicacion mas facilmente. La funcion trabaja con tres parametros, el nombre de la tabla o vista el nombre del campo, y el título de este campo, que sera el que se traducira. Esta funcion permite controlar en un solo sitio todos los titulos.
-'
-'   ' // Carga de vistas // Modificar cuando se use otra estructura de BBDD
-'   stxFTitles.Add(["view_jobs", "jidx", ("Índice")])
-'   stxFTitles.Add(["view_jobs", "jname", ("Trabajo")])
-'   stxFTitles.Add(["view_jobs", "jdate", ("Fecha")])
-'   stxFTitles.Add(["view_jobs", "jowner", ("Cliente")])
-'
-'   stxFTitles.Add(["boms", "midx", ("Índice")])
-'   stxFTitles.Add(["boms", "mjob", ("Trabajo")])
-'   stxFTitles.Add(["boms", "mcod", ("Código")])
-'   stxFTitles.Add(["boms", "mqty", ("Cantidad")])
-'
-'   stxFTitles.Add(["view_boms", "midx", ("Índice")])
-'   stxFTitles.Add(["view_boms", "mjob", ("Trabajo")])
-'   stxFTitles.Add(["view_boms", "mcod", ("Código")])
-'   stxFTitles.Add(["view_boms", "mclass", ("Clase")])
-'   stxFTitles.Add(["view_boms", "mqty", ("Cantidad")])
-'   stxFTitles.Add(["view_boms", "mprice", ("Precio")])
-'   stxFTitles.Add(["view_boms", "muom", ("Unidad")])
-'   stxFTitles.Add(["view_boms", "msupplier", ("Suministrador")])
-'
-'   stxFTitles.Add(["codcls", "sidx", ("Índice")])
-'   stxFTitles.Add(["codcls", "sname", ("Clase")])
-'
-'   stxFTitles.Add(["codes", "cidx", ("Índice")])
-'   stxFTitles.Add(["codes", "cname", ("Insumo")])
-'   stxFTitles.Add(["codes", "cclass", ("Clase")])
-'   stxFTitles.Add(["codes", "cqty", ("Cantidad")])
-'   stxFTitles.Add(["codes", "cuom", ("Unidad")])
-'   stxFTitles.Add(["codes", "cprice", ("Precio")])
-'
-'   stxFTitles.Add(["view_codes", "cidx", ("Índice")])
-'   stxFTitles.Add(["view_codes", "cname", ("Insumo")])
-'   stxFTitles.Add(["view_codes", "cclass", ("Clase")])
-'   stxFTitles.Add(["view_codes", "cqty", ("Cantidad")])
-'   stxFTitles.Add(["view_codes", "cuom", ("Unidad")])
-'   stxFTitles.Add(["view_codes", "cprice", ("Precio")])
-'
-'   stxFTitles.Add(["composites", "aidx", ("Índice")])
-'   stxFTitles.Add(["composites", "aname", ("Compuesto")])
-'   stxFTitles.Add(["composites", "adesc", ("Descripción")])
-'
-'   stxFTitles.Add(["deliverables", "didx", ("Índice")])
-'   stxFTitles.Add(["deliverables", "dname", ("Informe")])
-'
-'   stxFTitles.Add(["jobs", "jidx", ("Índice")])
-'   stxFTitles.Add(["jobs", "jname", ("Trabajo")])
-'   stxFTitles.Add(["jobs", "jdate", ("Fecha")])
-'   stxFTitles.Add(["jobs", "jowner", ("Cliente")])
-'   stxFTitles.Add(["jobs", "jlogistic", ("Logística")])
-'
-'   stxFTitles.Add(["logistics", "lidx", ("Índice")])
-'   stxFTitles.Add(["logistics", "lname", ("Logística")])
-'
-'   stxFTitles.Add(["owners", "oidx", ("Índice")])
-'   stxFTitles.Add(["owners", "oname", ("Cliente")])
-'
-'   stxFTitles.Add(["suppliers", "fidx", ("Índice")])
-'   stxFTitles.Add(["suppliers", "fname", ("Suministrador")])
-'
-'   stxFTitles.Add(["uoms", "uidx", ("Índice")])
-'   stxFTitles.Add(["uoms", "uname", ("Simbolo")])
-'   stxFTitles.Add(["uoms", "udesc", ("Unidad")])
-'
-'   ' Nombres de tablas y vistas
-'   stxVTitles.Add(["view_jobs", ("Trabajos"), "icon:/16/add"])
-'   stxVTitles.Add(["view_boms", ("Materiales y tareas"), "icon:/16/add"])
-'   stxVTitles.Add(["view_codes", ("Códigos"), "icon:/16/add"])
-'   stxVTitles.Add(["view_composites", ("Compuestos"), "icon:/16/delete"])
-'   stxVTitles.Add(["view_deliverables", ("Informes"), "icon:/16/delete"])
-'   stxVTitles.Add(["view_logistic", ("Logística"), "icon:/16/delete"])
-'   stxVTitles.Add(["view_owners", ("Clientes"), "icon:/16/delete"])
-'   stxVTitles.Add(["view_suppliers", ("Suministradores"), "icon:/16/delete"])
-'   stxVTitles.Add(["view_uoms", ("Unidades de medida"), "icon:/16/delete"])
-'
-'   If stxVTitles.Count > 0 Then
-'     Return 1
-'   Else
-'     Return 0
-'   Endif
-'
-' End
 
 Public Function Initiator() As Integer  ''Funcion que carga los parametros por defecto del programa. 1 ok, 0 Matrices iguales pero no se cargo todo -1 matrices distintas
 
@@ -281,7 +199,7 @@ Public Function Initiator() As Integer  ''Funcion que carga los parametros por d
   stxProgVal[1] = Settings[stxProgKey[1], strAppPath]
 
   stxProgKey[2] = "Program/Database-Name"
-  stxProgVal[2] = Settings[stxProgKey[2], strDBName]
+  stxProgVal[2] = Settings[stxProgKey[2], strDBDEfault]
 
   stxProgKey[3] = "Program/Database-Port"
   stxProgVal[3] = Settings[stxProgKey[3], ""]
@@ -336,21 +254,23 @@ Public Function Initiator() As Integer  ''Funcion que carga los parametros por d
   stxProgVal[15] = Settings[stxProgKey[15], "gef"]
   stxProgKey[16] = "Program/Show-GEF"
   stxProgVal[16] = Settings[stxProgKey[16], ""]
+
   stxProgKey[17] = "Program/Altern-App-Name"
-  stxProgVal[17] = Settings[stxProgKey[17], ""]
-  stxProgKey[18] = "Program/Key-18"
+  stxProgVal[17] = Settings[stxProgKey[17], ""] ' Aqui poner el nombre del prgrama alternativo
+
+  stxProgKey[18] = "Program/Last-SQL"
   stxProgVal[18] = Settings[stxProgKey[18], ""]
-  stxProgKey[19] = "Program/Key-19"
+  stxProgKey[19] = "Program/Pic-Dir"
   stxProgVal[19] = Settings[stxProgKey[19], ""]
 
   ' Ventana del formulario principal
-  stxProgKey[20] = "Program/Tree-Width"
-  stxProgVal[20] = Settings[stxProgKey[20], 150]
-  stxProgKey[21] = "Program/Tree-Height"
+  stxProgKey[20] = "Program/Current-Table"
+  stxProgVal[20] = Settings[stxProgKey[20], ""]
+  stxProgKey[21] = "Program/Key-21"
   stxProgVal[21] = Settings[stxProgKey[21], 150]
-  stxProgKey[22] = "Program/Grid-Width"
+  stxProgKey[22] = "Program/Key-22"
   stxProgVal[22] = Settings[stxProgKey[22], 300]
-  stxProgKey[23] = "Program/Grid-Height"
+  stxProgKey[23] = "Program/Key-23"
   stxProgVal[23] = Settings[stxProgKey[23], 150]
   stxProgKey[24] = "Program/Key-24"
   stxProgVal[24] = Settings[stxProgKey[24], ""]
@@ -389,27 +309,27 @@ End
 
 Public Function Dependences() As Integer ''Analisis de dependencias, si hay paquetes que falta instalar se procede a instalarlos y la funcion retorna la cantidad remanente de paquetes, siendo cero si se instalaron todos.
 
-  Dim stxDep As New String[]
-  Dim stxInstall As New String[]
+  ' Dim stxDep As New String[]
+  'Dim stxInstall As New String[]
   Dim str As String
   Dim strCmm As String
 
   str &= ("Debes instalar los siguientes paquetes") & ":\n"
 
-  Select GEFSys.DistroShort()
+  Select GEFSys.Distro()
 
     Case "debian", "ubuntu", "mint"
       strCmm = "sudo apt-get install "
-      If Exist("deb.txt") = True Then
-        stxPackages = GEFUtility.FileLoad("deb.txt")
+      If Exist("dep-deb.txt") = True Then
+        stxPackages = GEFUtility.FileLoad("dep-deb.txt")
       Endif
     Case "manjaro", "arch"
       strCmm = "sudo pacman -S "
       If Exist("arc.txt") = True Then
         stxPackages = GEFUtility.FileLoad("arc.txt")
       Else
-        If Exist("deb.txt") = True Then
-          stxPackages = GEFUtility.FileLoad("deb.txt")
+        If Exist("dep-deb.txt") = True Then
+          stxPackages = GEFUtility.FileLoad("dep-deb.txt")
         Endif
       Endif
     Case "fedora", "redhat"
@@ -417,8 +337,8 @@ Public Function Dependences() As Integer ''Analisis de dependencias, si hay paqu
       If Exist("rht.txt") = True Then
         stxPackages = GEFUtility.FileLoad("rht.txt")
       Else
-        If Exist("deb.txt") = True Then
-          stxPackages = GEFUtility.FileLoad("deb.txt")
+        If Exist("dep-deb.txt") = True Then
+          stxPackages = GEFUtility.FileLoad("dep-deb.txt")
         Endif
       Endif
 
@@ -427,8 +347,8 @@ Public Function Dependences() As Integer ''Analisis de dependencias, si hay paqu
       If Exist("gto.txt") = True Then
         stxPackages = GEFUtility.FileLoad("gto.txt")
       Else
-        If Exist("deb.txt") = True Then
-          stxPackages = GEFUtility.FileLoad("deb.txt")
+        If Exist("dep-deb.txt") = True Then
+          stxPackages = GEFUtility.FileLoad("dep-deb.txt")
         Endif
       Endif
 
@@ -437,8 +357,8 @@ Public Function Dependences() As Integer ''Analisis de dependencias, si hay paqu
       If Exist("osu.txt") = True Then
         stxPackages = GEFUtility.FileLoad("osu.txt")
       Else
-        If Exist("deb.txt") = True Then
-          stxPackages = GEFUtility.FileLoad("deb.txt")
+        If Exist("dep-deb.txt") = True Then
+          stxPackages = GEFUtility.FileLoad("dep-deb.txt")
         Endif
       Endif
 
@@ -451,14 +371,6 @@ Public Function Dependences() As Integer ''Analisis de dependencias, si hay paqu
       File.Save("/tmp/apt.txt", str & strCmm & stxPackages.Join(" "))
       Wait 1
       Desktop.Open("/tmp/apt.txt")
-
-      ' stxPackages = GEFSys.PkgInstall(stxPackages)
-      '
-      ' If stxPackages.Count > 0 Then
-      '   Message.Info("Algunos paquetes no se pudieron instalar.")
-      ' Else
-      '   GEFUtility.FileLog("Todos los paquetes fueron instalados.")
-      ' Endif
 
     Endif
   Endif

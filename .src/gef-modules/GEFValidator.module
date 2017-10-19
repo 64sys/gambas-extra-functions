@@ -529,8 +529,6 @@ Public Function ConvertPath(strInput As String) As String ''Descodifica los cara
     ' Examinar el siguiente caracter
     strChar = Mid$(strInput, intPos, 1)
     If strChar = "+" Then
-      ' Convertir a espacio
-      ' strOutput = strOutput & " " ' Lo anule porque se carga los directorios con signo +
       strOutput = strOutput & strChar
     Else If strChar <> "%" Then
       ' Normal, no cambiar
@@ -540,7 +538,6 @@ Public Function ConvertPath(strInput As String) As String ''Descodifica los cara
     Else
       ' Obtener los siguientes caracteres hex.
       strDigits = Mid$(strInput, intPos + 1, 2)
-      ' Debug strDigits
       ' aquí convertimos el valor hexadecimal a entero y
       ' se lo pasamos a Chr que devuelve el carácter correcto.
       strOutput = strOutput & Chr$(CInt(Val("&" & strDigits)))
@@ -550,6 +547,23 @@ Public Function ConvertPath(strInput As String) As String ''Descodifica los cara
   Loop
 
   Return strOutput
+
+End
+
+Public Function ChkExt(strExt As String) As String
+
+  Dim str As String
+
+  Select String.LCase(strExt)
+    Case "tif"
+      str = "tiff"
+    Case "jpg"
+      str = "jpeg"
+    Case Else
+      str = String.LCase(strExt)
+  End Select
+
+  Return str
 
 End
 

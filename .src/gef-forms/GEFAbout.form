@@ -37,14 +37,14 @@
       { pioGNULinux PictureBox About
         Name = "pioGNULinux"
         MoveScaled(0,1,10,10)
-        Picture = Picture["gnulinux-powered.png"]
+        Picture = Picture["gnulinux.png"]
         Stretch = True
         AutoResize = True
       }
       { pioGambas PictureBox About
         Name = "pioGambas"
         MoveScaled(10,1,10,10)
-        Picture = Picture["gambas-powered.png"]
+        Picture = Picture["gambas.png"]
         Stretch = True
         AutoResize = True
       }
